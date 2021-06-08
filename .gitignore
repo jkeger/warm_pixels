@@ -1,0 +1,33 @@
+# General file types
+*.aux
+*.bbl
+*.blg
+*.cprof
+*.csv
+*.dat
+*.gz
+*.hdf5
+*.log
+*.mp4
+*.npy
+*.npz
+*.ods
+*.out
+*.pdf
+*.pickle
+*.png
+*.pyc
+*.swp
+*.tar
+*.toc
+*.xmf
+*.zip
+*.*#
+*~
+
+# Folders
+data/
+
+# Misc
+*tmp*
+*debug*
