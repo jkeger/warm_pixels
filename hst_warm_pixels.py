@@ -17,6 +17,12 @@ import autoarray as aa
 
 
 # ========
+# Constants
+# ========
+trail_length = 9
+
+
+# ========
 # Image datasets
 # ========
 dataset_root = os.path.join(path, "../hst_acs_datasets/")
@@ -172,7 +178,7 @@ class Dataset(object):
         self.saved_lines = self.path + "saved_lines"
         self.saved_consistent_lines = self.path + "saved_consistent_lines"
         self.saved_stacked_lines = self.path + "saved_stacked_lines"
-        self.saved_stacked_info = self.path + "saved_stacked_info"
+        self.saved_stacked_info = self.path + "saved_stacked_info.npz"
 
 
 def plot_warm_pixels(image, warm_pixels, save_path=None):
@@ -199,6 +205,128 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
         plt.close()
 
 
+def plot_stacked_trails(dataset, save_path=None):
+    """WIP"""
+    # Load
+    stacked_lines = PixelLineCollection()
+    stacked_lines.load(dataset.saved_stacked_lines)
+    npzfile = np.load(dataset.saved_stacked_info)
+    row_bins, flux_bins, date_bins, background_bins = [
+        npzfile[var] for var in npzfile.files
+    ]
+    n_row_bins = len(row_bins) - 1
+    n_flux_bins = len(flux_bins) - 1
+    n_date_bins = len(date_bins) - 1
+    n_background_bins = len(background_bins) - 1
+
+    # Plot the stacked trails
+    plt.figure(figsize=(25, 12))
+    plt.subplots_adjust(wspace=0, hspace=0)
+    gs = GridSpec(n_row_bins, n_flux_bins)
+    axes = [
+        [plt.subplot(gs[i_row, i_flux]) for i_flux in range(n_flux_bins)]
+        for i_row in range(n_row_bins)
+    ]
+
+    pixels = np.arange(1, trail_length)
+    colours = plt.cm.jet(np.linspace(0.05, 0.95, n_background_bins))
+    y_min = np.amin(abs(stacked_lines.data[:, -trail_length:])) #+1
+    y_max = 1.5 * np.amax(stacked_lines.data[:, -trail_length:]) #+1
+
+    # Plot each stack
+    for i_row in range(n_row_bins):
+        for i_flux in range(n_flux_bins):
+            # Furthest row bin at the top
+            ax = axes[n_row_bins - 1 - i_row][i_flux]
+
+            for i_background, c in enumerate(colours):
+                bin_index = PixelLineCollection.stacked_bin_index(
+                    i_row=i_row,
+                    n_row_bins=n_row_bins,
+                    i_flux=i_flux,
+                    n_flux_bins=n_flux_bins,
+                    i_background=i_background,
+                    n_background_bins=n_background_bins,
+                )
+
+                line = stacked_lines.lines[bin_index]
+
+                # Skip empty and single-entry bins
+                if line.n_stacked <= 1:
+                    continue
+
+                # Check for negative values
+                trail = line.data[-trail_length + 1:]
+                noise = line.noise[-trail_length + 1:]
+                where_pos = np.where(trail > 0)[0]
+                where_neg = np.where(trail < 0)[0]
+
+                ax.errorbar(
+                    pixels[where_pos],
+                    trail[where_pos],
+                    yerr=noise[where_pos],
+                    color=c,
+                    capsize=2,
+                    alpha=0.7,
+                )
+                ax.scatter(
+                    pixels[where_neg],
+                    abs(trail[where_neg]),
+                    color=c,
+                    marker="x",
+                    alpha=0.7,
+                )
+
+                # Annotate
+                if i_background == 0:
+                    text = "$N=%d$" % line.n_stacked
+                else:
+                    text = "\n" * i_background + "$%d$" % line.n_stacked
+                ax.text((trail_length + 1) * 0.9, y_max * 0.8, text, ha="right", va="top")
+
+            ax.set_yscale("log")
+            ax.set_ylim(y_min, y_max)
+            ax.set_xlim(0.5, trail_length + 0.5)
+
+            # Axis labels
+            if i_flux == 0:
+                ax.set_ylabel("Charge")
+            else:
+                ax.set_yticklabels([])
+            if i_row == 0:
+                ax.set_xlabel("Pixel")
+                ax.set_xticks(np.arange(1, trail_length + 0.1, 2))
+            else:
+                ax.set_xticklabels([])
+
+            # Bin labels
+            if i_row == n_row_bins - 1:
+                ax.xaxis.set_label_position("top")
+                ax.set_xlabel(
+                    "Flux:  %.2g$-$%.2g" % (flux_bins[i_flux], flux_bins[i_flux + 1])
+                )
+            if i_flux == n_flux_bins - 1:
+                ax.yaxis.set_label_position("right")
+                text = "Row:  %d$-$%d" % (row_bins[i_row], row_bins[i_row + 1])
+                if i_row == int(n_row_bins / 2):
+                    text += "\n\nBackground:  "
+                    for i_background in range(n_background_bins):
+                        text += "%.0f$-$%.0f" % (
+                            background_bins[i_background],
+                            background_bins[i_background + 1],
+                        )
+                        if i_background < n_background_bins - 1:
+                            text += ",  "
+                ax.set_ylabel(text)
+
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path, dpi=200)
+        print("Saved", save_path[-40:])
+        plt.close()
+
+
 # ========
 # Main
 # ========
@@ -209,21 +337,18 @@ if __name__ == "__main__":
     for name in datasets_test:
         dataset = Dataset(name)
 
-        # Skip if already found and saved
-        if False:
-            continue
-
-        print('\nDataset "%s", %d images' % (name, dataset.n_images))
-
-        # Initialise the collection of warm pixel trails
-        warm_pixels = PixelLineCollection()
-
+        print('\nDataset "%s" (%d images)' % (name, dataset.n_images))
 
         # ========
         # Warm pixels in each image
         # ========
-        if  True:
+        ### Make each of these a function for tidiness and flexibility
+        if not True:
             print("1. Find possible warm pixels")
+
+            # Initialise the collection of warm pixel trails
+            warm_pixels = PixelLineCollection()
+
             # Find the warm pixels in each image
             for i_image in range(dataset.n_images):
                 image_path = dataset.image_paths[i_image]
@@ -246,7 +371,7 @@ if __name__ == "__main__":
 
                 # Find the warm pixel trails
                 new_warm_pixels = find_warm_pixels(
-                    image=image, origin=image_name, date=date
+                    image=image, trail_length=trail_length, origin=image_name, date=date
                 )
                 print("Found %d possible warm pixels" % len(new_warm_pixels))
 
@@ -267,7 +392,7 @@ if __name__ == "__main__":
         # ========
         # Consistent warm pixels in the set
         # ========
-        if True:
+        if not True:
             print("2. Find consistent warm pixels")
 
             # Load
@@ -286,3 +411,55 @@ if __name__ == "__main__":
 
             # Save
             warm_pixels.save(dataset.saved_consistent_lines)
+
+
+        # ========
+        # Stack in bins
+        # ========
+        if not True:
+            print("3. Stack warm pixel trails")
+
+            # Load
+            warm_pixels = PixelLineCollection()
+            warm_pixels.load(dataset.saved_consistent_lines)
+
+            # Subtract preceeding pixels in each line before stacking
+            for i in range(warm_pixels.n_lines):
+                warm_pixels.lines[i].data[trail_length:] -= warm_pixels.lines[i].data[:trail_length - 1][::-1]
+
+            # Stack the lines in bins by distance from readout and total flux
+            n_row_bins = 5
+            n_flux_bins = 10
+            n_background_bins = 1
+            (
+                stacked_lines,
+                row_bins,
+                flux_bins,
+                date_bins,
+                background_bins,
+            ) = warm_pixels.generate_stacked_lines_from_bins(
+                n_row_bins=n_row_bins,
+                n_flux_bins=n_flux_bins,
+                n_background_bins=n_background_bins,
+                return_bin_info=True,
+            )
+            print(
+                "Stacked lines in %d bins" % (n_row_bins * n_flux_bins * n_background_bins)
+            )
+
+            # Save
+            stacked_lines.save(dataset.saved_stacked_lines)
+            np.savez(
+                dataset.saved_stacked_info,
+                row_bins,
+                flux_bins,
+                date_bins,
+                background_bins,
+            )
+
+
+        # ========
+        # Plot stacked lines
+        # ========
+        if  True:
+            plot_stacked_trails(dataset, save_path=dataset.path + "stacked_trails")
