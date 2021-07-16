@@ -1,5 +1,28 @@
 """
 WIP
+
+Parameters
+----------
+datasets : str (opt.)
+    The name of the set of image datasets to run. Defaults to "test". See the
+    datasets_names dictionary for the options.
+
+--date_old_* : str (opt.)
+    A "year/month/day"-format date requirement to remake files saved before this
+    date. Defaults to only check whether a file already exists. Alternatively,
+    set "1" to force remaking or "0" to force not.
+    --date_old_all, -a
+        Overrides all others.
+    --date_old_fwp, -f
+        Find warm pixels.
+    --date_old_cwp, -c
+        Consistent warm pixels.
+    --date_old_swp, -s
+        Stacked warm pixels.
+    --date_old_ttd, -t
+        Total trap density.
+    --date_old_pst, -p
+        Plot stacked trails.
 """
 
 import numpy as np
@@ -7,6 +30,10 @@ import os
 import sys
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+import lmfit
+import argparse
+import time
+import datetime
 
 from pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels import find_warm_pixels
@@ -152,11 +179,15 @@ datasets_post_2006_06 = [
 ]
 datasets_all = np.append(datasets_pre_2006_06, datasets_post_2006_06)
 datasets_test = ["12_2020"]
+# Dictionary of set names
+datasets_names = {
+    "test": datasets_test,
+    "pre_2006_06": datasets_pre_2006_06,
+    "post_2006_06": datasets_post_2006_06,
+    "all": datasets_all,
+}
 
 
-# ========
-# Functions etc
-# ========
 class Dataset(object):
     """Simple class to store a list of image file paths and mild metadata.
 
@@ -201,12 +232,121 @@ class Dataset(object):
         self.bias_path = self.path + self.bias_name + ".fits"
 
         # Save paths
-        self.saved_lines = self.path + "saved_lines"
-        self.saved_consistent_lines = self.path + "saved_consistent_lines"
-        self.saved_stacked_lines = self.path + "saved_stacked_lines"
+        self.saved_lines = self.path + "saved_lines.pickle"
+        self.saved_consistent_lines = self.path + "saved_consistent_lines.pickle"
+        self.saved_stacked_lines = self.path + "saved_stacked_lines.pickle"
         self.saved_stacked_info = self.path + "saved_stacked_info.npz"
+        self.plotted_stacked_trails = self.path + "stacked_trails.png"
 
 
+# ========
+# Utility functions
+# ========
+def prep_parser():
+    """Prepare the sys args parser."""
+    parser = argparse.ArgumentParser()
+
+    # Positional arguments
+    parser.add_argument(
+        "datasets",
+        nargs="?",
+        default="test",
+        type=str,
+        help="The set of image datasets to run.",
+    )
+
+    # Date requirements for re-making files
+    parser.add_argument(
+        "-a",
+        "--date_old_all",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for all saved files.",
+    )
+    parser.add_argument(
+        "-f",
+        "--date_old_fwp",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for found warm pixels.",
+    )
+    parser.add_argument(
+        "-c",
+        "--date_old_cwp",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for consistent warm pixels.",
+    )
+    parser.add_argument(
+        "-s",
+        "--date_old_swp",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for stacked warm pixels.",
+    )
+    parser.add_argument(
+        "-t",
+        "--date_old_ttd",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for total trap density.",
+    )
+    parser.add_argument(
+        "-p",
+        "--date_old_pst",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for plot stacked trails.",
+    )
+
+    return parser
+
+
+def need_to_make_file(filepath, date_old=None):
+    """Return True if a file needs to be (re)made.
+
+    Parameters
+    ----------
+    filepath : str
+        The file that might need to be remade.
+
+    date_old : str (opt.)
+        A "year/month/day"-format date requirement to remake files saved before
+        this date. Defaults to only check whether a file already exists.
+        Alternatively, set "1" to force remaking or "0" to force not.
+    """
+    # If the file doesn't exist
+    if not os.path.isfile(filepath):
+        return True
+
+    # If the file was saved too long ago
+    if date_old is not None:
+        # Overrides
+        if date_old == "1":
+            return True
+        elif date_old == "0":
+            return False
+
+        # Compare with modified date
+        time_mod = os.path.getmtime(filepath)
+        time_old = time.mktime(
+            datetime.datetime.strptime(date_old, "%Y/%m/%d").timetuple()
+        )
+        if time_mod < time_old:
+            return True
+
+    return False
+
+
+# ========
+# Main functions
+# ========
 def find_dataset_warm_pixels(dataset):
     """Find the possible warm pixels in all images in a dataset.
 
@@ -228,7 +368,7 @@ def find_dataset_warm_pixels(dataset):
         image_path = dataset.image_paths[i_image]
         image_name = dataset.image_names[i_image]
         print(
-            "  %s (%d of %d): " % (image_name, i_image + 1, dataset.n_images),
+            "    %s (%d of %d): " % (image_name, i_image + 1, dataset.n_images),
             end="",
             flush=True,
         )
@@ -261,47 +401,6 @@ def find_dataset_warm_pixels(dataset):
 
     # Save
     warm_pixels.save(dataset.saved_lines)
-
-
-def plot_warm_pixels(image, warm_pixels, save_path=None):
-    """Plot an image and mark the locations of warm pixels.
-
-    stack_dataset_warm_pixels() must first be run for the dataset.
-
-    Parameters
-    ----------
-    image : [[float]]
-        The 2D image array.
-
-    warm_pixels : PixelLineCollection
-        The set of warm pixel trails.
-
-    save_path : str
-        The file path for saving the figure. If None, the show the figure.
-    """
-    # Plot the image and the found warm pixels
-    plt.figure()
-
-    im = plt.imshow(X=image, aspect="equal", vmin=0, vmax=500)
-    plt.scatter(
-        warm_pixels.locations[:, 1],
-        warm_pixels.locations[:, 0],
-        marker=".",
-        c="r",
-        edgecolor="none",
-        s=0.1,
-        alpha=0.7,
-    )
-
-    plt.colorbar(im)
-    plt.axis("off")
-
-    if save_path is None:
-        plt.show()
-    else:
-        plt.savefig(save_path, dpi=800)
-        # print("Saved", save_path[-40:])
-        plt.close()
 
 
 def find_consistent_warm_pixels(dataset):
@@ -389,6 +488,99 @@ def stack_dataset_warm_pixels(dataset):
     )
 
 
+def trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c):
+    """Calculate the model shape of a CTI trail.
+
+    Parameters
+    ----------
+    x : [float]
+        Pixel positions away from the trailed pixel.
+
+    rho_q : float
+        Total trap number density per pixel.
+
+    n_e : float
+        Number of electrons in the trailed pixel's charge cloud (e-).
+
+    n_bg : float
+        Background number of electrons (e-).
+
+    row : float
+        Distance in pixels of the trailed pixel from the readout register.
+
+    alpha : float
+        CCD well fill power.
+
+    w : float
+        CCD full well depth (e-).
+
+    A, B, C : float
+        Relative density of each trap species.
+
+    tau_a, tau_b, tau_c : float
+        Release timescale of each trap species (s).
+
+    Returns
+    -------
+    trail : [float]
+        Model charge values at each pixel in the trail (e-).
+    """
+    return (
+        rho_q
+        * ((n_e / w) ** alpha - (n_bg / w) ** alpha)
+        * row
+        * (
+            A * np.exp((1 - x) / tau_a) * (1 - np.exp(-1 / tau_a))
+            + B * np.exp((1 - x) / tau_b) * (1 - np.exp(-1 / tau_b))
+            + C * np.exp((1 - x) / tau_c) * (1 - np.exp(-1 / tau_c))
+        )
+    )
+
+
+# ========
+# Plotting functions
+# ========
+def plot_warm_pixels(image, warm_pixels, save_path=None):
+    """Plot an image and mark the locations of warm pixels.
+
+    stack_dataset_warm_pixels() must first be run for the dataset.
+
+    Parameters
+    ----------
+    image : [[float]]
+        The 2D image array.
+
+    warm_pixels : PixelLineCollection
+        The set of warm pixel trails.
+
+    save_path : str (opt.)
+        The file path for saving the figure. If None, the show the figure.
+    """
+    # Plot the image and the found warm pixels
+    plt.figure()
+
+    im = plt.imshow(X=image, aspect="equal", vmin=0, vmax=500)
+    plt.scatter(
+        warm_pixels.locations[:, 1],
+        warm_pixels.locations[:, 0],
+        marker=".",
+        c="r",
+        edgecolor="none",
+        s=0.1,
+        alpha=0.7,
+    )
+
+    plt.colorbar(im)
+    plt.axis("off")
+
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path, dpi=800)
+        # print("    Saved", save_path[-40:])
+        plt.close()
+
+
 def plot_stacked_trails(dataset, save_path=None):
     """Plot a tiled set of stacked trails.
 
@@ -399,7 +591,7 @@ def plot_stacked_trails(dataset, save_path=None):
     dataset : Dataset
         The dataset object with a list of image file paths and metadata.
 
-    save_path : str
+    save_path : str (opt.)
         The file path for saving the figure. If None, the show the figure.
     """
     # Load
@@ -474,7 +666,8 @@ def plot_stacked_trails(dataset, save_path=None):
                     pixels[where_neg],
                     abs(trail[where_neg]),
                     color=c,
-                    marker="x",
+                    facecolor="none",
+                    marker="o",
                     alpha=0.7,
                 )
 
@@ -529,7 +722,7 @@ def plot_stacked_trails(dataset, save_path=None):
         plt.show()
     else:
         plt.savefig(save_path)
-        print("Saved", save_path[-40:])
+        print("    Saved", save_path[-40:])
         plt.close()
 
 
@@ -538,28 +731,60 @@ def plot_stacked_trails(dataset, save_path=None):
 # ========
 if __name__ == "__main__":
     # ========
-    # Find and stack warm pixels in each dataset
+    # Parse arguments
     # ========
-    for name in datasets_test:
+    parser = prep_parser()
+    args = parser.parse_args()
+
+    if args.datasets not in datasets_names.keys():
+        print("Error: Invalid `datasets`", args.datasets)
+        print("  Choose from:", list(datasets_names.keys()))
+        raise ValueError
+    datasets = datasets_names[args.datasets]
+
+    if args.date_old_all is not None:
+        args.date_old_fwp = args.date_old_all
+        args.date_old_cwp = args.date_old_all
+        args.date_old_swp = args.date_old_all
+        args.date_old_ttd = args.date_old_all
+        args.date_old_pst = args.date_old_all
+
+    # ========
+    # Find and stack warm pixels in each dataset, then fit the trap density
+    # ========
+    for i_dataset, name in enumerate(datasets):
         dataset = Dataset(name)
 
-        print('\nDataset "%s" (%d images)' % (name, dataset.n_images))
+        print(
+            'Dataset "%s" (%d of %d in "%s", %d images)'
+            % (name, i_dataset + 1, len(datasets), args.datasets, dataset.n_images)
+        )
 
         # Warm pixels in each image
-        if True:
-            print("1. Find possible warm pixels")
+        if need_to_make_file(dataset.saved_lines, date_old=args.date_old_fwp):
+            print("  Find possible warm pixels")
             find_dataset_warm_pixels(dataset)
 
         # Consistent warm pixels in the set
-        if True:
-            print("2. Find consistent warm pixels")
+        if need_to_make_file(
+            dataset.saved_consistent_lines, date_old=args.date_old_cwp
+        ):
+            print("  Find consistent warm pixels")
             find_consistent_warm_pixels(dataset)
 
         # Stack in bins
-        if True:
-            print("3. Stack warm pixel trails")
+        if need_to_make_file(dataset.saved_stacked_lines, date_old=args.date_old_swp):
+            print("  Stack warm pixel trails")
             stack_dataset_warm_pixels(dataset)
 
+        # # Fit the trap density
+        # if need_to_make_file(dataset., date_old=args.date_old_ttd):
+        #     print("  Fit total trap density")
+        #     fit_total_trap_density()
+
         # Plot stacked lines
-        if True:
-            plot_stacked_trails(dataset, save_path=dataset.path + "stacked_trails")
+        if need_to_make_file(
+            dataset.plotted_stacked_trails, date_old=args.date_old_pst
+        ):
+            print("  Plot stacked trails")
+            plot_stacked_trails(dataset, save_path=dataset.plotted_stacked_trails)
