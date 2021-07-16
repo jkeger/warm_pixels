@@ -5,7 +5,7 @@ from pixel_lines import PixelLine
 
 def find_warm_pixels(
     image,
-    trail_length=9,
+    trail_length=8,
     n_parallel_overscan=0,
     n_serial_prescan=0,
     ignore_bad_columns=True,
@@ -30,8 +30,9 @@ def find_warm_pixels(
         register is above row 0.
 
     trail_length : int
-        The number of pixels including the warm pixel to save as a trail. The
-        same number (minus one) of preceeding pixels are also included.
+        The number of pixels in a trail, not including the warm pixel itself.
+        The warm pixel itself and the same number of preceeding pixels are also
+        included in the saved line.
 
     n_parallel_overscan : int
         The number of rows in the overscan region of the input image. i.e. the
@@ -123,9 +124,9 @@ def find_warm_pixels(
     image_smooth = uniform_filter(image_no_bg, size=smooth_width)
 
     # Ignore the very top of the CCD since we can't get full trails
-    where_not_ignored[:trail_length, :] = 0
+    where_not_ignored[: trail_length + 1, :] = 0
     # Ignore parallel overscan
-    where_not_ignored[-(n_parallel_overscan + trail_length) :, :] = 0
+    where_not_ignored[-(n_parallel_overscan + trail_length + 1) :, :] = 0
     # Ignore serial prescan
     where_not_ignored[:, :n_serial_prescan] = 0
 
@@ -180,16 +181,9 @@ def find_warm_pixels(
     for location in warm_pixel_locations:
         row, column = location
 
-        # Subtract a mirror of the preceding pixels from the trail to remove
-        # e.g. a star's profile
-        data = image[row - trail_length + 1 : row + trail_length, column] - background
-        if not True:
-            data[trail_length:] -= data[: trail_length - 1]
-        data += background
-
         warm_pixels.append(
             PixelLine(
-                data=data,
+                data=image[row - trail_length : row + trail_length + 1, column],
                 origin=origin,
                 location=[row, column],
                 date=date,

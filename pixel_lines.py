@@ -91,6 +91,10 @@ class PixelLineCollection(object):
         data : [[float]]
             The pixel counts of each line, in units of electrons.
 
+        noises : [[float]]
+            The noise errors on the pixel counts of each line, in units of
+            electrons.
+
         origins : [str]
             The identifiers for the origins (e.g. image name) of each line.
 
@@ -123,7 +127,7 @@ class PixelLineCollection(object):
         return np.array([line.data for line in self.lines])
 
     @property
-    def errors(self):
+    def noises(self):
         return np.array([line.noise for line in self.lines])
 
     @property
@@ -486,9 +490,7 @@ class PixelLineCollection(object):
                 stacked_lines[index].data = [line.data]
             else:
                 stacked_lines[index].data = np.append(
-                    stacked_lines[index].data,
-                    [line.data],
-                    axis=0,
+                    stacked_lines[index].data, [line.data], axis=0
                 )
             stacked_lines[index].n_stacked += 1
 

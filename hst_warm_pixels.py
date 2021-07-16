@@ -46,7 +46,8 @@ import autoarray as aa
 # ========
 # Constants
 # ========
-trail_length = 9
+# Number of pixels for each warm-pixel trail, not including the warm pixel itself
+trail_length = 8
 
 
 # ========
@@ -189,35 +190,34 @@ datasets_names = {
 
 
 class Dataset(object):
-    """Simple class to store a list of image file paths and mild metadata.
-
-    Parameters
-    ----------
-    name : str
-        The name of the dataset, i.e. the name of the directory containing the
-        image files, assumed to be in dataset_root.
-
-    Attributes
-    ----------
-    path : str
-        File path to the dataset directory.
-
-    image_names : [str]
-    image_paths : [str]
-        The list of image file names, excluding and including the full path and
-        extension, respectively.
-
-    bias_name : str
-    bias_path : str
-        The bias image file name, excluding and including the full path and
-        extension, respectively.
-
-    saved_lines, saved_consistent_lines, saved_stacked_lines, saved_stacked_info
-        : str
-        The file names for saving and loading derived data, including the path.
-    """
-
     def __init__(self, name):
+        """Simple class to store a list of image file paths and mild metadata.
+
+        Parameters
+        ----------
+        name : str
+            The name of the dataset, i.e. the name of the directory containing the
+            image files, assumed to be in dataset_root.
+
+        Attributes
+        ----------
+        path : str
+            File path to the dataset directory.
+
+        image_names : [str]
+        image_paths : [str]
+            The list of image file names, excluding and including the full path and
+            extension, respectively.
+
+        bias_name : str
+        bias_path : str
+            The bias image file name, excluding and including the full path and
+            extension, respectively.
+
+        saved_lines, saved_consistent_lines, saved_stacked_lines, saved_stacked_info
+            : str
+            The file names for saving and loading derived data, including the path.
+        """
         self.name = name
         self.path = dataset_root + self.name + "/"
 
@@ -362,6 +362,7 @@ def find_dataset_warm_pixels(dataset):
     """
     # Initialise the collection of warm pixel trails
     warm_pixels = PixelLineCollection()
+    print("")
 
     # Find the warm pixels in each image
     for i_image in range(dataset.n_images):
@@ -401,6 +402,7 @@ def find_dataset_warm_pixels(dataset):
 
     # Save
     warm_pixels.save(dataset.saved_lines)
+    print("")
 
 
 def find_consistent_warm_pixels(dataset):
@@ -435,6 +437,7 @@ def find_consistent_warm_pixels(dataset):
 
     # Save
     warm_pixels.save(dataset.saved_consistent_lines)
+    print("")
 
 
 def stack_dataset_warm_pixels(dataset):
@@ -459,8 +462,8 @@ def stack_dataset_warm_pixels(dataset):
 
     # Subtract preceeding pixels in each line before stacking
     for i in range(warm_pixels.n_lines):
-        warm_pixels.lines[i].data[trail_length:] -= warm_pixels.lines[i].data[
-            : trail_length - 1
+        warm_pixels.lines[i].data[trail_length + 1 :] -= warm_pixels.lines[i].data[
+            :trail_length
         ][::-1]
 
     # Stack the lines in bins by distance from readout and total flux
@@ -494,36 +497,36 @@ def trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c
     Parameters
     ----------
     x : [float]
-        Pixel positions away from the trailed pixel.
+        The pixel positions away from the trailed pixel.
 
     rho_q : float
-        Total trap number density per pixel.
+        The total trap number density per pixel.
 
     n_e : float
-        Number of electrons in the trailed pixel's charge cloud (e-).
+        The number of electrons in the trailed pixel's charge cloud (e-).
 
     n_bg : float
-        Background number of electrons (e-).
+        The background number of electrons (e-).
 
     row : float
-        Distance in pixels of the trailed pixel from the readout register.
+        The distance in pixels of the trailed pixel from the readout register.
 
     alpha : float
-        CCD well fill power.
+        The CCD well fill power.
 
     w : float
-        CCD full well depth (e-).
+        The CCD full well depth (e-).
 
     A, B, C : float
-        Relative density of each trap species.
+        The relative density of each trap species.
 
     tau_a, tau_b, tau_c : float
-        Release timescale of each trap species (s).
+        The release timescale of each trap species (s).
 
     Returns
     -------
     trail : [float]
-        Model charge values at each pixel in the trail (e-).
+        The model charge values at each pixel in the trail (e-).
     """
     return (
         rho_q
@@ -535,6 +538,107 @@ def trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c
             + C * np.exp((1 - x) / tau_c) * (1 - np.exp(-1 / tau_c))
         )
     )
+
+
+def trail_model_hst(x, rho_q, n_e, n_bg, row, is_pre_2006_06=False):
+    """Wrapper for trail_model() for HST ACS.
+
+    Parameters (where different to trail_model())
+    ----------
+    is_before_2006_06 : bool (opt.)
+        Whether to use the pre-June 2006 or the post-June 2006 trap model.
+
+    Returns
+    -------
+    trail : [float]
+        The model charge values at each pixel in the trail (e-).
+    """
+    # CCD
+    alpha = 0.478
+    w = 84700.0
+    # Trap species
+    A = 0.17
+    B = 0.45
+    C = 0.38
+    if is_pre_2006_06:
+        tau_a = 0.48
+        tau_b = 4.86
+        tau_c = 20.6
+    else:
+        tau_a = 0.74
+        tau_b = 7.70
+        tau_c = 37.0
+
+    return trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c)
+
+
+def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all):
+    """WIP
+
+    Takes the concatenated data from all trails to pass to trail_model() for
+    fitting, so other than x and y, the parameters will be in subsets of the
+    same value for the N consecutive pixels in each appended trail.
+
+    Parameters
+    ----------
+    x_all : [float]
+        The pixel position away from the trailed pixel, for each pixel in all
+        trails.
+
+    y_all : [float]
+        The charge value, for each pixel in all trails.
+
+    noise_all : [float]
+        The charge noise error value, for each pixel in all trails.
+
+    n_e_all : [float]
+        The number of electrons in the trailed pixel's charge cloud (e-), for
+        each pixel in all trails.
+
+    n_bg_all : [float]
+        The Background number of electrons (e-), for each pixel in all trails.
+
+    row_all : [float]
+        Distance in pixels of the trailed pixel from the readout register, for
+        each pixel in all trails.
+
+    Returns
+    -------
+    rho_q : float
+        The best-fit total number density of traps per pixel.
+
+    rho_q_std : float
+        The standard error on the total trap density.
+    """
+
+    # Initialise the fitting model
+    model = lmfit.models.Model(
+        func=trail_model_hst,
+        independent_vars=["x", "n_e", "n_bg", "row"],
+        nan_policy="propagate",  ## not "omit"? If any needed at all?
+    )
+    params = model.make_params()
+
+    # Initialise the fit
+    params["rho_q"].value = 0.1
+    params["rho_q"].min = 0.0
+
+    # Weight using the noise
+    weights = 1 / noise_all ** 2
+
+    # Run the fitting
+    result = model.fit(
+        data=y_all,
+        params=params,
+        weights=weights,
+        x=x_all,
+        n_e=n_e_all,
+        n_bg=n_bg_all,
+        row=row_all,
+    )
+    # print(result.fit_report())
+
+    return result.params.get("rho_q").value, result.params.get("rho_q").stderr
 
 
 # ========
@@ -577,7 +681,6 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
         plt.show()
     else:
         plt.savefig(save_path, dpi=800)
-        # print("    Saved", save_path[-40:])
         plt.close()
 
 
@@ -606,6 +709,10 @@ def plot_stacked_trails(dataset, save_path=None):
     n_date_bins = len(date_bins) - 1
     n_background_bins = len(background_bins) - 1
 
+    # Date
+    ##todo
+    is_pre_2006_06 = False
+
     # Plot the stacked trails
     plt.figure(figsize=(25, 12))
     plt.subplots_adjust(wspace=0, hspace=0)
@@ -616,9 +723,9 @@ def plot_stacked_trails(dataset, save_path=None):
     ]
 
     # Don't plot the warm pixel itself
-    pixels = np.arange(1, trail_length)
-    y_min = np.amin(abs(stacked_lines.data[:, -trail_length + 1 :]))
-    y_max = 2 * np.amax(stacked_lines.data[:, -trail_length + 1 :])
+    pixels = np.arange(1, trail_length + 1)
+    y_min = 0.8 * np.amin(abs(stacked_lines.data[:, -trail_length:]))
+    y_max = 4 * np.amax(stacked_lines.data[:, -trail_length:])
     colours = plt.cm.jet(np.linspace(0.05, 0.95, n_background_bins))
 
     # Plot each stack
@@ -644,8 +751,8 @@ def plot_stacked_trails(dataset, save_path=None):
                     continue
 
                 # Don't plot the warm pixel itself
-                trail = line.data[-trail_length + 1 :]
-                noise = line.noise[-trail_length + 1 :]
+                trail = line.data[-trail_length:]
+                noise = line.noise[-trail_length:]
 
                 # Check for negative values
                 where_pos = np.where(trail > 0)[0]
@@ -674,7 +781,25 @@ def plot_stacked_trails(dataset, save_path=None):
                 # ========
                 # Plot fitted trail
                 # ========
-                ##
+                # Fit the total trap density to this single stacked trail
+                rho_q, rho_q_std = fit_total_trap_density(
+                    x_all=pixels,
+                    y_all=trail,
+                    noise_all=noise,
+                    n_e_all=np.ones(trail_length) * line.mean_flux,
+                    n_bg_all=np.ones(trail_length) * line.mean_background,
+                    row_all=np.ones(trail_length) * line.mean_row,
+                )
+                model_pixels = np.linspace(1, trail_length, 20)
+                model_trail = trail_model_hst(
+                    x=model_pixels,
+                    rho_q=rho_q,
+                    n_e=line.mean_flux,
+                    n_bg=line.mean_background,
+                    row=line.mean_row,
+                    is_pre_2006_06=is_pre_2006_06,
+                )
+                ax.plot(model_pixels, model_trail, color=c, ls="--", alpha=0.7)
 
                 # Annotate
                 if i_background == 0:
@@ -685,7 +810,7 @@ def plot_stacked_trails(dataset, save_path=None):
 
             ax.set_yscale("log")
             ax.set_ylim(y_min, y_max)
-            ax.set_xlim(0.5, trail_length - 0.5)
+            ax.set_xlim(0.5, trail_length + 0.5)
 
             # Axis labels
             if i_flux == 0:
@@ -721,8 +846,8 @@ def plot_stacked_trails(dataset, save_path=None):
     if save_path is None:
         plt.show()
     else:
-        plt.savefig(save_path)
-        print("    Saved", save_path[-40:])
+        plt.savefig(save_path, dpi=200)
+        print("Saved", save_path[-30:])
         plt.close()
 
 
@@ -750,7 +875,7 @@ if __name__ == "__main__":
         args.date_old_pst = args.date_old_all
 
     # ========
-    # Find and stack warm pixels in each dataset, then fit the trap density
+    # Find and stack warm pixels in each dataset
     # ========
     for i_dataset, name in enumerate(datasets):
         dataset = Dataset(name)
@@ -762,29 +887,24 @@ if __name__ == "__main__":
 
         # Warm pixels in each image
         if need_to_make_file(dataset.saved_lines, date_old=args.date_old_fwp):
-            print("  Find possible warm pixels")
+            print("  Find possible warm pixels", end=" ", flush=True)
             find_dataset_warm_pixels(dataset)
 
         # Consistent warm pixels in the set
         if need_to_make_file(
             dataset.saved_consistent_lines, date_old=args.date_old_cwp
         ):
-            print("  Find consistent warm pixels")
+            print("  Consistent warm pixels", end=" ", flush=True)
             find_consistent_warm_pixels(dataset)
 
         # Stack in bins
         if need_to_make_file(dataset.saved_stacked_lines, date_old=args.date_old_swp):
-            print("  Stack warm pixel trails")
+            print("  Stack warm pixel trails", end=" ", flush=True)
             stack_dataset_warm_pixels(dataset)
-
-        # # Fit the trap density
-        # if need_to_make_file(dataset., date_old=args.date_old_ttd):
-        #     print("  Fit total trap density")
-        #     fit_total_trap_density()
 
         # Plot stacked lines
         if need_to_make_file(
             dataset.plotted_stacked_trails, date_old=args.date_old_pst
         ):
-            print("  Plot stacked trails")
+            print("  Plot stacked trails", end=" ", flush=True)
             plot_stacked_trails(dataset, save_path=dataset.plotted_stacked_trails)
