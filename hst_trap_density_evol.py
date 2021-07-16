@@ -8,6 +8,15 @@ Parameters
 dataset_list : str (opt.)
     The name of the list of image datasets to run. Defaults to "test". See the
     dataset_list_names dictionary for the options, in hst_warm_pixels.py.
+
+--date_old_* : str (opt.)
+    A "year/month/day"-format date requirement to remake files saved before this
+    date. Defaults to only check whether a file already exists. Alternatively,
+    set "1" to force remaking or "0" to force not.
+    --date_old_ttd, -t
+        Total trap density.
+    --date_old_pde, -e
+        Plot density evolution.
 """
 from hst_warm_pixels import *
 
@@ -22,7 +31,33 @@ date_acs_launch = 0  ##
 # ========
 # Utility functions
 # ========
+def prep_parser_extra(parser):
+    parser.add_argument(
+        "-t",
+        "--date_old_ttd",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for total trap density.",
+    )
+    parser.add_argument(
+        "-e",
+        "--date_old_pde",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for plot density evolution.",
+    )
+
+    return parser
+
+
 def dataset_list_saved_density_evol(list_name):
+    """Return the file path for the saved density data for a dataset list."""
+    return dataset_root + list_name + "_density_evol.npz"
+
+
+def dataset_list_plotted_density_evol(list_name):
     """Return the file path for the saved density data for a dataset list."""
     return dataset_root + list_name + "_density_evol.npz"
 
@@ -31,7 +66,7 @@ def dataset_list_saved_density_evol(list_name):
 # Main functions
 # ========
 def fit_dataset_total_trap_density(dataset):
-    """Load and prepare the stacked-trail data for fit_total_trap_density().
+    """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
 
     Parameters
     ----------
@@ -166,22 +201,34 @@ if __name__ == "__main__":
     # Parse arguments
     # ========
     parser = prep_parser()
+    parser = prep_parser_extra(parser)
     args = parser.parse_args()
 
-    if args.dataset_list not in dataset_list_names.keys():
-        print("Error: Invalid dataset_list", args.dataset_list)
+    list_name = args.dataset_list
+    if list_name not in dataset_list_names.keys():
+        print("Error: Invalid dataset_list", list_name)
         print("  Choose from:", list(dataset_list_names.keys()))
         raise ValueError
-    dataset_list = dataset_list_names[args.dataset_list]
+    dataset_list = dataset_list_names[list_name]
+
+    if args.date_old_all is not None:
+        args.date_old_ttd = args.date_old_all
+        args.date_old_pde = args.date_old_all
 
     # ========
     # Fit and save the total trap densities for each dataset
     # ========
-    print("Fit total trap densities...", end=" ", flush=True)
-    fit_total_trap_densities(dataset_list, args.dataset_list)
+    if need_to_make_file(
+        dataset_list_saved_density_evol(list_name), date_old=args.date_old_ttd
+    ):
+        print("Fit total trap densities...", end=" ", flush=True)
+        fit_total_trap_densities(dataset_list, list_name)
 
     # ========
     # Plot the trap density evolution
     # ========
-    print("Plot trap density evolution...", end=" ", flush=True)
-    plot_trap_density_evol(args.dataset_list)
+    if need_to_make_file(
+        dataset_list_plotted_density_evol(list_name), date_old=args.date_old_pde
+    ):
+        print("Plot trap density evolution...", end=" ", flush=True)
+        plot_trap_density_evol(list_name)

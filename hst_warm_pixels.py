@@ -19,8 +19,6 @@ dataset_list : str (opt.)
         Consistent warm pixels.
     --date_old_swp, -s
         Stacked warm pixels.
-    --date_old_ttd, -t
-        Total trap density.
     --date_old_pst, -p
         Plot stacked trails.
 """
@@ -251,7 +249,7 @@ dataset_list_names = {
     "post_2006_06": datasets_post_2006_06,
     "all": datasets_all,
 }
-# Convert to Dataset objects
+# Convert all to Dataset objects
 for key in dataset_list_names.keys():
     dataset_list_names[key] = [Dataset(dataset) for dataset in dataset_list_names[key]]
 
@@ -304,14 +302,6 @@ def prep_parser():
         type=str,
         required=False,
         help="Oldest valid date for stacked warm pixels.",
-    )
-    parser.add_argument(
-        "-t",
-        "--date_old_ttd",
-        default=None,
-        type=str,
-        required=False,
-        help="Oldest valid date for total trap density.",
     )
     parser.add_argument(
         "-p",
@@ -589,34 +579,34 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, is_pre_2006_06=False):
 
 
 def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all):
-    """WIP
+    """Fit the total trap density for a trail or a concatenated set of trails.
 
-    Takes the concatenated data from all trails to pass to trail_model() for
-    fitting, so other than x and y, the parameters will be in subsets of the
-    same value for the N consecutive pixels in each appended trail.
+    Other than the x, y, and noise values, which should cover all pixels in the
+    trail or set of trails, the parameters must be either a single value or an
+    array of the same length. So if the data are a concatenated set of multiple
+    trails, i.e. x_all = [1, 2, ..., n, 1, 2, ..., n, 1, ...], then e.g.
+    row_all = [row_1, row_1, ..., row_1, row_2, row_2, ... row_2, row_3, ...]
+    to set the correct values for all pixels in each trail.
 
     Parameters
     ----------
     x_all : [float]
-        The pixel position away from the trailed pixel, for each pixel in all
-        trails.
+        The pixel positions away from the trailed pixel.
 
     y_all : [float]
-        The charge value, for each pixel in all trails.
+        The charge values.
 
-    noise_all : [float]
-        The charge noise error value, for each pixel in all trails.
+    noise_all : float or [float]
+        The charge noise error value.
 
-    n_e_all : [float]
-        The number of electrons in the trailed pixel's charge cloud (e-), for
-        each pixel in all trails.
+    n_e_all : float or [float]
+        The number of electrons in the trailed pixel's charge cloud (e-).
 
-    n_bg_all : [float]
-        The Background number of electrons (e-), for each pixel in all trails.
+    n_bg_all : float or [float]
+        The Background number of electrons (e-).
 
-    row_all : [float]
-        Distance in pixels of the trailed pixel from the readout register, for
-        each pixel in all trails.
+    row_all : float or [float]
+        Distance in pixels of the trailed pixel from the readout register.
 
     Returns
     -------
@@ -802,9 +792,9 @@ def plot_stacked_trails(dataset, save_path=None):
                     x_all=pixels,
                     y_all=trail,
                     noise_all=noise,
-                    n_e_all=np.ones(trail_length) * line.mean_flux,
-                    n_bg_all=np.ones(trail_length) * line.mean_background,
-                    row_all=np.ones(trail_length) * line.mean_row,
+                    n_e_all=line.mean_flux,
+                    n_bg_all=line.mean_background,
+                    row_all=line.mean_row,
                 )
                 model_pixels = np.linspace(1, trail_length, 20)
                 model_trail = trail_model_hst(
@@ -876,17 +866,17 @@ if __name__ == "__main__":
     parser = prep_parser()
     args = parser.parse_args()
 
-    if args.dataset_list not in dataset_list_names.keys():
-        print("Error: Invalid dataset_list", args.dataset_list)
+    list_name = args.dataset_list
+    if list_name not in dataset_list_names.keys():
+        print("Error: Invalid dataset_list", list_name)
         print("  Choose from:", list(dataset_list_names.keys()))
         raise ValueError
-    dataset_list = dataset_list_names[args.dataset_list]
+    dataset_list = dataset_list_names[list_name]
 
     if args.date_old_all is not None:
         args.date_old_fwp = args.date_old_all
         args.date_old_cwp = args.date_old_all
         args.date_old_swp = args.date_old_all
-        args.date_old_ttd = args.date_old_all
         args.date_old_pst = args.date_old_all
 
     # ========
@@ -899,7 +889,7 @@ if __name__ == "__main__":
                 dataset.name,
                 i_dataset + 1,
                 len(dataset_list),
-                args.dataset_list,
+                list_name,
                 dataset.n_images,
             )
         )
