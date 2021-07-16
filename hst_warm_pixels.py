@@ -1,11 +1,11 @@
 """
-WIP
+Find, stack, and plot warm pixels in multiple sets of HST ACS images.
 
 Parameters
 ----------
-datasets : str (opt.)
-    The name of the set of image datasets to run. Defaults to "test". See the
-    datasets_names dictionary for the options.
+dataset_list : str (opt.)
+    The name of the list of image datasets to run. Defaults to "test". See the
+    dataset_list_names dictionary for the options.
 
 --date_old_* : str (opt.)
     A "year/month/day"-format date requirement to remake files saved before this
@@ -46,13 +46,75 @@ import autoarray as aa
 # ========
 # Constants
 # ========
-# Number of pixels for each warm-pixel trail, not including the warm pixel itself
+# Number of pixels for each trail, not including the warm pixel itself
 trail_length = 8
 
 
 # ========
 # Image datasets
 # ========
+class Dataset(object):
+    def __init__(self, name):
+        """Simple class to store a list of image file paths and mild metadata.
+
+        Parameters
+        ----------
+        name : str
+            The name of the dataset, i.e. the name of the directory containing the
+            image files, assumed to be in dataset_root.
+
+        Attributes
+        ----------
+        path : str
+            File path to the dataset directory.
+
+        image_names : [str]
+        image_paths : [str]
+            The list of image file names, excluding and including the full path and
+            extension, respectively.
+
+        bias_name : str
+        bias_path : str
+            The bias image file name, excluding and including the full path and
+            extension, respectively.
+
+        saved_lines, saved_consistent_lines, saved_stacked_lines, saved_stacked_info
+            : str
+            The file names for saving and loading derived data, including the path.
+        """
+        self.name = name
+        self.path = dataset_root + self.name + "/"
+
+        # Image file paths
+        files = os.listdir(dataset_root + self.name)
+        self.image_names = [f[:-5] for f in files if f[-9:] == "_raw.fits"]
+        self.image_paths = [self.path + name + ".fits" for name in self.image_names]
+        self.n_images = len(self.image_names)
+
+        # Bias file path
+        try:
+            self.bias_name = [f[:-5] for f in files if f[-9:] == "_bia.fits"][0]
+            self.bias_path = self.path + self.bias_name + ".fits"
+        except IndexError:
+            self.bias_name = None
+            self.bias_path = None
+
+        # Save paths
+        self.saved_lines = self.path + "saved_lines.pickle"
+        self.saved_consistent_lines = self.path + "saved_consistent_lines.pickle"
+        self.saved_stacked_lines = self.path + "saved_stacked_lines.pickle"
+        self.saved_stacked_info = self.path + "saved_stacked_info.npz"
+        self.plotted_stacked_trails = self.path + "stacked_trails.png"
+
+    @property
+    def date(self):
+        """Return the Julian date of the set, taken from the first image."""
+        image = aa.acs.ImageACS.from_fits(
+            file_path=self.image_paths[0], quadrant_letter="A"
+        )
+        return 2400000.5 + image.header.modified_julian_date
+
+
 dataset_root = os.path.join(path, "../hst_acs_datasets/")
 datasets_pre_2006_06 = [
     # In date order
@@ -95,7 +157,7 @@ datasets_pre_2006_06 = [
 datasets_post_2006_06 = [
     # Aidan
     "07_2006",
-    "09_2006",
+    # "09_2006", # Missing?
     "05_2010",
     "04_2011",
     "05_2012",
@@ -180,63 +242,18 @@ datasets_post_2006_06 = [
 ]
 datasets_all = np.append(datasets_pre_2006_06, datasets_post_2006_06)
 datasets_test = ["12_2020"]
-# Dictionary of set names
-datasets_names = {
+datasets_test_2 = ["04_2011", "05_2012", "04_2013", "04_2014"]
+# Dictionary of list names
+dataset_list_names = {
     "test": datasets_test,
+    "test_2": datasets_test_2,
     "pre_2006_06": datasets_pre_2006_06,
     "post_2006_06": datasets_post_2006_06,
     "all": datasets_all,
 }
-
-
-class Dataset(object):
-    def __init__(self, name):
-        """Simple class to store a list of image file paths and mild metadata.
-
-        Parameters
-        ----------
-        name : str
-            The name of the dataset, i.e. the name of the directory containing the
-            image files, assumed to be in dataset_root.
-
-        Attributes
-        ----------
-        path : str
-            File path to the dataset directory.
-
-        image_names : [str]
-        image_paths : [str]
-            The list of image file names, excluding and including the full path and
-            extension, respectively.
-
-        bias_name : str
-        bias_path : str
-            The bias image file name, excluding and including the full path and
-            extension, respectively.
-
-        saved_lines, saved_consistent_lines, saved_stacked_lines, saved_stacked_info
-            : str
-            The file names for saving and loading derived data, including the path.
-        """
-        self.name = name
-        self.path = dataset_root + self.name + "/"
-
-        # Image file paths
-        files = os.listdir(dataset_root + self.name)
-        self.image_names = [f[:-5] for f in files if f[-9:] == "_raw.fits"]
-        self.image_paths = [self.path + name + ".fits" for name in self.image_names]
-        self.n_images = len(self.image_names)
-
-        # Bias file path
-        self.bias_name = [f[:-5] for f in files if f[-9:] == "_bia.fits"][0]
-        self.bias_path = self.path + self.bias_name + ".fits"
-
-        # Save paths
-        self.saved_lines = self.path + "saved_lines.pickle"
-        self.saved_consistent_lines = self.path + "saved_consistent_lines.pickle"
-        self.saved_stacked_lines = self.path + "saved_stacked_lines.pickle"
-        self.saved_stacked_info = self.path + "saved_stacked_info.npz"
-        self.plotted_stacked_trails = self.path + "stacked_trails.png"
+# Convert to Dataset objects
+for key in dataset_list_names.keys():
+    dataset_list_names[key] = [Dataset(dataset) for dataset in dataset_list_names[key]]
 
 
 # ========
@@ -248,11 +265,11 @@ def prep_parser():
 
     # Positional arguments
     parser.add_argument(
-        "datasets",
+        "dataset_list",
         nargs="?",
         default="test",
         type=str,
-        help="The set of image datasets to run.",
+        help="The list of image datasets to run.",
     )
 
     # Date requirements for re-making files
@@ -402,7 +419,6 @@ def find_dataset_warm_pixels(dataset):
 
     # Save
     warm_pixels.save(dataset.saved_lines)
-    print("")
 
 
 def find_consistent_warm_pixels(dataset):
@@ -848,7 +864,6 @@ def plot_stacked_trails(dataset, save_path=None):
     else:
         plt.savefig(save_path, dpi=200)
         print("Saved", save_path[-30:])
-        plt.close()
 
 
 # ========
@@ -861,11 +876,11 @@ if __name__ == "__main__":
     parser = prep_parser()
     args = parser.parse_args()
 
-    if args.datasets not in datasets_names.keys():
-        print("Error: Invalid `datasets`", args.datasets)
-        print("  Choose from:", list(datasets_names.keys()))
+    if args.dataset_list not in dataset_list_names.keys():
+        print("Error: Invalid dataset_list", args.dataset_list)
+        print("  Choose from:", list(dataset_list_names.keys()))
         raise ValueError
-    datasets = datasets_names[args.datasets]
+    dataset_list = dataset_list_names[args.dataset_list]
 
     if args.date_old_all is not None:
         args.date_old_fwp = args.date_old_all
@@ -877,34 +892,38 @@ if __name__ == "__main__":
     # ========
     # Find and stack warm pixels in each dataset
     # ========
-    for i_dataset, name in enumerate(datasets):
-        dataset = Dataset(name)
-
+    for i_dataset, dataset in enumerate(dataset_list):
         print(
             'Dataset "%s" (%d of %d in "%s", %d images)'
-            % (name, i_dataset + 1, len(datasets), args.datasets, dataset.n_images)
+            % (
+                dataset.name,
+                i_dataset + 1,
+                len(dataset_list),
+                args.dataset_list,
+                dataset.n_images,
+            )
         )
 
         # Warm pixels in each image
         if need_to_make_file(dataset.saved_lines, date_old=args.date_old_fwp):
-            print("  Find possible warm pixels", end=" ", flush=True)
+            print("  Find possible warm pixels...", end=" ", flush=True)
             find_dataset_warm_pixels(dataset)
 
         # Consistent warm pixels in the set
         if need_to_make_file(
             dataset.saved_consistent_lines, date_old=args.date_old_cwp
         ):
-            print("  Consistent warm pixels", end=" ", flush=True)
+            print("  Consistent warm pixels...", end=" ", flush=True)
             find_consistent_warm_pixels(dataset)
 
         # Stack in bins
         if need_to_make_file(dataset.saved_stacked_lines, date_old=args.date_old_swp):
-            print("  Stack warm pixel trails", end=" ", flush=True)
+            print("  Stack warm pixel trails...", end=" ", flush=True)
             stack_dataset_warm_pixels(dataset)
 
         # Plot stacked lines
         if need_to_make_file(
             dataset.plotted_stacked_trails, date_old=args.date_old_pst
         ):
-            print("  Plot stacked trails", end=" ", flush=True)
+            print("  Plot stacked trails...", end=" ", flush=True)
             plot_stacked_trails(dataset, save_path=dataset.plotted_stacked_trails)
