@@ -149,7 +149,7 @@ def set_std_form_cbar(cbar, A1_colour, force=False):
         cbar.update_ticks()
 
 
-def set_large_ticks(ax):
+def set_large_ticks(ax, do_x=True, do_y=True):
     """ Set larger ticks on plot axes, especially for logarithmic scales.
 
         Args:
@@ -173,14 +173,16 @@ def set_large_ticks(ax):
     length_min = 4
 
     # First set all major and minor ticks to the logarithmic sizes
-    ax.tick_params("both", width=width_log, length=length_log, which="major")
-    ax.tick_params("both", width=width_log, length=length_lin, which="minor")
+    if do_x:
+        ax.tick_params("both", width=width_log, length=length_log, which="major")
+    if do_y:
+        ax.tick_params("both", width=width_log, length=length_lin, which="minor")
 
     # Reset linear ticks ((this weird order seems to work best))
-    if not log_x:
+    if do_x and not log_x:
         ax.xaxis.set_tick_params(width=width_lin, length=length_lin, which="major")
         ax.xaxis.set_tick_params(width=width_min, length=length_min, which="minor")
-    if not log_y:
+    if do_y and not log_y:
         ax.yaxis.set_tick_params(width=width_lin, length=length_lin, which="major")
         ax.yaxis.set_tick_params(width=width_min, length=length_min, which="minor")
 

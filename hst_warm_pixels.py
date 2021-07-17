@@ -26,6 +26,7 @@ dataset_list : str (opt.)
 import numpy as np
 import os
 import sys
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import lmfit
@@ -694,7 +695,7 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
         The set of warm pixel trails.
 
     save_path : str (opt.)
-        The file path for saving the figure. If None, the show the figure.
+        The file path for saving the figure. If None, then show the figure.
     """
     # Plot the image and the found warm pixels
     plt.figure()
@@ -731,7 +732,7 @@ def plot_stacked_trails(dataset, save_path=None):
         The dataset object with a list of image file paths and metadata.
 
     save_path : str (opt.)
-        The file path for saving the figure. If None, the show the figure.
+        The file path for saving the figure. If None, then show the figure.
     """
     # Load
     stacked_lines = PixelLineCollection()
@@ -753,12 +754,24 @@ def plot_stacked_trails(dataset, save_path=None):
         [plt.subplot(gs[i_row, i_flux]) for i_flux in range(n_flux_bins)]
         for i_row in range(n_row_bins)
     ]
+    gs.update(wspace=0, hspace=0)
 
     # Don't plot the warm pixel itself
     pixels = np.arange(1, trail_length + 1)
-    y_min = 0.8 * np.amin(abs(stacked_lines.data[:, -trail_length:]))
+    y_min = np.amin(abs(stacked_lines.data[:, -trail_length:]))
     y_max = 4 * np.amax(stacked_lines.data[:, -trail_length:])
-    colours = plt.cm.jet(np.linspace(0.05, 0.95, n_background_bins))
+    log10_y_min = np.ceil(np.log10(y_min))
+    log10_y_max = np.floor(np.log10(y_max))
+    y_min = min(y_min, 10 ** (log10_y_min - 0.4))
+    y_max = max(y_max, 10 ** (log10_y_max + 0.4))
+    y_ticks = 10 ** np.arange(log10_y_min, log10_y_max + 0.1, 1)
+    if n_background_bins == 1:
+        colours = ["k"]
+    else:
+        colours = plt.cm.jet(np.linspace(0.05, 0.95, n_background_bins))
+
+    # Label size
+    fontsize = 14
 
     # Plot each stack
     for i_row in range(n_row_bins):
@@ -836,37 +849,77 @@ def plot_stacked_trails(dataset, save_path=None):
 
                 # Annotate
                 if i_background == 0:
-                    text = "$N=%d$" % line.n_stacked
+                    text = "$%d$" % line.n_stacked
                 else:
                     text = "\n" * i_background + "$%d$" % line.n_stacked
-                ax.text(0.97, 0.96, text, transform=ax.transAxes, ha="right", va="top")
+                ax.text(
+                    0.97,
+                    0.96,
+                    text,
+                    transform=ax.transAxes,
+                    size=fontsize,
+                    ha="right",
+                    va="top",
+                )
 
+            ax.set_xlim(0.5, trail_length + 0.5)
+            ax.set_xticks(np.arange(2, trail_length + 0.1, 2))
+            ax.set_xticks(np.arange(1, trail_length + 0.1, 2), minor=True)
             ax.set_yscale("log")
             ax.set_ylim(y_min, y_max)
-            ax.set_xlim(0.5, trail_length + 0.5)
+            ax.set_yticks(y_ticks)
 
             # Axis labels
-            if i_flux == 0:
-                ax.set_ylabel("Charge")
-            else:
-                ax.set_yticklabels([])
-            if i_row == 0:
-                ax.set_xlabel("Pixel")
-                ax.set_xticks(np.arange(1, trail_length + 0.1, 2))
-            else:
+            if i_row != 0:
                 ax.set_xticklabels([])
+            elif i_flux in [2, n_flux_bins - 3]:
+                ax.set_xlabel("Pixel")
+            if i_flux != 0:
+                ax.set_yticklabels([])
+            elif i_row in [1, n_row_bins - 2]:
+                ax.set_ylabel("Charge (e$^-$)")
 
-            # Bin labels
-            if i_row == n_row_bins - 1:
-                ax.xaxis.set_label_position("top")
-                ax.set_xlabel(
-                    "Flux:  %.2g$-$%.2g" % (flux_bins[i_flux], flux_bins[i_flux + 1])
-                )
+            # Bin edge labels
             if i_flux == n_flux_bins - 1:
-                ax.yaxis.set_label_position("right")
-                text = "Row:  %d$-$%d" % (row_bins[i_row], row_bins[i_row + 1])
-                if i_row == int(n_row_bins / 2):
-                    text += "\n\nBackground:  "
+                if i_row == 0:
+                    ax.text(
+                        1.02,
+                        0.5,
+                        "Row:",
+                        transform=ax.transAxes,
+                        rotation=90,
+                        ha="left",
+                        va="center",
+                    )
+                if i_row < n_row_bins - 1:
+                    ax.text(
+                        1.02,
+                        1.0,
+                        "%d" % row_bins[i_row + 1],
+                        transform=ax.transAxes,
+                        rotation=90,
+                        ha="left",
+                        va="center",
+                    )
+            if i_row == n_row_bins - 1:
+                if i_flux == 0:
+                    ax.text(
+                        0.5,
+                        1.01,
+                        "Flux:",
+                        transform=ax.transAxes,
+                        ha="center",
+                        va="bottom",
+                    )
+                flux_max = flux_bins[i_flux + 1]
+                pow10 = np.floor(np.log10(flux_max))
+                text = r"$%.1f \!\times\! 10^{%d}$" % (flux_max / 10 ** pow10, pow10)
+                ax.text(
+                    1.0, 1.01, text, transform=ax.transAxes, ha="center", va="bottom"
+                )
+            if n_background_bins > 1:
+                if i_row == int(n_row_bins / 2) and i_flux == n_flux_bins - 1:
+                    text = "Background:  "
                     for i_background in range(n_background_bins):
                         text += "%.0f$-$%.0f" % (
                             background_bins[i_background],
@@ -874,7 +927,25 @@ def plot_stacked_trails(dataset, save_path=None):
                         )
                         if i_background < n_background_bins - 1:
                             text += ",  "
-                ax.set_ylabel(text)
+                    ax.text(
+                        1.25,
+                        0.5,
+                        text,
+                        transform=ax.transAxes,
+                        rotation=90,
+                        ha="left",
+                        va="center",
+                    )
+
+            if i_row == 0 and i_flux == 0:
+                set_large_ticks(ax)
+            elif i_row == 0:
+                set_large_ticks(ax, do_x=False)
+            elif i_flux == 0:
+                set_large_ticks(ax, do_y=False)
+            set_font_size(ax)
+
+    plt.tight_layout()
 
     if save_path is None:
         plt.show()
