@@ -49,12 +49,12 @@ def prep_parser_extra(parser):
 
 def dataset_list_saved_density_evol(list_name):
     """Return the file path for the saved density data for a dataset list."""
-    return dataset_root + list_name + "_density_evol.npz"
+    return dataset_root + "density_evol_%s.npz" % list_name
 
 
 def dataset_list_plotted_density_evol(list_name):
-    """Return the file path for the saved density data for a dataset list."""
-    return dataset_root + list_name + "_density_evol.npz"
+    """Return the file path for the saved density plot for a dataset list."""
+    return path + "/density_evol_%s.png" % list_name
 
 
 # ========
@@ -79,25 +79,55 @@ def fit_dataset_total_trap_density(dataset):
     # Load
     stacked_lines = PixelLineCollection()
     stacked_lines.load(dataset.saved_stacked_lines)
+    npzfile = np.load(dataset.saved_stacked_info)
+    row_bins, flux_bins, date_bins, background_bins = [
+        npzfile[var] for var in npzfile.files
+    ]
+    n_row_bins = len(row_bins) - 1
+    n_flux_bins = len(flux_bins) - 1
+    n_date_bins = len(date_bins) - 1
+    n_background_bins = len(background_bins) - 1
 
-    # Concatenate the charge values from all trails
-    y_all = np.ravel(stacked_lines.data)
-    noise_all = np.ravel(stacked_lines.noises)
+    # Compile the data from all stacked lines
+    n_lines_used = 0
+    y_all = np.array([])
+    noise_all = np.array([])
+    n_e_each = np.array([])
+    n_bg_each = np.array([])
+    row_each = np.array([])
+
+    # Loop over each stacked trail
+    # Skip the lowest-row and lowest-flux bins
+    for i_row in range(1, n_row_bins):
+        for i_flux in range(1, n_flux_bins):
+            for i_background in range(n_background_bins):
+                bin_index = PixelLineCollection.stacked_bin_index(
+                    i_row=i_row,
+                    n_row_bins=n_row_bins,
+                    i_flux=i_flux,
+                    n_flux_bins=n_flux_bins,
+                    i_background=i_background,
+                    n_background_bins=n_background_bins,
+                )
+
+                line = stacked_lines.lines[bin_index]
+
+                if line.n_stacked >= 3:
+                    # Concatenate the data
+                    y_all = np.append(y_all, line.data[-trail_length:])
+                    noise_all = np.append(noise_all, line.noise[-trail_length:])
+                    n_e_each = np.append(n_e_each, line.mean_flux)
+                    n_bg_each = np.append(n_bg_each, line.mean_background)
+                    row_each = np.append(row_each, line.mean_row)
+                    n_lines_used += 1
 
     # Duplicate the x arrays for all trails
-    length = stacked_lines.lengths[0]
-    x_all = np.tile(np.arange(length) + 1, stacked_lines.n_lines)
+    x_all = np.tile(np.arange(trail_length) + 1, n_lines_used)
 
     # Duplicate the single parameters of each trail for all pixels
-    n_e_all = np.repeat(
-        np.array([line.mean_flux for line in stacked_lines.lines]), length
-    )
-    n_bg_all = np.repeat(
-        np.array([line.mean_background for line in stacked_lines.lines]), length
-    )
-    row_all = np.repeat(
-        np.array([line.mean_row for line in stacked_lines.lines]), length
-    )
+    n_e_all = np.repeat(n_e_each, trail_length)
+    n_bg_all = np.repeat(n_bg_each, trail_length)
+    row_all = np.repeat(row_each, trail_length)
 
     # Run the fitting
     rho_q, rho_q_std = fit_total_trap_density(
@@ -182,7 +212,7 @@ def plot_trap_density_evol(list_name):
 
     # Axes etc
     ax.set_xlabel("Days Since ACS Launch")
-    ax.set_ylabel(r"Trap Density per Pixel, $\rho_{\rm q}$")
+    ax.set_ylabel(r"Total Trap Density per Pixel, $\rho_{\rm q}$")
     day_0 = 0
     day_1 = days[-1] * 1.01
     ax.set_xlim(day_0, day_1)
@@ -231,9 +261,9 @@ def plot_trap_density_evol(list_name):
     my_nice_plot(ax)
     my_nice_plot(ax2)
 
-    save_path = dataset_root + list_name + "_density_evol.png"
+    save_path = dataset_list_plotted_density_evol(list_name)
     plt.savefig(save_path)
-    print("Saved", save_path[-30:])
+    print("Saved", save_path[-36:])
 
 
 # ========

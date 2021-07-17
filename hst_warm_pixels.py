@@ -109,7 +109,9 @@ class Dataset(object):
         self.saved_consistent_lines = self.path + "saved_consistent_lines.pickle"
         self.saved_stacked_lines = self.path + "saved_stacked_lines.pickle"
         self.saved_stacked_info = self.path + "saved_stacked_info.npz"
-        self.plotted_stacked_trails = self.path + "stacked_trails.png"
+        self.plotted_stacked_trails = (
+            path + "/stacked_trail_plots/%s_stacked_trails.png" % self.name
+        )
 
     @property
     def date(self):
@@ -162,7 +164,7 @@ datasets_pre_T_change = [
 datasets_post_T_change = [
     # Aidan
     "07_2006",
-    # "09_2006", # Missing?
+    # "09_2006",  # Missing?
     "05_2010",
     "04_2011",
     "05_2012",
@@ -878,7 +880,7 @@ def plot_stacked_trails(dataset, save_path=None):
         plt.show()
     else:
         plt.savefig(save_path, dpi=200)
-        print("Saved", save_path[-30:])
+        print("Saved", save_path[-36:])
 
 
 # ========
