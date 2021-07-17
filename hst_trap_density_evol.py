@@ -9,15 +9,15 @@ dataset_list : str (opt.)
     The name of the list of image datasets to run. Defaults to "test". See the
     dataset_list_names dictionary for the options, in hst_warm_pixels.py.
 
---date_old_* : str (opt.)
-    A "year/month/day"-format date requirement to remake files saved before this
+--mdate_old_* : str (opt.)
+    A "year/month/day" requirement to remake files saved/modified before this
     date. Defaults to only check whether a file already exists. Alternatively,
     set "1" to force remaking or "0" to force not.
-    --date_old_all, -a
+    --mdate_old_all, -a
         Overrides all others.
-    --date_old_ttd, -t
+    --mdate_old_ttd, -t
         Total trap density.
-    --date_old_pde, -e
+    --mdate_old_pde, -e
         Plot density evolution.
 """
 from hst_warm_pixels import *
@@ -29,7 +29,7 @@ from hst_warm_pixels import *
 def prep_parser_extra(parser):
     parser.add_argument(
         "-t",
-        "--date_old_ttd",
+        "--mdate_old_ttd",
         default=None,
         type=str,
         required=False,
@@ -37,7 +37,7 @@ def prep_parser_extra(parser):
     )
     parser.add_argument(
         "-e",
-        "--date_old_pde",
+        "--mdate_old_pde",
         default=None,
         type=str,
         required=False,
@@ -169,7 +169,7 @@ def plot_trap_density_evol(list_name):
     plt.figure(figsize=(12, 10))
     ax = plt.gca()
 
-    plt.errorbar(
+    ax.errorbar(
         days,
         densities,
         yerr=density_errors,
@@ -181,8 +181,55 @@ def plot_trap_density_evol(list_name):
     )
 
     # Axes etc
-    plt.xlabel("Days Since ACS Launch")
-    plt.ylabel(r"Trap Density per Pixel, $\rho_{\rm q}$")
+    ax.set_xlabel("Days Since ACS Launch")
+    ax.set_ylabel(r"Trap Density per Pixel, $\rho_{\rm q}$")
+    day_0 = 0
+    day_1 = days[-1] * 1.01
+    ax.set_xlim(day_0, day_1)
+
+    # Mark dates
+    ax.axvline(date_T_change - date_acs_launch, c="k")
+    ax.axvline(date_side2_fail - date_acs_launch, c="k")
+    ax.axvline(date_repair - date_acs_launch, c="k")
+    ax.axvspan(
+        date_side2_fail - date_acs_launch,
+        date_repair - date_acs_launch,
+        fc="0.7",
+        ec="none",
+        alpha=0.3,
+        zorder=-1,
+    )
+    for date, text, ha in [
+        [date_T_change, "Temperature Change", "right"],
+        [date_side2_fail, "Side-2 Failure", "left"],
+        [date_repair, "SM4 Repair", "right"],
+    ]:
+        if ha == "left":
+            x_shift = 1.02
+        else:
+            x_shift = 0.99
+        ax.text(
+            (date - date_acs_launch) * x_shift,
+            0.995,
+            text,
+            transform=ax.get_xaxis_transform(),
+            rotation=90,
+            size=14,
+            ha=ha,
+            va="top",
+        )
+
+    # Calendar years
+    ax2 = ax.twiny()
+    ax2.set_xlabel("Calendar Year")
+    ax2.set_xlim(day_0, day_1)
+    year_ticks = np.arange(2003, jd_to_dec_yr(date_acs_launch + day_1), 1)
+    ax2.set_xticks(dec_yr_to_jd(year_ticks[1::2]) - date_acs_launch)
+    ax2.set_xticks(dec_yr_to_jd(year_ticks[::2]) - date_acs_launch, minor=True)
+    ax2.set_xticklabels(["%d" % year for year in year_ticks[1::2]])
+
+    my_nice_plot(ax)
+    my_nice_plot(ax2)
 
     save_path = dataset_root + list_name + "_density_evol.png"
     plt.savefig(save_path)
@@ -207,15 +254,15 @@ if __name__ == "__main__":
         raise ValueError
     dataset_list = dataset_list_names[list_name]
 
-    if args.date_old_all is not None:
-        args.date_old_ttd = args.date_old_all
-        args.date_old_pde = args.date_old_all
+    if args.mdate_old_all is not None:
+        args.mdate_old_ttd = args.mdate_old_all
+        args.mdate_old_pde = args.mdate_old_all
 
     # ========
     # Fit and save the total trap densities for each dataset
     # ========
     if need_to_make_file(
-        dataset_list_saved_density_evol(list_name), date_old=args.date_old_ttd
+        dataset_list_saved_density_evol(list_name), date_old=args.mdate_old_ttd
     ):
         print("Fit total trap densities...", end=" ", flush=True)
         fit_total_trap_densities(dataset_list, list_name)
@@ -224,7 +271,7 @@ if __name__ == "__main__":
     # Plot the trap density evolution
     # ========
     if need_to_make_file(
-        dataset_list_plotted_density_evol(list_name), date_old=args.date_old_pde
+        dataset_list_plotted_density_evol(list_name), date_old=args.mdate_old_pde
     ):
         print("Plot trap density evolution...", end=" ", flush=True)
         plot_trap_density_evol(list_name)

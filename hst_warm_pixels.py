@@ -7,19 +7,19 @@ dataset_list : str (opt.)
     The name of the list of image datasets to run. Defaults to "test". See the
     dataset_list_names dictionary for the options.
 
---date_old_* : str (opt.)
-    A "year/month/day"-format date requirement to remake files saved before this
+--mdate_old_* : str (opt.)
+    A "year/month/day" requirement to remake files saved/modified before this
     date. Defaults to only check whether a file already exists. Alternatively,
     set "1" to force remaking or "0" to force not.
-    --date_old_all, -a
+    --mdate_old_all, -a
         Overrides all others.
-    --date_old_fwp, -f
+    --mdate_old_fwp, -f
         Find warm pixels.
-    --date_old_cwp, -c
+    --mdate_old_cwp, -c
         Consistent warm pixels.
-    --date_old_swp, -s
+    --mdate_old_swp, -s
         Stacked warm pixels.
-    --date_old_pst, -p
+    --mdate_old_pst, -p
         Plot stacked trails.
 """
 
@@ -32,9 +32,11 @@ import lmfit
 import argparse
 import time
 import datetime
+from astropy.time import Time
 
 from pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels import find_warm_pixels
+from misc import *  # Plotting defaults etc
 
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(path, "../PyAutoArray/"))
@@ -46,7 +48,7 @@ import autoarray as aa
 # ========
 # Number of pixels for each trail, not including the warm pixel itself
 trail_length = 8
-# Modified Julian dates
+# Julian dates
 date_acs_launch = 2452334.5  # ACS launched, SM3B, 01 March 2002
 date_T_change = 2453920.0  # Temperature changed, 03 July 2006
 date_side2_fail = 2454128.0  # ACS stopped working, 27 January 2007
@@ -245,7 +247,7 @@ datasets_post_T_change = [
 ]
 datasets_all = np.append(datasets_pre_T_change, datasets_post_T_change)
 datasets_test = ["12_2020"]
-datasets_test_2 = ["04_2011", "05_2012", "04_2013", "04_2014"]
+datasets_test_2 = ["04_2011", "04_2013", "04_2014", "05_2016", "06_2017", "08_2018"]
 # Dictionary of list names
 dataset_list_names = {
     "test": datasets_test,
@@ -278,7 +280,7 @@ def prep_parser():
     # Date requirements for re-making files
     parser.add_argument(
         "-a",
-        "--date_old_all",
+        "--mdate_old_all",
         default=None,
         type=str,
         required=False,
@@ -286,7 +288,7 @@ def prep_parser():
     )
     parser.add_argument(
         "-f",
-        "--date_old_fwp",
+        "--mdate_old_fwp",
         default=None,
         type=str,
         required=False,
@@ -294,7 +296,7 @@ def prep_parser():
     )
     parser.add_argument(
         "-c",
-        "--date_old_cwp",
+        "--mdate_old_cwp",
         default=None,
         type=str,
         required=False,
@@ -302,7 +304,7 @@ def prep_parser():
     )
     parser.add_argument(
         "-s",
-        "--date_old_swp",
+        "--mdate_old_swp",
         default=None,
         type=str,
         required=False,
@@ -310,7 +312,7 @@ def prep_parser():
     )
     parser.add_argument(
         "-p",
-        "--date_old_pst",
+        "--mdate_old_pst",
         default=None,
         type=str,
         required=False,
@@ -354,6 +356,20 @@ def need_to_make_file(filepath, date_old=None):
             return True
 
     return False
+
+
+def dec_yr_to_jd(dates):
+    """Convert one or more decimal-year dates to Julian dates."""
+    time = Time(dates, format="decimalyear")
+    time.format = "jd"
+    return time.value
+
+
+def jd_to_dec_yr(dates):
+    """Convert one or more Julian dates to decimal-year dates."""
+    time = Time(dates, format="jd")
+    time.format = "decimalyear"
+    return time.value
 
 
 # ========
@@ -882,11 +898,11 @@ if __name__ == "__main__":
         raise ValueError
     dataset_list = dataset_list_names[list_name]
 
-    if args.date_old_all is not None:
-        args.date_old_fwp = args.date_old_all
-        args.date_old_cwp = args.date_old_all
-        args.date_old_swp = args.date_old_all
-        args.date_old_pst = args.date_old_all
+    if args.mdate_old_all is not None:
+        args.mdate_old_fwp = args.mdate_old_all
+        args.mdate_old_cwp = args.mdate_old_all
+        args.mdate_old_swp = args.mdate_old_all
+        args.mdate_old_pst = args.mdate_old_all
 
     # ========
     # Find and stack warm pixels in each dataset
@@ -904,25 +920,25 @@ if __name__ == "__main__":
         )
 
         # Warm pixels in each image
-        if need_to_make_file(dataset.saved_lines, date_old=args.date_old_fwp):
+        if need_to_make_file(dataset.saved_lines, date_old=args.mdate_old_fwp):
             print("  Find possible warm pixels...", end=" ", flush=True)
             find_dataset_warm_pixels(dataset)
 
         # Consistent warm pixels in the set
         if need_to_make_file(
-            dataset.saved_consistent_lines, date_old=args.date_old_cwp
+            dataset.saved_consistent_lines, date_old=args.mdate_old_cwp
         ):
             print("  Consistent warm pixels...", end=" ", flush=True)
             find_consistent_warm_pixels(dataset)
 
         # Stack in bins
-        if need_to_make_file(dataset.saved_stacked_lines, date_old=args.date_old_swp):
+        if need_to_make_file(dataset.saved_stacked_lines, date_old=args.mdate_old_swp):
             print("  Stack warm pixel trails...", end=" ", flush=True)
             stack_dataset_warm_pixels(dataset)
 
         # Plot stacked lines
         if need_to_make_file(
-            dataset.plotted_stacked_trails, date_old=args.date_old_pst
+            dataset.plotted_stacked_trails, date_old=args.mdate_old_pst
         ):
             print("  Plot stacked trails...", end=" ", flush=True)
             plot_stacked_trails(dataset, save_path=dataset.plotted_stacked_trails)
