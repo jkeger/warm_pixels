@@ -46,6 +46,11 @@ import autoarray as aa
 # ========
 # Number of pixels for each trail, not including the warm pixel itself
 trail_length = 8
+# Modified Julian dates
+date_acs_launch = 2452334.5  # ACS launched, SM3B, 01 March 2002
+date_T_change = 2453920.0  # Temperature changed, 03 July 2006
+date_side2_fail = 2454128.0  # ACS stopped working, 27 January 2007
+date_repair = 2454968.0  # ACS repaired, SM4, 16 May 2009
 
 
 # ========
@@ -114,7 +119,7 @@ class Dataset(object):
 
 
 dataset_root = os.path.join(path, "../hst_acs_datasets/")
-datasets_pre_2006_06 = [
+datasets_pre_T_change = [
     # In date order
     # Aidan
     "01_2003",
@@ -152,7 +157,7 @@ datasets_pre_2006_06 = [
     "longSNe3",
     "shortSNe8",
 ]
-datasets_post_2006_06 = [
+datasets_post_T_change = [
     # Aidan
     "07_2006",
     # "09_2006", # Missing?
@@ -238,15 +243,15 @@ datasets_post_2006_06 = [
     "candels2013a",
     "obama2",
 ]
-datasets_all = np.append(datasets_pre_2006_06, datasets_post_2006_06)
+datasets_all = np.append(datasets_pre_T_change, datasets_post_T_change)
 datasets_test = ["12_2020"]
 datasets_test_2 = ["04_2011", "05_2012", "04_2013", "04_2014"]
 # Dictionary of list names
 dataset_list_names = {
     "test": datasets_test,
     "test_2": datasets_test_2,
-    "pre_2006_06": datasets_pre_2006_06,
-    "post_2006_06": datasets_post_2006_06,
+    "pre_T_change": datasets_pre_T_change,
+    "post_T_change": datasets_post_T_change,
     "all": datasets_all,
 }
 # Convert all to Dataset objects
@@ -434,7 +439,7 @@ def find_consistent_warm_pixels(dataset):
     # Find the warm pixels present in at least 2/3 of the images
     consistent_lines = warm_pixels.find_consistent_lines(fraction_present=2 / 3)
     print(
-        "Found %d consistent warm pixels out of %d possibles"
+        "Found %d consistents of %d possibles"
         % (len(consistent_lines), warm_pixels.n_lines)
     )
 
@@ -546,13 +551,13 @@ def trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c
     )
 
 
-def trail_model_hst(x, rho_q, n_e, n_bg, row, is_pre_2006_06=False):
+def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
     """Wrapper for trail_model() for HST ACS.
 
     Parameters (where different to trail_model())
     ----------
-    is_before_2006_06 : bool (opt.)
-        Whether to use the pre-June 2006 or the post-June 2006 trap model.
+    date : float
+        The Julian date of the images, used to set the trap model.
 
     Returns
     -------
@@ -566,7 +571,8 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, is_pre_2006_06=False):
     A = 0.17
     B = 0.45
     C = 0.38
-    if is_pre_2006_06:
+    # Trap lifetimes before or after the temperature change
+    if date < date_T_change:
         tau_a = 0.48
         tau_b = 4.86
         tau_c = 20.6
@@ -578,15 +584,17 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, is_pre_2006_06=False):
     return trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c)
 
 
-def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all):
+def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date):
     """Fit the total trap density for a trail or a concatenated set of trails.
 
     Other than the x, y, and noise values, which should cover all pixels in the
     trail or set of trails, the parameters must be either a single value or an
     array of the same length. So if the data are a concatenated set of multiple
-    trails, i.e. x_all = [1, 2, ..., n, 1, 2, ..., n, 1, ...], then e.g.
-    row_all = [row_1, row_1, ..., row_1, row_2, row_2, ... row_2, row_3, ...]
-    to set the correct values for all pixels in each trail.
+    trails, e.g. x_all = [1, 2, ..., n, 1, 2, ..., n, 1, ...], then e.g. row_all
+    should be [row_1, row_1, ..., row_1, row_2, row_2, ... row_2, row_3, ...] to
+    set the correct values for all pixels in each trail. The date is taken as a
+    single value, which only affects the results by being before vs after the
+    change of trap model.
 
     Parameters
     ----------
@@ -608,6 +616,9 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all):
     row_all : float or [float]
         Distance in pixels of the trailed pixel from the readout register.
 
+    date : float
+        The Julian date of the images, used to set the trap model.
+
     Returns
     -------
     rho_q : float
@@ -620,7 +631,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all):
     # Initialise the fitting model
     model = lmfit.models.Model(
         func=trail_model_hst,
-        independent_vars=["x", "n_e", "n_bg", "row"],
+        independent_vars=["x", "n_e", "n_bg", "row", "date"],
         nan_policy="propagate",  ## not "omit"? If any needed at all?
     )
     params = model.make_params()
@@ -641,6 +652,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all):
         n_e=n_e_all,
         n_bg=n_bg_all,
         row=row_all,
+        date=date,
     )
     # print(result.fit_report())
 
@@ -714,10 +726,6 @@ def plot_stacked_trails(dataset, save_path=None):
     n_flux_bins = len(flux_bins) - 1
     n_date_bins = len(date_bins) - 1
     n_background_bins = len(background_bins) - 1
-
-    # Date
-    ##todo
-    is_pre_2006_06 = False
 
     # Plot the stacked trails
     plt.figure(figsize=(25, 12))
@@ -795,6 +803,7 @@ def plot_stacked_trails(dataset, save_path=None):
                     n_e_all=line.mean_flux,
                     n_bg_all=line.mean_background,
                     row_all=line.mean_row,
+                    date=dataset.date,
                 )
                 model_pixels = np.linspace(1, trail_length, 20)
                 model_trail = trail_model_hst(
@@ -803,7 +812,7 @@ def plot_stacked_trails(dataset, save_path=None):
                     n_e=line.mean_flux,
                     n_bg=line.mean_background,
                     row=line.mean_row,
-                    is_pre_2006_06=is_pre_2006_06,
+                    date=dataset.date,
                 )
                 ax.plot(model_pixels, model_trail, color=c, ls="--", alpha=0.7)
 

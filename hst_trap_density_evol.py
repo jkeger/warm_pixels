@@ -1,7 +1,7 @@
 """
 Fit and plot the total trap density from multiple sets of HST ACS images.
 
-First run hst_warm_pixels.py for the datasets.
+First run hst_warm_pixels.py to prepare the datasets.
 
 Parameters
 ----------
@@ -13,19 +13,14 @@ dataset_list : str (opt.)
     A "year/month/day"-format date requirement to remake files saved before this
     date. Defaults to only check whether a file already exists. Alternatively,
     set "1" to force remaking or "0" to force not.
+    --date_old_all, -a
+        Overrides all others.
     --date_old_ttd, -t
         Total trap density.
     --date_old_pde, -e
         Plot density evolution.
 """
 from hst_warm_pixels import *
-
-
-# ========
-# Constants
-# ========
-# Julian date of HST ACS launch
-date_acs_launch = 0  ##
 
 
 # ========
@@ -106,7 +101,7 @@ def fit_dataset_total_trap_density(dataset):
 
     # Run the fitting
     rho_q, rho_q_std = fit_total_trap_density(
-        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all
+        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date
     )
 
     return rho_q, rho_q_std
@@ -185,6 +180,7 @@ def plot_trap_density_evol(list_name):
         elinewidth=1,
     )
 
+    # Axes etc
     plt.xlabel("Days Since ACS Launch")
     plt.ylabel(r"Trap Density per Pixel, $\rho_{\rm q}$")
 
