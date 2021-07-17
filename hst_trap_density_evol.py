@@ -96,7 +96,9 @@ def fit_dataset_total_trap_density(dataset):
     n_bg_each = np.array([])
     row_each = np.array([])
 
-    # Loop over each stacked trail
+    # ========
+    # Concatenate each stacked trail
+    # ========
     # Skip the lowest-row and lowest-flux bins
     for i_row in range(1, n_row_bins):
         for i_flux in range(1, n_flux_bins):
@@ -113,7 +115,6 @@ def fit_dataset_total_trap_density(dataset):
                 line = stacked_lines.lines[bin_index]
 
                 if line.n_stacked >= 3:
-                    # Concatenate the data
                     y_all = np.append(y_all, line.data[-trail_length:])
                     noise_all = np.append(noise_all, line.noise[-trail_length:])
                     n_e_each = np.append(n_e_each, line.mean_flux)
@@ -162,20 +163,31 @@ def fit_total_trap_densities(dataset_list, list_name):
 
     # Analyse each dataset
     for i_dataset, dataset in enumerate(dataset_list):
-        # Date
-        days.append(dataset.date - date_acs_launch)
+        print(
+            "\rFit total trap densities... "
+            '"%s" (%d of %d)' % (dataset.name, i_dataset + 1, len(dataset_list)),
+            end="            ",
+            flush=True,
+        )
 
-        # Trap density
+        # Fit the density
         rho_q, rho_q_std = fit_dataset_total_trap_density(dataset)
 
+        # Skip bad fits
+        if rho_q is None or rho_q_std is None:
+            print("# error")
+            continue
+
+        # Append the data
+        days.append(dataset.date - date_acs_launch)
         densities.append(rho_q)
         density_errors.append(rho_q_std)
+    print("\rFit total trap densities... ")
 
     # Save
     np.savez(
         dataset_list_saved_density_evol(list_name), days, densities, density_errors
     )
-    print("")
 
 
 # ========
@@ -191,7 +203,7 @@ def plot_trap_density_evol(list_name):
     """
     # Load
     npzfile = np.load(dataset_list_saved_density_evol(list_name))
-    days, densities, density_errors = [npzfile[var] for var in npzfile.files]
+    days, densities, errors = [npzfile[var] for var in npzfile.files]
 
     # ========
     # Plot
@@ -202,7 +214,7 @@ def plot_trap_density_evol(list_name):
     ax.errorbar(
         days,
         densities,
-        yerr=density_errors,
+        yerr=errors,
         c="k",
         ls="none",
         marker="x",
@@ -214,8 +226,11 @@ def plot_trap_density_evol(list_name):
     ax.set_xlabel("Days Since ACS Launch")
     ax.set_ylabel(r"Total Trap Density per Pixel, $\rho_{\rm q}$")
     day_0 = 0
-    day_1 = days[-1] * 1.01
+    day_1 = np.amax(days) * 1.02
     ax.set_xlim(day_0, day_1)
+    ax.set_ylim(
+        min(0, np.amin(densities - 2 * errors)), 1.1 * np.amax(densities + errors)
+    )
 
     # Mark dates
     ax.axvline(date_T_change - date_acs_launch, c="k")
@@ -235,16 +250,16 @@ def plot_trap_density_evol(list_name):
         [date_repair, "SM4 Repair", "right"],
     ]:
         if ha == "left":
-            x_shift = 1.02
+            x_shift = 1.03
         else:
             x_shift = 0.99
         ax.text(
             (date - date_acs_launch) * x_shift,
-            0.995,
+            0.99,
             text,
             transform=ax.get_xaxis_transform(),
             rotation=90,
-            size=14,
+            size=16,
             ha=ha,
             va="top",
         )
@@ -288,18 +303,14 @@ if __name__ == "__main__":
         args.mdate_old_ttd = args.mdate_old_all
         args.mdate_old_pde = args.mdate_old_all
 
-    # ========
     # Fit and save the total trap densities for each dataset
-    # ========
     if need_to_make_file(
         dataset_list_saved_density_evol(list_name), date_old=args.mdate_old_ttd
     ):
         print("Fit total trap densities...", end=" ", flush=True)
         fit_total_trap_densities(dataset_list, list_name)
 
-    # ========
     # Plot the trap density evolution
-    # ========
     if need_to_make_file(
         dataset_list_plotted_density_evol(list_name), date_old=args.mdate_old_pde
     ):
