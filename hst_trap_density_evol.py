@@ -22,6 +22,8 @@ dataset_list : str (opt.)
 """
 from hst_warm_pixels import *
 
+from scipy.optimize import curve_fit
+
 
 # ========
 # Utility functions
@@ -211,6 +213,7 @@ def plot_trap_density_evol(list_name):
     plt.figure(figsize=(12, 10))
     ax = plt.gca()
 
+    # Data
     ax.errorbar(
         days,
         densities,
@@ -221,6 +224,25 @@ def plot_trap_density_evol(list_name):
         capsize=3,
         elinewidth=1,
     )
+
+    # Linear fits
+    def linear(x, m, c):
+        return m * x + c
+
+    sel_pre_T_change = np.where(days < day_T_change)[0]
+    sel_post_T_change = np.where(days > day_T_change)[0]
+    for sel in [sel_pre_T_change, sel_post_T_change]:
+        popt, pcov = curve_fit(linear, days[sel], densities[sel], sigma=errors[sel])
+        grad, icpt = popt
+        err_grad = np.sqrt(pcov[0, 0])
+        err_icpt = np.sqrt(pcov[1, 1])
+        ax.plot(
+            days[sel],
+            linear(days[sel], grad, icpt),
+            label=r"$(%.2g \pm %.2g) \!\times\! 10^{-4}\; t + (%.2g \pm %.2g)$"
+            % (grad / 1e-4, err_grad / 1e-4, icpt, err_icpt),
+        )
+    plt.legend(loc="lower right")
 
     # Axes etc
     ax.set_xlabel("Days Since ACS Launch")
@@ -233,28 +255,21 @@ def plot_trap_density_evol(list_name):
     )
 
     # Mark dates
-    ax.axvline(date_T_change - date_acs_launch, c="k")
-    ax.axvline(date_side2_fail - date_acs_launch, c="k")
-    ax.axvline(date_repair - date_acs_launch, c="k")
-    ax.axvspan(
-        date_side2_fail - date_acs_launch,
-        date_repair - date_acs_launch,
-        fc="0.7",
-        ec="none",
-        alpha=0.3,
-        zorder=-1,
-    )
-    for date, text, ha in [
-        [date_T_change, "Temperature Change", "right"],
-        [date_side2_fail, "Side-2 Failure", "left"],
-        [date_repair, "SM4 Repair", "right"],
+    ax.axvline(day_T_change, c="k", lw=1)
+    ax.axvline(day_side2_fail, c="k", lw=1)
+    ax.axvline(day_repair, c="k", lw=1)
+    ax.axvspan(day_side2_fail, day_repair, fc="0.7", ec="none", alpha=0.3, zorder=-1)
+    for day, text, ha in [
+        [day_T_change, "Temperature Change", "right"],
+        [day_side2_fail, "Side-2 Failure", "left"],
+        [day_repair, "SM4 Repair", "right"],
     ]:
         if ha == "left":
             x_shift = 1.03
         else:
             x_shift = 0.99
         ax.text(
-            (date - date_acs_launch) * x_shift,
+            day * x_shift,
             0.99,
             text,
             transform=ax.get_xaxis_transform(),

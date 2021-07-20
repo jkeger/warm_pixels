@@ -54,6 +54,10 @@ date_acs_launch = 2452334.5  # ACS launched, SM3B, 01 March 2002
 date_T_change = 2453920.0  # Temperature changed, 03 July 2006
 date_side2_fail = 2454128.0  # ACS stopped working, 27 January 2007
 date_repair = 2454968.0  # ACS repaired, SM4, 16 May 2009
+# Convert to days since ACS launch
+day_T_change = date_T_change - date_acs_launch
+day_side2_fail = date_side2_fail - date_acs_launch
+day_repair = date_repair - date_acs_launch
 
 
 # ========
