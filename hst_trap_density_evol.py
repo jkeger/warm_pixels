@@ -7,7 +7,7 @@ Parameters
 ----------
 dataset_list : str (opt.)
     The name of the list of image datasets to run. Defaults to "test". See the
-    dataset_list_names dictionary for the options, in hst_warm_pixels.py.
+    dataset_lists dictionary for the options, in hst_warm_pixels.py.
 
 --mdate_old_* : str (opt.)
     A "year/month/day" requirement to remake files saved/modified before this
@@ -62,84 +62,6 @@ def dataset_list_plotted_density_evol(list_name):
 # ========
 # Main functions
 # ========
-def fit_dataset_total_trap_density(dataset):
-    """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
-
-    Parameters
-    ----------
-    dataset : Dataset
-        The dataset object with a list of image file paths and metadata.
-
-    Returns
-    -------
-    rho_q : float
-        The best-fit total number density of traps per pixel.
-
-    rho_q_std : float
-        The standard error on the total trap density.
-    """
-    # Load
-    stacked_lines = PixelLineCollection()
-    stacked_lines.load(dataset.saved_stacked_lines)
-    npzfile = np.load(dataset.saved_stacked_info)
-    row_bins, flux_bins, date_bins, background_bins = [
-        npzfile[var] for var in npzfile.files
-    ]
-    n_row_bins = len(row_bins) - 1
-    n_flux_bins = len(flux_bins) - 1
-    n_date_bins = len(date_bins) - 1
-    n_background_bins = len(background_bins) - 1
-
-    # Compile the data from all stacked lines
-    n_lines_used = 0
-    y_all = np.array([])
-    noise_all = np.array([])
-    n_e_each = np.array([])
-    n_bg_each = np.array([])
-    row_each = np.array([])
-
-    # ========
-    # Concatenate each stacked trail
-    # ========
-    # Skip the lowest-row and lowest-flux bins
-    for i_row in range(1, n_row_bins):
-        for i_flux in range(1, n_flux_bins):
-            for i_background in range(n_background_bins):
-                bin_index = PixelLineCollection.stacked_bin_index(
-                    i_row=i_row,
-                    n_row_bins=n_row_bins,
-                    i_flux=i_flux,
-                    n_flux_bins=n_flux_bins,
-                    i_background=i_background,
-                    n_background_bins=n_background_bins,
-                )
-
-                line = stacked_lines.lines[bin_index]
-
-                if line.n_stacked >= 3:
-                    y_all = np.append(y_all, line.data[-trail_length:])
-                    noise_all = np.append(noise_all, line.noise[-trail_length:])
-                    n_e_each = np.append(n_e_each, line.mean_flux)
-                    n_bg_each = np.append(n_bg_each, line.mean_background)
-                    row_each = np.append(row_each, line.mean_row)
-                    n_lines_used += 1
-
-    # Duplicate the x arrays for all trails
-    x_all = np.tile(np.arange(trail_length) + 1, n_lines_used)
-
-    # Duplicate the single parameters of each trail for all pixels
-    n_e_all = np.repeat(n_e_each, trail_length)
-    n_bg_all = np.repeat(n_bg_each, trail_length)
-    row_all = np.repeat(row_each, trail_length)
-
-    # Run the fitting
-    rho_q, rho_q_std = fit_total_trap_density(
-        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date
-    )
-
-    return rho_q, rho_q_std
-
-
 def fit_total_trap_densities(dataset_list, list_name):
     """Call fit_dataset_total_trap_density() for each dataset and compile and
     save the results.
@@ -293,7 +215,7 @@ def plot_trap_density_evol(list_name):
 
     save_path = dataset_list_plotted_density_evol(list_name)
     plt.savefig(save_path)
-    print("Saved", save_path[-36:])
+    print("Saved", save_path[-40:])
 
 
 # ========
@@ -308,11 +230,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     list_name = args.dataset_list
-    if list_name not in dataset_list_names.keys():
+    if list_name not in dataset_lists.keys():
         print("Error: Invalid dataset_list", list_name)
-        print("  Choose from:", list(dataset_list_names.keys()))
+        print("  Choose from:", list(dataset_lists.keys()))
         raise ValueError
-    dataset_list = dataset_list_names[list_name]
+    dataset_list = dataset_lists[list_name]
 
     if args.mdate_old_all is not None:
         args.mdate_old_ttd = args.mdate_old_all

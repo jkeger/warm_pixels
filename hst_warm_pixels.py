@@ -5,7 +5,7 @@ Parameters
 ----------
 dataset_list : str (opt.)
     The name of the list of image datasets to run. Defaults to "test". See the
-    dataset_list_names dictionary for the options.
+    dataset_lists dictionary for the options.
 
 --mdate_old_* : str (opt.)
     A "year/month/day" requirement to remake files saved/modified before this
@@ -129,134 +129,139 @@ class Dataset(object):
 
 dataset_root = os.path.join(path, "../hst_acs_datasets/")
 datasets_pre_T_change = [
-    # In date order
+    # Date, days since acs launch
     # Aidan
-    "01_2003",
-    "05_2004",
-    "10_2004",
-    "12_2004",
-    "04_2005",
-    "05_2005",
-    "09_2005",
-    "11_2005",
-    "04_2006",
+    "01_2003",  # 2003/01/16, 321
+    "05_2004",  # 2004/05/13, 804
+    "10_2004",  # 2004/11/07, 982
+    "12_2004",  # 2004/12/15, 1020
+    "04_2005",  # 2005/04/05, 1131
+    "05_2005",  # 2005/05/14, 1170
+    "09_2005",  # 2005/09/04, 1283
+    "11_2005",  # 2005/11/14, 1354
+    "04_2006",  # 2006/04/28, 1519
     # Richard
-    "shortSNe0",  # Aidan: 1step error
-    "shortSNe1",
-    "shortSNe2",  # Aidan: something wrong
-    "shortSNe3",
-    "shortSNe4",
-    "early",
-    "middle1",
-    "middle2",
-    "ten1a",
-    "ten1b",
-    "late",
-    "later",
-    "ten2a",
-    "ten2b",
-    "richmassey60680",
-    "richmassey60493",
-    "longSNe5",
-    "longSNe6",
-    "longSNe4",
-    "shortSNe5",
-    "shortSNe6",
-    "shortSNe7",
-    "longSNe3",
-    "shortSNe8",
+    "shortSNe0",  # 2002/06/22, 113  ## Aidan: 1step error
+    "shortSNe1",  # 2002/11/20, 264
+    "shortSNe2",  # 2003/05/06, 431  ## Aidan: something wrong
+    "shortSNe3",  # 2003/05/08, 433
+    "shortSNe4",  # 2003/05/12, 437
+    "early",  # 2003/10/20, 598
+    "middle1",  # 2004/04/30, 791
+    "middle2",  # 2004/05/20, 811
+    "ten1a",  # 2004/05/24, 815
+    "ten1b",  # 2004/05/29, 820
+    "late",  # 2005/03/29, 1124
+    "later",  # 2005/05/12, 1168
+    "ten2a",  # 2005/09/22, 1301
+    "ten2b",  # 2006/02/09, 1441
+    "richmassey60680",  # 2006/02/13, 1445
+    "richmassey60493",  # 2006/02/13, 1445
+    "longSNe5",  # 2006/02/21, 1453
+    "longSNe6",  # 2006/03/19, 1479
+    "longSNe4",  # 2006/04/04, 1495
+    "shortSNe5",  # 2006/04/04, 1495
+    "shortSNe6",  # 2006/04/13, 1504
+    "shortSNe7",  # 2006/04/23, 1514
+    "longSNe3",  # 2006/05/15, 1536
+    "shortSNe8",  # 2006/05/15, 1536
 ]
 datasets_post_T_change = [
+    # Date, days since acs launch
     # Aidan
-    "07_2006",
-    # "09_2006",  # Missing?
-    "05_2010",
-    "04_2011",
-    "05_2012",
-    "04_2013",
-    "02_2014",
-    "04_2014",
-    "01_2015",
-    "06_2015",
-    "09_2015",
-    "01_2016",
-    "05_2016",
-    "09_2016",
-    "04_2017",
-    "06_2017",
-    "08_2017",
-    "10_2017",
-    "02_2018",
-    "08_2018",
-    "12_2018",
-    "01_2019",
-    "04_2019",
-    "07_2019",
-    "07_2019_2",
-    "10_2019",
-    "11_2019",
-    "11_2019_2",
-    "12_2019",
-    "12_2019_2",
-    "01_2020",
-    "03_2020",
-    "04_2020",
-    "07_2020",
-    "08_2020_1",
-    "09_2020_2",
-    "12_2020",
+    "07_2006",  # 2006/07/05, 1587
+    "05_2010",  # 2010/05/25, 3007
+    "04_2011",  # 2011/04/04, 3321
+    "05_2012",  # 2012/05/27, 3740
+    "04_2013",  # 2013/04/02, 4050
+    "02_2014",  # 2014/02/23, 4377
+    "04_2014",  # 2014/04/19, 4432
+    "01_2015",  # 2015/01/21, 4709
+    "06_2015",  # 2015/06/16, 4855
+    "09_2015",  # 2015/09/01, 4932
+    "01_2016",  # 2016/01/05, 5058
+    "05_2016",  # 2016/05/23, 5197
+    "09_2016",  # 2016/09/24, 5321
+    "04_2017",  # 2017/04/05, 5514
+    "06_2017",  # 2017/06/25, 5595
+    "08_2017",  # 2017/08/08, 5639
+    "10_2017",  # 2017/10/03, 5695
+    "02_2018",  # 2018/02/16, 5831
+    "08_2018",  # 2018/08/12, 6008
+    "12_2018",  # 2018/12/05, 6123
+    "01_2019",  # 2019/01/07, 6156
+    "04_2019",  # 2019/04/01, 6240
+    "07_2019",  # 2019/07/16, 6346
+    "07_2019_2",  # 2019/07/15, 6345
+    "10_2019",  # 2019/10/30, 6452
+    "11_2019",  # 2019/11/19, 6472
+    "11_2019_2",  # 2019/11/16, 6469
+    "12_2019",  # 2019/12/06, 6489
+    "12_2019_2",  # 2019/12/31, 6514
+    "01_2020",  # 2020/01/04, 6518
+    "03_2020",  # 2020/03/21, 6595
+    "04_2020",  # 2020/04/12, 6617
+    "07_2020",  # 2020/07/31, 6727
+    "08_2020_1",  # 2020/08/07, 6734
+    "09_2020_2",  # 2020/09/17, 6775
+    "12_2020",  # 2020/12/03, 6852
     # Richard
-    "longSNe2",
-    "richmassey60494",
-    "richmassey60490",
-    "richmassey61093",
-    "richmassey60491",
-    "ten3",
-    "shortSNe9",
-    "richmassey60488",
-    "richmassey60489",
-    "richmassey61092",
-    "longSNe1",
-    "shortSNeA",
-    "ten4",
-    "richmassey60487",
-    "richmassey60492",
-    "richmassey60484",
-    "richmassey60486",
-    "richmassey60485",
-    "sm41",
-    "sm42",
-    "sm43",
-    "sm44",
-    "sm45",
-    "richmassey72704",
-    "richmassey72703",
-    "richmassey72702",
-    "richmassey72701",
-    "richmassey72700",
-    "richmassey72699",
-    "richmassey72698",
-    "obama",
-    "huff_spt814a",
-    "huff_spt606a",
-    "huff_spt606f",
-    "huff_spt606g",
-    "huff_spt606b",
-    "huff_spt606c",
-    "huff_spt606d",
-    "huff_spt606e",
-    "huff_spt814b",  # Aidan: something wrong
-    "huff_spt814c",
-    "huff_spt606h",
-    "candels2013b",
-    "candels2013a",
-    "obama2",
+    "longSNe2",  # 2006/07/13, 1595
+    "richmassey60494",  # 2006/07/13, 1595
+    "richmassey60490",  # 2006/07/17, 1599  ## e.g. low
+    "richmassey61093",  # 2006/07/31, 1613  ## e.g. high
+    "richmassey60491",  # 2006/08/16, 1629  ## e.g. low
+    "ten3",  # 2006/08/18, 1631
+    "shortSNe9",  # 2006/08/18, 1631
+    "richmassey60488",  # 2006/08/22, 1635
+    "richmassey60489",  # 2006/08/22, 1635
+    "richmassey61092",  # 2006/09/11, 1655  ## e.g. high
+    "longSNe1",  # 2006/09/16, 1660
+    "shortSNeA",  # 2006/09/16, 1660
+    "ten4",  # 2006/11/09, 1714
+    "richmassey60487",  # 2006/12/07, 1742
+    "richmassey60492",  # 2006/12/07, 1742
+    "richmassey60484",  # 2006/12/11, 1746
+    "richmassey60486",  # 2006/12/23, 1758
+    "richmassey60485",  # 2006/12/31, 1766
+    "sm41",  # 2009/08/26, 2735
+    "sm42",  # 2009/08/26, 2735
+    "sm43",  # 2009/11/02, 2803
+    "sm44",  # 2009/11/08, 2809
+    "sm45",  # 2010/01/23, 2885
+    "richmassey72704",  # 2010/02/11, 2904
+    "richmassey72703",  # 2010/02/17, 2910
+    "richmassey72702",  # 2010/03/07, 2928
+    "richmassey72701",  # 2010/04/09, 2961
+    "richmassey72700",  # 2010/04/18, 2970
+    "richmassey72699",  # 2010/04/22, 2974
+    "richmassey72698",  # 2010/05/10, 2992
+    "obama",  # 2010/07/08, 3051
+    "huff_spt814a",  # 2011/10/04, 3504
+    "huff_spt606a",  # 2011/10/06, 3506
+    "huff_spt606f",  # 2011/11/27, 3558
+    "huff_spt606g",  # 2011/12/03, 3564
+    "huff_spt606b",  # 2012/01/04, 3596
+    "huff_spt606c",  # 2012/01/20, 3612
+    "huff_spt606d",  # 2012/03/03, 3655
+    "huff_spt606e",  # 2012/07/17, 3791
+    "huff_spt814b",  # 2012/07/25, 3799  ## Aidan: something wrong
+    "huff_spt814c",  # 2012/10/14, 3880
+    "huff_spt606h",  # 2012/10/22, 3888
+    "candels2013b",  # 2013/01/02, 3960
+    "candels2013a",  # 2013/01/02, 3960
+    "obama2",  # 2013/04/17, 4065
 ]
 datasets_all = np.append(datasets_pre_T_change, datasets_post_T_change)
 datasets_test = ["12_2020"]
-datasets_test_2 = ["04_2011", "04_2013", "04_2014", "05_2016", "06_2017", "08_2018"]
+datasets_test_2 = [
+    "richmassey60490",
+    "richmassey61093",
+    "richmassey60491",
+    "richmassey61092",
+]
 # Dictionary of list names
-dataset_list_names = {
+dataset_lists = {
     "test": datasets_test,
     "test_2": datasets_test_2,
     "pre_T_change": datasets_pre_T_change,
@@ -264,8 +269,8 @@ dataset_list_names = {
     "all": datasets_all,
 }
 # Convert all to Dataset objects
-for key in dataset_list_names.keys():
-    dataset_list_names[key] = [Dataset(dataset) for dataset in dataset_list_names[key]]
+for key in dataset_lists.keys():
+    dataset_lists[key] = [Dataset(dataset) for dataset in dataset_lists[key]]
 
 
 # ========
@@ -682,6 +687,84 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     return result.params.get("rho_q").value, result.params.get("rho_q").stderr
 
 
+def fit_dataset_total_trap_density(dataset):
+    """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The dataset object with a list of image file paths and metadata.
+
+    Returns
+    -------
+    rho_q : float
+        The best-fit total number density of traps per pixel.
+
+    rho_q_std : float
+        The standard error on the total trap density.
+    """
+    # Load
+    stacked_lines = PixelLineCollection()
+    stacked_lines.load(dataset.saved_stacked_lines)
+    npzfile = np.load(dataset.saved_stacked_info)
+    row_bins, flux_bins, date_bins, background_bins = [
+        npzfile[var] for var in npzfile.files
+    ]
+    n_row_bins = len(row_bins) - 1
+    n_flux_bins = len(flux_bins) - 1
+    n_date_bins = len(date_bins) - 1
+    n_background_bins = len(background_bins) - 1
+
+    # Compile the data from all stacked lines
+    n_lines_used = 0
+    y_all = np.array([])
+    noise_all = np.array([])
+    n_e_each = np.array([])
+    n_bg_each = np.array([])
+    row_each = np.array([])
+
+    # ========
+    # Concatenate each stacked trail
+    # ========
+    # Skip the lowest-row and lowest-flux bins
+    for i_row in range(1, n_row_bins):
+        for i_flux in range(1, n_flux_bins):
+            for i_background in range(n_background_bins):
+                bin_index = PixelLineCollection.stacked_bin_index(
+                    i_row=i_row,
+                    n_row_bins=n_row_bins,
+                    i_flux=i_flux,
+                    n_flux_bins=n_flux_bins,
+                    i_background=i_background,
+                    n_background_bins=n_background_bins,
+                )
+
+                line = stacked_lines.lines[bin_index]
+
+                if line.n_stacked >= 3:
+                    y_all = np.append(y_all, line.data[-trail_length:])
+                    noise_all = np.append(noise_all, line.noise[-trail_length:])
+                    n_e_each = np.append(n_e_each, line.mean_flux)
+                    n_bg_each = np.append(n_bg_each, line.mean_background)
+                    row_each = np.append(row_each, line.mean_row)
+                    n_lines_used += 1
+
+    # Duplicate the x arrays for all trails
+    x_all = np.tile(np.arange(trail_length) + 1, n_lines_used)
+
+    # Duplicate the single parameters of each trail for all pixels
+    n_e_all = np.repeat(n_e_each, trail_length)
+    n_bg_all = np.repeat(n_bg_each, trail_length)
+    row_all = np.repeat(row_each, trail_length)
+
+    # Run the fitting
+    rho_q, rho_q_std = fit_total_trap_density(
+        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date
+    )
+
+    return rho_q, rho_q_std
+
+
 # ========
 # Plotting functions
 # ========
@@ -777,6 +860,9 @@ def plot_stacked_trails(dataset, save_path=None):
     # Label size
     fontsize = 14
 
+    # Fit the total trap density to the full dataset
+    rho_q_set, rho_q_std_set = fit_dataset_total_trap_density(dataset)
+
     # Plot each stack
     for i_row in range(n_row_bins):
         for i_flux in range(n_flux_bins):
@@ -850,6 +936,16 @@ def plot_stacked_trails(dataset, save_path=None):
                     date=dataset.date,
                 )
                 ax.plot(model_pixels, model_trail, color=c, ls="--", alpha=0.7)
+                # Also plot the full-set fit
+                model_trail = trail_model_hst(
+                    x=model_pixels,
+                    rho_q=rho_q_set,
+                    n_e=line.mean_flux,
+                    n_bg=line.mean_background,
+                    row=line.mean_row,
+                    date=dataset.date,
+                )
+                ax.plot(model_pixels, model_trail, color=c, ls=":", alpha=0.7)
 
                 # Annotate
                 if i_background == 0:
@@ -910,7 +1006,7 @@ def plot_stacked_trails(dataset, save_path=None):
                     ax.text(
                         0.5,
                         1.01,
-                        "Flux:",
+                        r"Flux (e$^-$):",
                         transform=ax.transAxes,
                         ha="center",
                         va="bottom",
@@ -941,6 +1037,19 @@ def plot_stacked_trails(dataset, save_path=None):
                         va="center",
                     )
 
+            # Total trap density
+            if i_row == n_row_bins - 1 and i_flux == n_flux_bins - 1:
+                ax.text(
+                    0.01,
+                    0.01,
+                    r"$\rho_{\rm q} = %.2g \pm %.2g$" % (rho_q_set, rho_q_std_set),
+                    transform=ax.transAxes,
+                    size=fontsize,
+                    ha="left",
+                    va="bottom",
+                )
+
+            # Tidy
             if i_row == 0 and i_flux == 0:
                 set_large_ticks(ax)
             elif i_row == 0:
@@ -955,7 +1064,7 @@ def plot_stacked_trails(dataset, save_path=None):
         plt.show()
     else:
         plt.savefig(save_path, dpi=200)
-        print("Saved", save_path[-36:])
+        print("Saved", save_path[-40:])
 
 
 # ========
@@ -969,11 +1078,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     list_name = args.dataset_list
-    if list_name not in dataset_list_names.keys():
+    if list_name not in dataset_lists.keys():
         print("Error: Invalid dataset_list", list_name)
-        print("  Choose from:", list(dataset_list_names.keys()))
+        print("  Choose from:", list(dataset_lists.keys()))
         raise ValueError
-    dataset_list = dataset_list_names[list_name]
+    dataset_list = dataset_lists[list_name]
 
     if args.mdate_old_all is not None:
         args.mdate_old_fwp = args.mdate_old_all
