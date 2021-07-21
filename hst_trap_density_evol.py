@@ -71,6 +71,9 @@ def fit_total_trap_densities(dataset_list, list_name):
     dataset_list : [str]
         The list of image datasets to run.
 
+    list_name : str
+        The name of the list of image datasets.
+
     Saves
     -----
     days : [float]
@@ -198,12 +201,14 @@ def plot_trap_density_evol(list_name):
     # Mark dates
     ax.axvline(day_T_change, c="k", lw=1)
     ax.axvline(day_side2_fail, c="k", lw=1)
-    ax.axvline(day_repair, c="k", lw=1)
-    ax.axvspan(day_side2_fail, day_repair, fc="0.7", ec="none", alpha=0.3, zorder=-1)
+    ax.axvline(day_sm4_repair, c="k", lw=1)
+    ax.axvspan(
+        day_side2_fail, day_sm4_repair, fc="0.7", ec="none", alpha=0.3, zorder=-1
+    )
     for day, text, ha in [
         [day_T_change, "Temperature Change", "right"],
         [day_side2_fail, "Side-2 Failure", "left"],
-        [day_repair, "SM4 Repair", "right"],
+        [day_sm4_repair, "SM4 Repair", "right"],
     ]:
         if ha == "left":
             x_shift = 1.03

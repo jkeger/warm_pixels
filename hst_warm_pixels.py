@@ -21,6 +21,9 @@ dataset_list : str (opt.)
         Stacked warm pixels.
     --mdate_old_pst, -p
         Plot stacked trails.
+
+--test_image_and_bias_files, -t : str (opt.)
+    Test loading the image and corresponding bias files in the list of datasets.
 """
 
 import numpy as np
@@ -53,11 +56,14 @@ trail_length = 8
 date_acs_launch = 2452334.5  # ACS launched, SM3B, 01 March 2002
 date_T_change = 2453920.0  # Temperature changed, 03 July 2006
 date_side2_fail = 2454128.0  # ACS stopped working, 27 January 2007
-date_repair = 2454968.0  # ACS repaired, SM4, 16 May 2009
+date_sm4_repair = 2454968.0  # ACS repaired, SM4, 16 May 2009
 # Convert to days since ACS launch
 day_T_change = date_T_change - date_acs_launch
 day_side2_fail = date_side2_fail - date_acs_launch
-day_repair = date_repair - date_acs_launch
+day_sm4_repair = date_sm4_repair - date_acs_launch
+# Image quadrants to use
+quadrants = ["A"]
+# quadrants = ["A", "B", "C", "D"]
 
 
 # ========
@@ -80,17 +86,12 @@ class Dataset(object):
 
         image_names : [str]
         image_paths : [str]
-            The list of image file names, excluding and including the full path and
-            extension, respectively.
+            The list of image file names, excluding and including the full path
+            and extension, respectively.
 
-        bias_name : str
-        bias_path : str
-            The bias image file name, excluding and including the full path and
-            extension, respectively.
-
-        saved_lines, saved_consistent_lines, saved_stacked_lines, saved_stacked_info
-            : str
-            The file names for saving and loading derived data, including the path.
+        saved_stacked_lines, saved_stacked_info : str
+            The file names for saving and loading derived data, including the
+            path.
         """
         self.name = name
         self.path = dataset_root + self.name + "/"
@@ -101,17 +102,7 @@ class Dataset(object):
         self.image_paths = [self.path + name + ".fits" for name in self.image_names]
         self.n_images = len(self.image_names)
 
-        # Bias file path
-        try:
-            self.bias_name = [f[:-5] for f in files if f[-9:] == "_bia.fits"][0]
-            self.bias_path = self.path + self.bias_name + ".fits"
-        except IndexError:
-            self.bias_name = None
-            self.bias_path = None
-
         # Save paths
-        self.saved_lines = self.path + "saved_lines.pickle"
-        self.saved_consistent_lines = self.path + "saved_consistent_lines.pickle"
         self.saved_stacked_lines = self.path + "saved_stacked_lines.pickle"
         self.saved_stacked_info = self.path + "saved_stacked_info.npz"
         self.plotted_stacked_trails = (
@@ -125,6 +116,14 @@ class Dataset(object):
             file_path=self.image_paths[0], quadrant_letter="A"
         )
         return 2400000.5 + image.header.modified_julian_date
+
+    def saved_lines(self, quadrant):
+        """Return the file name including the path for saving derived data."""
+        return self.path + "saved_lines_%s.pickle" % quadrant
+
+    def saved_consistent_lines(self, quadrant):
+        """Return the file name including the path for saving derived data."""
+        return self.path + "saved_consistent_lines_%s.pickle" % quadrant
 
 
 dataset_root = os.path.join(path, "../hst_acs_datasets/")
@@ -254,12 +253,7 @@ datasets_post_T_change = [
 ]
 datasets_all = np.append(datasets_pre_T_change, datasets_post_T_change)
 datasets_test = ["12_2020"]
-datasets_test_2 = [
-    "richmassey60490",
-    "richmassey61093",
-    "richmassey60491",
-    "richmassey61092",
-]
+datasets_test_2 = ["richmassey60490", "richmassey61093"]
 # Dictionary of list names
 dataset_lists = {
     "test": datasets_test,
@@ -330,6 +324,14 @@ def prep_parser():
         required=False,
         help="Oldest valid date for plot stacked trails.",
     )
+    parser.add_argument(
+        "-t",
+        "--test_image_and_bias_files",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Test loading the image and corresponding bias files.",
+    )
 
     return parser
 
@@ -384,10 +386,47 @@ def jd_to_dec_yr(dates):
     return time.value
 
 
+def test_image_and_bias_files(dataset):
+    """Test loading the set of image and corresponding bias files.
+
+    Missing bias files can be downloaded from ssb.stsci.edu/cdbs_open/cdbs/jref.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The dataset object with a list of image file paths and metadata.
+
+    Returns
+    -------
+    all_okay : bool
+        True if no errors, False if any errors hit.
+    """
+    all_okay = True
+
+    for i_image in range(dataset.n_images):
+        image_path = dataset.image_paths[i_image]
+        image_name = dataset.image_names[i_image]
+        print("\r  %s " % image_name, end="", flush=True)
+
+        # Load the image
+        try:
+            image = aa.acs.ImageACS.from_fits(
+                file_path=image_path,
+                quadrant_letter="A",
+                bias_subtract_via_bias_file=True,
+                bias_subtract_via_prescan=True,
+            ).native
+        except FileNotFoundError as e:
+            all_okay = False
+            print(str(e))
+
+    return all_okay
+
+
 # ========
 # Main functions
 # ========
-def find_dataset_warm_pixels(dataset):
+def find_dataset_warm_pixels(dataset, quadrant="A"):
     """Find the possible warm pixels in all images in a dataset.
 
     Parameters
@@ -395,10 +434,13 @@ def find_dataset_warm_pixels(dataset):
     dataset : Dataset
         The dataset object with a list of image file paths and metadata.
 
+    quadrant : str (opt.)
+        The quadrant (A, B, C, D) of the image to load.
+
     Saves
     -----
     warm_pixels : PixelLineCollection
-        The set of warm pixel trails, saved to dataset.saved_lines.
+        The set of warm pixel trails, saved to dataset.saved_lines(quadrant).
     """
     # Initialise the collection of warm pixel trails
     warm_pixels = PixelLineCollection()
@@ -409,7 +451,8 @@ def find_dataset_warm_pixels(dataset):
         image_path = dataset.image_paths[i_image]
         image_name = dataset.image_names[i_image]
         print(
-            "    %s (%d of %d): " % (image_name, i_image + 1, dataset.n_images),
+            "    %s_%s (%d of %d): "
+            % (image_name, quadrant, i_image + 1, dataset.n_images),
             end="",
             flush=True,
         )
@@ -417,34 +460,36 @@ def find_dataset_warm_pixels(dataset):
         # Load the image
         image = aa.acs.ImageACS.from_fits(
             file_path=image_path,
-            quadrant_letter="A",
-            bias_path=dataset.bias_path,
+            quadrant_letter=quadrant,
+            bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
         ).native
 
         date = 2400000.5 + image.header.modified_julian_date
 
+        image_name_q = image_name + "_%s" % quadrant
+
         # Find the warm pixel trails
         new_warm_pixels = find_warm_pixels(
-            image=image, trail_length=trail_length, origin=image_name, date=date
+            image=image, trail_length=trail_length, origin=image_name_q, date=date
         )
-        print("Found %d possible warm pixels" % len(new_warm_pixels))
+        print("Found %d possible warm pixels " % len(new_warm_pixels))
 
         # Plot
         plot_warm_pixels(
             image,
             PixelLineCollection(new_warm_pixels),
-            save_path=dataset.path + image_name,
+            save_path=dataset.path + image_name_q,
         )
 
         # Add them to the collection
         warm_pixels.append(new_warm_pixels)
 
     # Save
-    warm_pixels.save(dataset.saved_lines)
+    warm_pixels.save(dataset.saved_lines(quadrant))
 
 
-def find_consistent_warm_pixels(dataset):
+def find_consistent_warm_pixels(dataset, quadrant="A"):
     """Find the consistent warm pixels in a dataset.
 
     find_dataset_warm_pixels() must first be run for the dataset.
@@ -454,15 +499,18 @@ def find_consistent_warm_pixels(dataset):
     dataset : Dataset
         The dataset object with a list of image file paths and metadata.
 
+    quadrant : str (opt.)
+        The quadrant (A, B, C, D) of the image to load.
+
     Saves
     -----
     warm_pixels : PixelLineCollection
         The set of consistent warm pixel trails, saved to
-        dataset.saved_consistent_lines.
+        dataset.saved_consistent_lines(quadrant).
     """
     # Load
     warm_pixels = PixelLineCollection()
-    warm_pixels.load(dataset.saved_lines)
+    warm_pixels.load(dataset.saved_lines(quadrant))
 
     # Find the warm pixels present in at least 2/3 of the images
     consistent_lines = warm_pixels.find_consistent_lines(fraction_present=2 / 3)
@@ -475,11 +523,10 @@ def find_consistent_warm_pixels(dataset):
     warm_pixels.lines = warm_pixels.lines[consistent_lines]
 
     # Save
-    warm_pixels.save(dataset.saved_consistent_lines)
-    print("")
+    warm_pixels.save(dataset.saved_consistent_lines(quadrant))
 
 
-def stack_dataset_warm_pixels(dataset):
+def stack_dataset_warm_pixels(dataset, quadrants=["A"]):
     """Stack a set of premade warm pixel trails into bins.
 
     find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
@@ -490,6 +537,9 @@ def stack_dataset_warm_pixels(dataset):
     dataset : Dataset
         The dataset object with a list of image file paths and metadata.
 
+    quadrants : [str]
+        The list of quadrants (A, B, C, D) of the images to load.
+
     Saves
     -----
     stacked_lines : PixelLineCollection
@@ -497,7 +547,9 @@ def stack_dataset_warm_pixels(dataset):
     """
     # Load
     warm_pixels = PixelLineCollection()
-    warm_pixels.load(dataset.saved_consistent_lines)
+    # Append data from each quadrant
+    for quadrant in quadrants:
+        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
 
     # Subtract preceeding pixels in each line before stacking
     for i in range(warm_pixels.n_lines):
@@ -1040,8 +1092,8 @@ def plot_stacked_trails(dataset, save_path=None):
             # Total trap density
             if i_row == n_row_bins - 1 and i_flux == n_flux_bins - 1:
                 ax.text(
-                    0.01,
-                    0.01,
+                    0.03,
+                    0.03,
                     r"$\rho_{\rm q} = %.2g \pm %.2g$" % (rho_q_set, rho_q_std_set),
                     transform=ax.transAxes,
                     size=fontsize,
@@ -1090,6 +1142,19 @@ if __name__ == "__main__":
         args.mdate_old_swp = args.mdate_old_all
         args.mdate_old_pst = args.mdate_old_all
 
+    # Test loading the image and corresponding bias files
+    if args.test_image_and_bias_files:
+        print("Testing image and bias files...")
+        all_okay = True
+
+        for dataset in dataset_list:
+            if not test_image_and_bias_files(dataset):
+                all_okay = False
+        print("")
+
+        if not all_okay:
+            exit()
+
     # ========
     # Find and stack warm pixels in each dataset
     # ========
@@ -1105,22 +1170,29 @@ if __name__ == "__main__":
             )
         )
 
-        # Warm pixels in each image
-        if need_to_make_file(dataset.saved_lines, date_old=args.mdate_old_fwp):
-            print("  Find possible warm pixels...", end=" ", flush=True)
-            find_dataset_warm_pixels(dataset)
+        # Find warm pixels in each image quadrant
+        for quadrant in quadrants:
+            if len(quadrants) > 1:
+                print("  Quadrant %s:" % quadrant)
 
-        # Consistent warm pixels in the set
-        if need_to_make_file(
-            dataset.saved_consistent_lines, date_old=args.mdate_old_cwp
-        ):
-            print("  Consistent warm pixels...", end=" ", flush=True)
-            find_consistent_warm_pixels(dataset)
+            # Find possible warm pixels in each image
+            if need_to_make_file(
+                dataset.saved_lines(quadrant), date_old=args.mdate_old_fwp
+            ):
+                print("  Find possible warm pixels...", end=" ", flush=True)
+                find_dataset_warm_pixels(dataset, quadrant)
+
+            # Consistent warm pixels in the set
+            if need_to_make_file(
+                dataset.saved_consistent_lines(quadrant), date_old=args.mdate_old_cwp
+            ):
+                print("  Consistent warm pixels...", end=" ", flush=True)
+                find_consistent_warm_pixels(dataset, quadrant)
 
         # Stack in bins
         if need_to_make_file(dataset.saved_stacked_lines, date_old=args.mdate_old_swp):
             print("  Stack warm pixel trails...", end=" ", flush=True)
-            stack_dataset_warm_pixels(dataset)
+            stack_dataset_warm_pixels(dataset, quadrants)
 
         # Plot stacked lines
         if need_to_make_file(
