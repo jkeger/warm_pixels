@@ -108,6 +108,12 @@ def fit_total_trap_densities(dataset_list, list_name):
         density_errors.append(rho_q_std)
     print("\rFit total trap densities... ")
 
+    # Sort
+    sort = np.argsort(days)
+    days = np.array(days)[sort]
+    densities = np.array(densities)[sort]
+    density_errors = np.array(density_errors)[sort]
+
     # Save
     np.savez(
         dataset_list_saved_density_evol(list_name), days, densities, density_errors
@@ -153,17 +159,30 @@ def plot_trap_density_evol(list_name):
 
     sel_pre_T_change = np.where(days < day_T_change)[0]
     sel_post_T_change = np.where(days > day_T_change)[0]
-    for sel in [sel_pre_T_change, sel_post_T_change]:
-        popt, pcov = curve_fit(linear, days[sel], densities[sel], sigma=errors[sel])
+    for sel, c in [[sel_pre_T_change, A1_c[0]], [sel_post_T_change, A1_c[1]]]:
+        # Fit
+        day_mid = np.mean(days[sel])
+        popt, pcov = curve_fit(
+            linear, days[sel] - day_mid, densities[sel], sigma=errors[sel]
+        )
         grad, icpt = popt
         err_grad = np.sqrt(pcov[0, 0])
         err_icpt = np.sqrt(pcov[1, 1])
+        fit_densities = linear(days[sel] - day_mid, grad, icpt)
+
+        # Plot
         ax.plot(
             days[sel],
-            linear(days[sel], grad, icpt),
-            label=r"$(%.2g \pm %.2g) \!\times\! 10^{-4}\; t + (%.2g \pm %.2g)$"
-            % (grad / 1e-4, err_grad / 1e-4, icpt, err_icpt),
+            fit_densities,
+            c=c,
+            lw=1,
+            label=r"$(%.2g \pm %.2g) \!\times\! 10^{-4}\; (t - %d) + (%.2g \pm %.2g)$"
+            % (grad / 1e-4, err_grad / 1e-4, day_mid, icpt, err_icpt),
         )
+        fit_errors = np.sqrt(err_icpt ** 2 + ((days[sel] - day_mid) * err_grad) ** 2)
+        ax.plot(days[sel], fit_densities + fit_errors, c=c, lw=1, alpha=0.3)
+        ax.plot(days[sel], fit_densities - fit_errors, c=c, lw=1, alpha=0.3)
+
     plt.legend(loc="lower right")
 
     # Axes etc
