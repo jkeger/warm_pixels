@@ -1,6 +1,18 @@
 """
 Find, stack, and plot warm pixels in multiple sets of HST ACS images.
 
+For each dataset of images:
++ For each image (and quadrant):
+    + Find possible warm pixels
+    + Find consistent warm pixels
++ Plot distributions of the warm pixels
++ Stack the warm pixel trails in bins
++ Plot the stacked trails
+
+By default, runs all the functions for the chosen list of image datasets,
+skipping any that have been run before and saved their output. Use the optional
+flags to choose manually which functions to run.
+
 Parameters
 ----------
 dataset_list : str (opt.)
@@ -11,16 +23,27 @@ dataset_list : str (opt.)
     A "year/month/day" requirement to remake files saved/modified before this
     date. Defaults to only check whether a file already exists. Alternatively,
     set "1" to force remaking or "0" to force not.
-    --mdate_old_all, -a
-        Overrides all others.
+
     --mdate_old_fwp, -f
         Find warm pixels.
+
     --mdate_old_cwp, -c
         Consistent warm pixels.
+
+    --mdate_old_dwp, -d
+        Distributions of warm pixels in histograms.
+
     --mdate_old_swp, -s
         Stacked warm pixels.
+
     --mdate_old_pst, -p
         Plot stacked trails.
+
+    --mdate_old_all, -a
+        Sets the default for all others, can be overridden individually.
+
+--quadrants, -q : str (opt.)
+    The image quadrants to use, e.g. "A" or "ABCD" (default).
 
 --test_image_and_bias_files, -t : str (opt.)
     Test loading the image and corresponding bias files in the list of datasets.
@@ -61,9 +84,6 @@ date_sm4_repair = 2454968.0  # ACS repaired, SM4, 16 May 2009
 day_T_change = date_T_change - date_acs_launch
 day_side2_fail = date_side2_fail - date_acs_launch
 day_sm4_repair = date_sm4_repair - date_acs_launch
-# Image quadrants to use
-quadrants = ["A"]
-# quadrants = ["A", "B", "C", "D"]
 
 
 # ========
@@ -108,6 +128,7 @@ class Dataset(object):
         self.plotted_stacked_trails = (
             path + "/stacked_trail_plots/%s_stacked_trails.png" % self.name
         )
+        self.plotted_distributions = self.path + "plotted_distributions.png"
 
     @property
     def date(self):
@@ -253,7 +274,10 @@ datasets_post_T_change = [
 ]
 datasets_all = np.append(datasets_pre_T_change, datasets_post_T_change)
 datasets_test = ["12_2020"]
-datasets_test_2 = ["richmassey60490", "richmassey61093"]
+datasets_test_2 = [
+    "richmassey60490",
+    # "richmassey61093",
+]
 # Dictionary of list names
 dataset_lists = {
     "test": datasets_test,
@@ -309,6 +333,14 @@ def prep_parser():
         help="Oldest valid date for consistent warm pixels.",
     )
     parser.add_argument(
+        "-d",
+        "--mdate_old_dwp",
+        default=None,
+        type=str,
+        required=False,
+        help="Distributions of warm pixels in histograms.",
+    )
+    parser.add_argument(
         "-s",
         "--mdate_old_swp",
         default=None,
@@ -323,6 +355,16 @@ def prep_parser():
         type=str,
         required=False,
         help="Oldest valid date for plot stacked trails.",
+    )
+
+    # Other options
+    parser.add_argument(
+        "-q",
+        "--quadrants",
+        default="ABCD",
+        type=str,
+        required=False,
+        help="The image quadrants to use.",
     )
     parser.add_argument(
         "-t",
@@ -860,6 +902,116 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
         plt.close()
 
 
+def plot_warm_pixel_distributions(dataset, quadrants=["A"], save_path=None):
+    """Plot histograms of the properties of premade warm pixel trails.
+
+    find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
+    run for the dataset.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The dataset object with a list of image file paths and metadata.
+
+    quadrants : [str]
+        The list of quadrants (A, B, C, D) of the images to plot.
+
+    save_path : str (opt.)
+        The file path for saving the figure. If None, then show the figure.
+    """
+    # Tile four histograms
+    plt.figure()
+    gs = GridSpec(nrows=2, ncols=2)
+    ax1 = plt.subplot(gs[0, 0])
+    ax2 = plt.subplot(gs[0, 1])
+    ax3 = plt.subplot(gs[1, 0])
+    ax4 = plt.subplot(gs[1, 1])
+
+    if len(quadrants) > 1:
+        colours = A1_c[: len(quadrants)]
+    else:
+        colours = ["k"]
+
+    # Load
+    warm_pixels = PixelLineCollection()
+    # Append data from each quadrant
+    for quadrant in quadrants:
+        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
+
+    # Set bins for all quadrants
+    n_row_bins = 20
+    n_flux_bins = 30
+    n_background_bins = 10
+    n_date_bins = 10
+
+    row_min = np.amin(warm_pixels.locations[:, 0])
+    row_max = np.amax(warm_pixels.locations[:, 0])
+    row_bins = np.linspace(row_min, row_max, n_row_bins + 1)
+
+    flux_min = np.amin(warm_pixels.fluxes)
+    flux_max = np.amax(warm_pixels.fluxes)
+    flux_bins = np.logspace(np.log10(flux_min), np.log10(flux_max), n_flux_bins + 1)
+
+    background_min = np.amin(warm_pixels.backgrounds)
+    background_max = np.amax(warm_pixels.backgrounds)
+    background_bins = np.linspace(background_min, background_max, n_background_bins + 1)
+
+    date_min = np.amin(warm_pixels.dates - date_acs_launch)
+    date_max = np.amax(warm_pixels.dates - date_acs_launch)
+    date_bins = np.linspace(date_min, date_max, n_date_bins + 1)
+
+    # Plot each quadrant separately
+    for quadrant, c in zip(quadrants, colours):
+        # Load only this quadrant
+        warm_pixels = PixelLineCollection()
+        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
+
+        # Data
+        row_hist, row_bin_edges = np.histogram(
+            warm_pixels.locations[:, 0], bins=row_bins
+        )
+        flux_hist, flux_bin_edges = np.histogram(warm_pixels.fluxes, bins=flux_bins)
+        background_hist, background_bin_edges = np.histogram(
+            warm_pixels.backgrounds, bins=background_bins
+        )
+        date_hist, date_bin_edges = np.histogram(
+            warm_pixels.dates - date_acs_launch, bins=date_bins
+        )
+
+        # Plot
+        plot_hist(ax1, row_hist, row_bin_edges, c=c)
+        plot_hist(ax2, flux_hist, flux_bin_edges, c=c, label=quadrant)
+        plot_hist(ax3, background_hist, background_bin_edges, c=c)
+        plot_hist(ax4, date_hist, date_bin_edges, c=c)
+
+    ax2.legend(fontsize=12)
+
+    # Axes
+    ax1.set_xlabel("Row")
+    ax2.set_xlabel(r"Flux (e$^-$)")
+    ax3.set_xlabel(r"Background (e$^-$)")
+    ax4.set_xlabel("Days Since ACS Launch")
+    ax1.set_ylabel("Number of Warm Pixels")
+    ax3.set_ylabel("Number of Warm Pixels")
+
+    ax2.set_xscale("log")
+    ax2.set_yscale("log")
+    ax3.ticklabel_format(useOffset=False, axis="x")
+    ax4.ticklabel_format(useOffset=False, axis="x")
+
+    nice_plot(ax1)
+    nice_plot(ax2)
+    nice_plot(ax3)
+    nice_plot(ax4)
+
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path)
+        plt.close()
+        print("Saved", save_path[-40:])
+
+
 def plot_stacked_trails(dataset, save_path=None):
     """Plot a tiled set of stacked trails.
 
@@ -887,7 +1039,6 @@ def plot_stacked_trails(dataset, save_path=None):
 
     # Plot the stacked trails
     plt.figure(figsize=(25, 12))
-    plt.subplots_adjust(wspace=0, hspace=0)
     gs = GridSpec(n_row_bins, n_flux_bins)
     axes = [
         [plt.subplot(gs[i_row, i_flux]) for i_flux in range(n_flux_bins)]
@@ -1116,6 +1267,7 @@ def plot_stacked_trails(dataset, save_path=None):
         plt.show()
     else:
         plt.savefig(save_path, dpi=200)
+        plt.close()
         print("Saved", save_path[-40:])
 
 
@@ -1137,10 +1289,18 @@ if __name__ == "__main__":
     dataset_list = dataset_lists[list_name]
 
     if args.mdate_old_all is not None:
-        args.mdate_old_fwp = args.mdate_old_all
-        args.mdate_old_cwp = args.mdate_old_all
-        args.mdate_old_swp = args.mdate_old_all
-        args.mdate_old_pst = args.mdate_old_all
+        if args.mdate_old_fwp is None:
+            args.mdate_old_fwp = args.mdate_old_all
+        if args.mdate_old_cwp is None:
+            args.mdate_old_cwp = args.mdate_old_all
+        if args.mdate_old_dwp is None:
+            args.mdate_old_dwp = args.mdate_old_all
+        if args.mdate_old_swp is None:
+            args.mdate_old_swp = args.mdate_old_all
+        if args.mdate_old_pst is None:
+            args.mdate_old_pst = args.mdate_old_all
+
+    quadrants = [q for q in args.quadrants]
 
     # Test loading the image and corresponding bias files
     if args.test_image_and_bias_files:
@@ -1160,34 +1320,47 @@ if __name__ == "__main__":
     # ========
     for i_dataset, dataset in enumerate(dataset_list):
         print(
-            'Dataset "%s" (%d of %d in "%s", %d images)'
+            'Dataset "%s" (%d of %d in "%s", %d images, quadrant(s) %s)'
             % (
                 dataset.name,
                 i_dataset + 1,
                 len(dataset_list),
                 list_name,
                 dataset.n_images,
+                args.quadrants,
             )
         )
 
         # Find warm pixels in each image quadrant
         for quadrant in quadrants:
-            if len(quadrants) > 1:
-                print("  Quadrant %s:" % quadrant)
-
             # Find possible warm pixels in each image
             if need_to_make_file(
                 dataset.saved_lines(quadrant), date_old=args.mdate_old_fwp
             ):
-                print("  Find possible warm pixels...", end=" ", flush=True)
+                print(
+                    "  Find possible warm pixels (%s)..." % quadrant,
+                    end=" ",
+                    flush=True,
+                )
                 find_dataset_warm_pixels(dataset, quadrant)
 
             # Consistent warm pixels in the set
             if need_to_make_file(
                 dataset.saved_consistent_lines(quadrant), date_old=args.mdate_old_cwp
             ):
-                print("  Consistent warm pixels...", end=" ", flush=True)
+                print(
+                    "  Consistent warm pixels (%s)..." % quadrant, end=" ", flush=True
+                )
                 find_consistent_warm_pixels(dataset, quadrant)
+
+        # Distributions of warm pixels in the set
+        if need_to_make_file(
+            dataset.plotted_distributions, date_old=args.mdate_old_dwp
+        ):
+            print("  Distributions of warm pixels...", end=" ", flush=True)
+            plot_warm_pixel_distributions(
+                dataset, quadrants, save_path=dataset.plotted_distributions
+            )
 
         # Stack in bins
         if need_to_make_file(dataset.saved_stacked_lines, date_old=args.mdate_old_swp):
