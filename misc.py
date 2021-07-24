@@ -174,9 +174,11 @@ def set_large_ticks(ax, do_x=True, do_y=True):
 
     # First set all major and minor ticks to the logarithmic sizes
     if do_x:
-        ax.tick_params("both", width=width_log, length=length_log, which="major")
+        ax.xaxis.set_tick_params(width=width_log, length=length_log, which="major")
+        ax.xaxis.set_tick_params(width=width_log, length=length_lin, which="minor")
     if do_y:
-        ax.tick_params("both", width=width_log, length=length_lin, which="minor")
+        ax.yaxis.set_tick_params(width=width_log, length=length_log, which="major")
+        ax.yaxis.set_tick_params(width=width_log, length=length_lin, which="minor")
 
     # Reset linear ticks ((this weird order seems to work best))
     if do_x and not log_x:
@@ -475,13 +477,52 @@ def set_nice_ticks(ax, x_or_y, x_max, x_min=0):
         ax.set_yticks(A1_ticks)
 
 
-def my_nice_plot(ax=None, cbar=None):
+def nice_plot(ax=None, cbar=None, fontsize=22):
     """ Call my standard nice-plot-making functions, default values only. """
     if ax is None:
         ax = plt.gca()
     set_large_ticks(ax)
     set_std_form_axes(ax)
-    set_font_size(ax, cbar=cbar)
+    set_font_size(ax, cbar=cbar, fontsize=fontsize)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         plt.tight_layout()
+
+
+def plot_hist(ax, A1_hist, A1_bin_edge, c="k", ls="-", lw=1.7, alpha=1, label=None):
+    """ Plot a nice histogram with no vertical lines in the middle.
+
+    Parameters
+    ----------
+    ax : plt axes
+        The plot axes.
+
+    A1_hist, A1_bin_edge : [float]
+        The histogram and bin arrays returned by numpy.histogram(): a list of
+        number counts or density values in each bin and a list of bin edges
+        including both outside values.
+
+    c, ls, lw : str (opt.)
+        The colour, linestyle, and linewidth. Default solid black line.
+
+    alpha : float (opt.)
+        The opacity. Default solid.
+
+    label : str (opt.)
+        The label, if required.
+    """
+    # Append values to complete the plot with vertical lines at both ends
+    A1_hist = np.append(-np.inf, A1_hist)
+    A1_hist = np.append(A1_hist, -np.inf)
+    A1_bin_edge = np.append(A1_bin_edge, A1_bin_edge[-1])
+
+    ax.plot(
+        A1_bin_edge,
+        A1_hist,
+        c=c,
+        ls=ls,
+        lw=lw,
+        drawstyle="steps",
+        alpha=alpha,
+        label=label,
+    )
