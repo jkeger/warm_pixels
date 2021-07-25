@@ -30,7 +30,7 @@ dataset_list : str (opt.)
     use e.g. "A_B_C_D", or e.g. "AB_CD" for combined A & B kept separate from
     combined C & D.
 
---mdate_old_* : str (opt.)
+--mdate_old_*, -* DATE : str (opt.)
     A "year/month/day" requirement to remake files saved/modified before this
     date. Defaults to only check whether a file already exists. Alternatively,
     set "1" to force remaking or "0" to force not.
@@ -53,11 +53,15 @@ dataset_list : str (opt.)
     --mdate_all, -a
         Sets the default for all others, can be overridden individually.
 
---prep_density, -r
-    Fit the total trap density (rho_q) across all datasets.
+--prep_density, -d
+    Fit the total trap density across all datasets.
 
---plot_density, -R
+--plot_density, -D
     Plot the evolution of the total trap density.
+
+--downsample, -w N i : int int
+    Downsample the dataset list to run 1/N of the datasets, starting with set i.
+    e.g. -w 10 5 will run the datasets with indices 5, 15, 25, ... in the list.
 
 --test_image_and_bias_files, -t : str (opt.)
     Test loading the image and corresponding bias files in the list of datasets.
@@ -313,19 +317,6 @@ if __name__ == "__main__":
     # All quadrants, ignoring subsets
     all_quadrants = [q for qs in quadrant_sets for q in qs]
 
-    # Test loading the image and corresponding bias files
-    if args.test_image_and_bias_files:
-        print("Testing image and bias files...")
-        all_okay = True
-
-        for dataset in dataset_list:
-            if not ut.test_image_and_bias_files(dataset):
-                all_okay = False
-        print("")
-
-        if not all_okay:
-            exit()
-
     # Date/override requirements
     if args.mdate_all is not None:
         if args.mdate_find is None:
@@ -338,6 +329,25 @@ if __name__ == "__main__":
             args.mdate_stack = args.mdate_all
         if args.mdate_plot_stack is None:
             args.mdate_plot_stack = args.mdate_all
+
+    # Downsample the dataset list
+    if args.downsample is not None:
+        N = int(args.downsample[0])
+        i = int(args.downsample[1])
+        dataset_list = dataset_list[i::N]
+
+    # Test loading the image and corresponding bias files
+    if args.test_image_and_bias_files:
+        print("Testing image and bias files...")
+        all_okay = True
+
+        for dataset in dataset_list:
+            if not ut.test_image_and_bias_files(dataset):
+                all_okay = False
+        print("")
+
+        if not all_okay:
+            exit()
 
     # ========
     # Find and stack warm pixels in each dataset

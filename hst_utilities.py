@@ -107,15 +107,15 @@ def prep_parser():
 
     # Other functions
     parser.add_argument(
-        "-r",
+        "-d",
         "--prep_density",
         action="store_true",
         default=False,
         required=False,
-        help="Fit the total trap density (rho_q) for all datasets.",
+        help="Fit the total trap density for all datasets.",
     )
     parser.add_argument(
-        "-R",
+        "-D",
         "--plot_density",
         action="store_true",
         default=False,
@@ -129,6 +129,15 @@ def prep_parser():
         default=False,
         required=False,
         help="Test loading the image and corresponding bias files.",
+    )
+    parser.add_argument(
+        "-w",
+        "--downsample",
+        nargs=2,
+        default=None,
+        metavar=("downsample_N", "downsample_i"),
+        required=False,
+        help="Downsample to run 1/N of the datasets, starting with set i.",
     )
 
     return parser
