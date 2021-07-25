@@ -684,8 +684,11 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
 
     # Don't plot the warm pixel itself
     pixels = np.arange(1, ut.trail_length + 1)
-    y_min = np.partition(abs(np.ravel(stacked_lines.data[:, -ut.trail_length :])), 2)[1]
-    y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :])
+    sel_non_zero = np.where(stacked_lines.data[:, -ut.trail_length :] != 0)
+    y_min = np.partition(
+        abs(np.ravel(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])), 2
+    )[1]
+    y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
     log10_y_min = np.ceil(np.log10(y_min))
     log10_y_max = np.floor(np.log10(y_max))
     y_min = min(y_min, 10 ** (log10_y_min - 0.4))
@@ -852,6 +855,7 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
                     )
                 flux_max = flux_bins[i_flux + 1]
                 pow10 = np.floor(np.log10(flux_max))
+                print(flux_max, pow10)
                 text = r"$%.1f \!\times\! 10^{%d}$" % (flux_max / 10 ** pow10, pow10)
                 ax.text(
                     1.0, 1.01, text, transform=ax.transAxes, ha="center", va="bottom"

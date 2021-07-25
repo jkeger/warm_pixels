@@ -367,7 +367,10 @@ class PixelLineCollection(object):
             n_flux_bins = len(flux_bins) - 1
         else:
             if flux_min is None:
-                flux_min = np.amin(self.fluxes)
+                if flux_scale == "linear":
+                    flux_min = np.amin(self.fluxes)
+                else:
+                    flux_min = np.amin(self.fluxes[self.fluxes > 0])
             if flux_max is None:
                 flux_max = np.amax(self.fluxes)
 
