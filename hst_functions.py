@@ -855,7 +855,6 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
                     )
                 flux_max = flux_bins[i_flux + 1]
                 pow10 = np.floor(np.log10(flux_max))
-                print(flux_max, pow10)
                 text = r"$%.1f \!\times\! 10^{%d}$" % (flux_max / 10 ** pow10, pow10)
                 ax.text(
                     1.0, 1.01, text, transform=ax.transAxes, ha="center", va="bottom"
@@ -881,10 +880,14 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
 
             # Total trap density
             if i_row == n_row_bins - 1 and i_flux == n_flux_bins - 1:
+                if rho_q_set is None or rho_q_std_set is None:
+                    text = "fit error"
+                else:
+                    text = r"$\rho_{\rm q} = %.2g \pm %.2g$" % (rho_q_set, rho_q_std_set)
                 ax.text(
                     0.03,
                     0.03,
-                    r"$\rho_{\rm q} = %.2g \pm %.2g$" % (rho_q_set, rho_q_std_set),
+                    text,
                     transform=ax.transAxes,
                     size=fontsize,
                     ha="left",

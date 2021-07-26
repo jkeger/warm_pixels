@@ -157,10 +157,9 @@ datasets_pre_T_change = [
     "04_2005",  # 2005/04/05, day 1131, 8 images
     "05_2005",  # 2005/05/14, day 1170, 14 images
     "09_2005",  # 2005/09/04, day 1283, 12 images
-    "11_2005",  # 2005/11/14, day 1354, 13 images
+    "11_2005",  # 2005/11/14, day 1354, 13 images  ## fit error?
     "04_2006",  # 2006/04/28, day 1519, 11 images
     # Richard
-    "shortSNe0",  # 2002/06/22, day 113, 2 images  ## Aidan: 1step error
     "shortSNe1",  # 2002/11/20, day 264, 8 images
     "shortSNe2",  # 2003/05/06, day 431, 3 images  ## Aidan: something wrong
     "shortSNe3",  # 2003/05/08, day 433, 3 images
