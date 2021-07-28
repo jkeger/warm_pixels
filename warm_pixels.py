@@ -133,26 +133,8 @@ def find_warm_pixels(
     # Calculate the maximum of the neighbouring pixels in the same column for
     # each pixel, not including that pixel
     nearby_maxima = np.maximum.reduce(
-        [
-            np.roll(image_no_bg, 1, axis=0),
-            np.roll(image_no_bg, 2, axis=0),
-            np.roll(image_no_bg, 3, axis=0),
-            np.roll(image_no_bg, 4, axis=0),
-            np.roll(image_no_bg, 5, axis=0),
-            np.roll(image_no_bg, 6, axis=0),
-            np.roll(image_no_bg, 7, axis=0),
-            np.roll(image_no_bg, 8, axis=0),
-            np.roll(image_no_bg, 9, axis=0),
-            np.roll(image_no_bg, -1, axis=0),
-            np.roll(image_no_bg, -2, axis=0),
-            np.roll(image_no_bg, -3, axis=0),
-            np.roll(image_no_bg, -4, axis=0),
-            np.roll(image_no_bg, -5, axis=0),
-            np.roll(image_no_bg, -6, axis=0),
-            np.roll(image_no_bg, -7, axis=0),
-            np.roll(image_no_bg, -8, axis=0),
-            np.roll(image_no_bg, -9, axis=0),
-        ]
+        [np.roll(image_no_bg, i + 1, axis=0) for i in range(trail_length + 1)]
+        + [np.roll(image_no_bg, -(i + 1), axis=0) for i in range(trail_length + 1)]
     )
 
     # Identify warm pixels
