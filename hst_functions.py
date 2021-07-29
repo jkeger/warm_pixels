@@ -641,7 +641,7 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
     else:
         plt.savefig(save_path)
         plt.close()
-        print("Saved", save_path[-40:])
+        print("Saved", save_path[-36:])
 
 
 def plot_stacked_trails(dataset, quadrants, save_path=None):
@@ -883,7 +883,10 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
                 if rho_q_set is None or rho_q_std_set is None:
                     text = "fit error"
                 else:
-                    text = r"$\rho_{\rm q} = %.2g \pm %.2g$" % (rho_q_set, rho_q_std_set)
+                    text = r"$\rho_{\rm q} = %.2g \pm %.2g$" % (
+                        rho_q_set,
+                        rho_q_std_set,
+                    )
                 ax.text(
                     0.03,
                     0.03,
@@ -951,6 +954,9 @@ def plot_trap_density_evol(list_name, quadrant_sets):
         npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrants))
         days, densities, errors = [npzfile[var] for var in npzfile.files]
 
+        day_0 = 0
+        day_1 = np.amax(days) * 1.02
+
         label = "".join(quadrants)
         c = colours[i_q]
 
@@ -969,15 +975,24 @@ def plot_trap_density_evol(list_name, quadrant_sets):
             grad, icpt = popt
             err_grad = np.sqrt(pcov[0, 0])
             err_icpt = np.sqrt(pcov[1, 1])
-            fit_densities = linear(days[sel] - day_mid, grad, icpt)
+            if days[sel][-1] > ut.day_T_change:
+                # Extrapolate on to the plot edge
+                days_fit = np.append(days[sel], [day_1])
+                if days[sel][0] < ut.day_side2_fail:
+                    # And back to the T change
+                    days_fit = np.append([ut.day_T_change], days_fit)
+            else:
+                # Extrapolate on to the T change
+                days_fit = np.append(days[sel], [ut.day_T_change])
+                # And back to the plot edge
+                days_fit = np.append([day_0], days_fit)
+            fit_densities = linear(days_fit - day_mid, grad, icpt)
 
             # Plot
-            ax.plot(days[sel], fit_densities, c=c, lw=1)
-            fit_errors = np.sqrt(
-                err_icpt ** 2 + ((days[sel] - day_mid) * err_grad) ** 2
-            )
-            ax.plot(days[sel], fit_densities + fit_errors, c=c, lw=1, alpha=0.3)
-            ax.plot(days[sel], fit_densities - fit_errors, c=c, lw=1, alpha=0.3)
+            ax.plot(days_fit, fit_densities, c=c, lw=1)
+            fit_errors = np.sqrt(err_icpt ** 2 + ((days_fit - day_mid) * err_grad) ** 2)
+            ax.plot(days_fit, fit_densities + fit_errors, c=c, lw=1, alpha=0.25)
+            ax.plot(days_fit, fit_densities - fit_errors, c=c, lw=1, alpha=0.25)
 
             # Shift for neater function of t
             icpt -= grad * day_mid
@@ -1006,12 +1021,12 @@ def plot_trap_density_evol(list_name, quadrant_sets):
     # Axes etc
     ax.set_xlabel("Days Since ACS Launch")
     ax.set_ylabel(r"Total Trap Density per Pixel, $\rho_{\rm q}$")
-    day_0 = 0
-    day_1 = np.amax(days) * 1.02
     ax.set_xlim(day_0, day_1)
     ax.set_ylim(
         min(0, np.amin(densities - 2 * errors)), 1.1 * np.amax(densities + errors)
     )
+    ax.xaxis.set_minor_locator(MultipleLocator(200))
+    ax.yaxis.set_minor_locator(MultipleLocator(0.1))
 
     # Mark dates
     ax.axvline(ut.day_T_change, c="k", lw=1)
@@ -1053,5 +1068,5 @@ def plot_trap_density_evol(list_name, quadrant_sets):
     nice_plot(ax2)
 
     save_path = ut.dataset_list_plotted_density_evol(list_name, quadrant_sets)
-    plt.savefig(save_path)
+    plt.savefig(save_path, dpi=200)
     print("Saved", save_path[-40:])

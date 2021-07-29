@@ -110,9 +110,6 @@ class Dataset(object):
         self.image_paths = [self.path + name + ".fits" for name in self.image_names]
         self.n_images = len(self.image_names)
 
-        # Save paths
-        self.plotted_distributions = self.path + "plotted_distributions.png"
-
     @property
     def date(self):
         """Return the Julian date of the set, taken from the first image."""
@@ -147,6 +144,10 @@ class Dataset(object):
             "".join(quadrants),
         )
 
+    def plotted_distributions(self, quadrants):
+        """Return the file name including the path for saving derived data."""
+        return self.path + "plotted_distributions_%s.png" % "".join(quadrants)
+
 
 datasets_pre_T_change = [
     # Aidan
@@ -161,7 +162,7 @@ datasets_pre_T_change = [
     "04_2006",  # 2006/04/28, day 1519, 11 images
     # Richard
     "shortSNe1",  # 2002/11/20, day 264, 8 images
-    "shortSNe2",  # 2003/05/06, day 431, 3 images  ## Aidan: something wrong
+    "shortSNe2",  # 2003/05/06, day 431, 3 images
     "shortSNe3",  # 2003/05/08, day 433, 3 images
     "shortSNe4",  # 2003/05/12, day 437, 3 images
     "early",  # 2003/10/20, day 598, 23 images
@@ -225,14 +226,14 @@ datasets_post_T_change = [
     # Richard
     "longSNe2",  # 2006/07/13, day 1595, 32 images
     "richmassey60494",  # 2006/07/13, day 1595, 9 images
-    "richmassey60490",  # 2006/07/17, day 1599, 6 images  ## e.g. low
-    "richmassey61093",  # 2006/07/31, day 1613, 8 images  ## e.g. high
-    "richmassey60491",  # 2006/08/16, day 1629, 7 images  ## e.g. low
+    "richmassey60490",  # 2006/07/17, day 1599, 6 images
+    "richmassey61093",  # 2006/07/31, day 1613, 8 images
+    "richmassey60491",  # 2006/08/16, day 1629, 7 images
     "ten3",  # 2006/08/18, day 1631, 28 images
     "shortSNe9",  # 2006/08/18, day 1631, 5 images
     "richmassey60488",  # 2006/08/22, day 1635, 6 images
     "richmassey60489",  # 2006/08/22, day 1635, 5 images
-    "richmassey61092",  # 2006/09/11, day 1655, 4 images  ## e.g. high
+    "richmassey61092",  # 2006/09/11, day 1655, 4 images
     "longSNe1",  # 2006/09/16, day 1660, 16 images
     "shortSNeA",  # 2006/09/16, day 1660, 3 images
     "ten4",  # 2006/11/09, day 1714, 18 images
@@ -262,7 +263,7 @@ datasets_post_T_change = [
     "huff_spt606c",  # 2012/01/20, day 3612, 8 images
     "huff_spt606d",  # 2012/03/03, day 3655, 8 images
     "huff_spt606e",  # 2012/07/17, day 3791, 8 images
-    "huff_spt814b",  # 2012/07/25, day 3799, 4 images  ## Aidan: something wrong
+    "huff_spt814b",  # 2012/07/25, day 3799, 4 images
     "huff_spt814c",  # 2012/10/14, day 3880, 8 images
     "huff_spt606h",  # 2012/10/22, day 3888, 8 images
     "candels2013b",  # 2013/01/02, day 3960, 15 images
@@ -270,23 +271,33 @@ datasets_post_T_change = [
     "obama2",  # 2013/04/17, day 4065, 22 images
 ]
 datasets_all = np.append(datasets_pre_T_change, datasets_post_T_change)
-datasets_test = ["12_2020"]
-datasets_test_2 = [
-    # "richmassey60490",
-    # "richmassey61093",
-    "05_2010",
-    "02_2014",
-    "10_2017",
-    "03_2020",
+datasets_sample = [
+    "shortSNe2",  # 2003/05/06, day 431, 3 images
+    "05_2004",  # 2004/05/13, day 804, 12 images
+    "04_2005",  # 2005/04/05, day 1131, 8 images
+    "ten2b",  # 2006/02/09, day 1441, 8 images
+    "04_2006",  # 2006/04/28, day 1519, 11 images
+    "richmassey60490",  # 2006/07/17, day 1599, 6 images
+    "richmassey61093",  # 2006/07/31, day 1613, 8 images
+    "richmassey60491",  # 2006/08/16, day 1629, 7 images
+    "richmassey61092",  # 2006/09/11, day 1655, 4 images
+    "sm43",  # 2009/11/02, day 2803, 12 images
+    "05_2010",  # 2010/05/25, day 3007, 7 images
+    "04_2011",  # 2011/04/04, day 3321, 15 images
+    "huff_spt814b",  # 2012/07/25, day 3799, 4 images
+    "04_2013",  # 2013/04/02, day 4050, 15 images
+    "02_2014",  # 2014/02/23, day 4377, 8 images
+    "01_2015",  # 2015/01/21, day 4709, 10 images
+    "01_2016",  # 2016/01/05, day 5058, 8 images
+    "04_2017",  # 2017/04/05, day 5514, 7 images
+    "08_2018",  # 2018/08/12, day 6008, 14 images
+    "04_2019",  # 2019/04/01, day 6240, 8 images
+    "03_2020",  # 2020/03/21, day 6595, 6 images
+    "12_2020",  # 2020/12/03, day 6852, 12 images
 ]
-# Dictionary of list names
-dataset_lists = {
-    "test": datasets_test,
-    "test_2": datasets_test_2,
-    "pre_T_change": datasets_pre_T_change,
-    "post_T_change": datasets_post_T_change,
-    "all": datasets_all,
-}
+datasets_test = ["huff_spt814b"]
+# Dictionary of choosable list names
+dataset_lists = {"all": datasets_all, "sample": datasets_sample, "test": datasets_test}
 # Convert all to Dataset objects
 for key in dataset_lists.keys():
     dataset_lists[key] = [Dataset(dataset) for dataset in dataset_lists[key]]
@@ -388,11 +399,14 @@ if __name__ == "__main__":
 
         # Plot distributions of warm pixels in the set
         if ut.need_to_make_file(
-            dataset.plotted_distributions, date_old=args.mdate_plot_consistent
+            dataset.plotted_distributions(all_quadrants),
+            date_old=args.mdate_plot_consistent,
         ):
             print("  Distributions of warm pixels...", end=" ", flush=True)
             fu.plot_warm_pixel_distributions(
-                dataset, all_quadrants, save_path=dataset.plotted_distributions
+                dataset,
+                all_quadrants,
+                save_path=dataset.plotted_distributions(all_quadrants),
             )
 
         # Stack warm pixels in each image quadrant or combined quadrants
