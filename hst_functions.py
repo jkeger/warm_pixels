@@ -8,6 +8,7 @@ from scipy.optimize import curve_fit
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+import warnings
 
 from pixel_lines import PixelLineCollection
 from warm_pixels import find_warm_pixels
@@ -916,7 +917,7 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
         print("Saved", save_path[-40:])
 
 
-def plot_trap_density_evol(list_name, quadrant_sets):
+def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
     """Plot the evolution of the total trap density.
 
     fit_total_trap_densities() must first be run for the dataset list.
@@ -931,6 +932,9 @@ def plot_trap_density_evol(list_name, quadrant_sets):
         subsets to be combined together.
 
         e.g. [["A", "B"]] to combine vs [["A"], ["B"]] to keep separate.
+
+    do_sunspots : bool (opt.)
+        Whether or not to also plot the monthly average sunspot number.
     """
     # Linear fits
     def linear(x, m, c):
@@ -942,13 +946,13 @@ def plot_trap_density_evol(list_name, quadrant_sets):
     else:
         colours = A1_c[: len(quadrant_sets)]
 
-    # ========
     # Plot
-    # ========
     plt.figure(figsize=(12, 10))
     ax = plt.gca()
 
-    # Load and plot
+    # ========
+    # Load and plot data
+    # ========
     for i_q, quadrants in enumerate(quadrant_sets):
         # Load
         npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrants))
@@ -1016,7 +1020,58 @@ def plot_trap_density_evol(list_name, quadrant_sets):
             label=label,
         )
 
-    plt.legend(loc="lower right")
+    # ========
+    # Sunspots
+    # ========
+    if do_sunspots:
+        ax2 = ax.twinx()
+
+        # Load
+        # https://wwwbis.sidc.be/silso/datafiles#total monthly mean
+        # Year | Month | Decimal year | N sunspots | Std dev | N obs | Provisional?
+        sunspot_data = np.genfromtxt(
+            "SN_m_tot_V2.0.txt",
+            dtype=[("dcml_year", float), ("sunspots", float), ("sunspots_err", float)],
+            usecols=(2, 3, 4),
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            sunspot_days = (
+                ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
+            )
+        sel_ss = np.where((day_0 < sunspot_days) & (sunspot_days < day_1))[0]
+
+        # Plot
+        ax2.errorbar(
+            sunspot_days[sel_ss],
+            sunspot_data["sunspots"][sel_ss],
+            yerr=sunspot_data["sunspots_err"][sel_ss],
+            c="0.8",
+            ls="none",
+            marker=".",
+            capsize=3,
+            elinewidth=1,
+        )
+        # Label on primary axes
+        ax.errorbar(
+            [],
+            [],
+            yerr=[],
+            c="0.8",
+            ls="none",
+            marker=".",
+            capsize=3,
+            elinewidth=1,
+            label="Sunspot number",
+        )
+
+        # Axes etc
+        ax.patch.set_visible(False)
+        ax2.patch.set_visible(True)
+        ax2.set_zorder(-1)
+        ax2.set_ylabel(r"Sunspot Number, Monthly Average")
+        ax2.set_ylim(0, None)
+        plt.sca(ax)
 
     # Axes etc
     ax.set_xlabel("Days Since ACS Launch")
@@ -1027,6 +1082,9 @@ def plot_trap_density_evol(list_name, quadrant_sets):
     )
     ax.xaxis.set_minor_locator(MultipleLocator(200))
     ax.yaxis.set_minor_locator(MultipleLocator(0.1))
+
+    # Legend
+    plt.legend(loc="lower right", prop={"size": 14})
 
     # Mark dates
     ax.axvline(ut.day_T_change, c="k", lw=1)
@@ -1056,16 +1114,16 @@ def plot_trap_density_evol(list_name, quadrant_sets):
         )
 
     # Calendar years
-    ax2 = ax.twiny()
-    ax2.set_xlabel("Calendar Year")
-    ax2.set_xlim(day_0, day_1)
+    ax_yr = ax.twiny()
+    ax_yr.set_xlabel("Calendar Year")
+    ax_yr.set_xlim(day_0, day_1)
     year_ticks = np.arange(2003, ut.jd_to_dec_yr(ut.date_acs_launch + day_1), 1)
-    ax2.set_xticks(ut.dec_yr_to_jd(year_ticks[1::2]) - ut.date_acs_launch)
-    ax2.set_xticks(ut.dec_yr_to_jd(year_ticks[::2]) - ut.date_acs_launch, minor=True)
-    ax2.set_xticklabels(["%d" % year for year in year_ticks[1::2]])
+    ax_yr.set_xticks(ut.dec_yr_to_jd(year_ticks[1::2]) - ut.date_acs_launch)
+    ax_yr.set_xticks(ut.dec_yr_to_jd(year_ticks[::2]) - ut.date_acs_launch, minor=True)
+    ax_yr.set_xticklabels(["%d" % year for year in year_ticks[1::2]])
 
     nice_plot(ax)
-    nice_plot(ax2)
+    nice_plot(ax_yr)
 
     save_path = ut.dataset_list_plotted_density_evol(list_name, quadrant_sets)
     plt.savefig(save_path, dpi=200)
