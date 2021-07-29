@@ -17,7 +17,6 @@ dataset_root = os.path.join(path, "../hst_acs_datasets/")
 # ========
 # Number of pixels for each trail, not including the warm pixel itself
 trail_length = 8
-# trail_length = 12
 # Julian dates
 date_acs_launch = 2452334.5  # ACS launched, SM3B, 01 March 2002
 date_T_change = 2453920.0  # Temperature changed, 03 July 2006
@@ -156,18 +155,18 @@ def need_to_make_file(filepath, date_old=None):
         this date. Defaults to only check whether a file already exists.
         Alternatively, set "1" to force remaking or "0" to force not.
     """
+    # Overrides
+    if date_old == "1":
+        return True
+    elif date_old == "0":
+        return False
+
     # If the file doesn't exist
     if not os.path.isfile(filepath):
         return True
 
     # If the file was saved too long ago
     if date_old is not None:
-        # Overrides
-        if date_old == "1":
-            return True
-        elif date_old == "0":
-            return False
-
         # Compare with modified date
         time_mod = os.path.getmtime(filepath)
         time_old = time.mktime(
