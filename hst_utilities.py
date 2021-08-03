@@ -13,10 +13,41 @@ dataset_root = os.path.join(path, "../hst_acs_datasets/")
 
 
 # ========
-# Constants
+# Input parameters
 # ========
 # Number of pixels for each trail, not including the warm pixel itself
-trail_length = 8
+trail_length = 9
+# The minimum fraction of images in which a warm pixel must be present.
+# fraction_present = 0.9
+fraction_present = 2 / 3
+# Stacking bins (see generate_stacked_lines_from_bins() in pixel_lines.py)
+n_row_bins = 5
+n_flux_bins = 10
+n_background_bins = 1
+flux_bins = None
+#   Richard bins
+flux_bins = np.array(
+    [
+        100.000,
+        177.475,
+        314.972,
+        558.996,
+        992.075,
+        1760.68,
+        3124.76,
+        5545.66,
+        9842.13,
+        17467.3,
+        58982.4,
+    ]
+)
+#   Middle flux bins
+# flux_bins = np.logspace(np.log10(2e2), np.log10(1e4), n_flux_bins + 1)
+
+
+# ========
+# Constants
+# ========
 # Julian dates
 date_acs_launch = 2452334.5  # ACS launched, SM3B, 01 March 2002
 date_T_change = 2453920.0  # Temperature changed, 03 July 2006

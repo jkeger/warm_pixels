@@ -5,14 +5,15 @@ See functions.py and utilities.py.
 
 Full pipeline:
 + For each dataset of images:
-    + For each image (and quadrant):
-        + Find possible warm pixels
-        + Find consistent warm pixels
+    + For each image (and quadrant), find possible warm pixels
+    + Find consistent warm pixels
     + Plot distributions of the warm pixels
     + Stack the warm pixel trails in bins
     + Plot the stacked trails
 + Fit the total trap density across all datasets
 + Plot the evolution of the total trap density
+
+See hst_utilities.py to set parameters like the trail length and bin edges.
 
 By default, runs all the functions for the chosen list of image datasets,
 skipping any that have been run before and saved their output. Use the optional
@@ -63,7 +64,7 @@ dataset_list : str (opt.)
     Downsample the dataset list to run 1/N of the datasets, starting with set i.
     e.g. -w 10 5 will run the datasets with indices 5, 15, 25, ... in the list.
 
---test_image_and_bias_files, -t : str (opt.)
+--test_image_and_bias_files, -t
     Test loading the image and corresponding bias files in the list of datasets.
 """
 
@@ -146,7 +147,10 @@ class Dataset(object):
 
     def plotted_distributions(self, quadrants):
         """Return the file name including the path for saving derived data."""
-        return self.path + "plotted_distributions_%s.png" % "".join(quadrants)
+        return ut.path + "/plotted_distributions/%s_plotted_distributions_%s.png" % (
+            self.name,
+            "".join(quadrants),
+        )
 
 
 datasets_pre_T_change = [
@@ -277,10 +281,12 @@ datasets_sample = [
     "04_2005",  # 2005/04/05, day 1131, 8 images
     "ten2b",  # 2006/02/09, day 1441, 8 images
     "04_2006",  # 2006/04/28, day 1519, 11 images
+    # Temperature changed
     "richmassey60490",  # 2006/07/17, day 1599, 6 images
     "richmassey61093",  # 2006/07/31, day 1613, 8 images
     "richmassey60491",  # 2006/08/16, day 1629, 7 images
     "richmassey61092",  # 2006/09/11, day 1655, 4 images
+    # Failure and repair
     "sm43",  # 2009/11/02, day 2803, 12 images
     "05_2010",  # 2010/05/25, day 3007, 7 images
     "04_2011",  # 2011/04/04, day 3321, 15 images
@@ -297,8 +303,19 @@ datasets_sample = [
     "12_2020",  # 2020/12/03, day 6852, 12 images
 ]
 datasets_test = ["huff_spt814b"]
+datasets_test_2 = [
+    "richmassey60491",  # 2006/08/16, day 1629, 7 images
+    "richmassey61092",  # 2006/09/11, day 1655, 4 images
+    "04_2017",  # 2017/04/05, day 5514, 7 images
+    "10_2017",  # 2017/10/03, day 5695, 5 images
+]
 # Dictionary of choosable list names
-dataset_lists = {"all": datasets_all, "sample": datasets_sample, "test": datasets_test}
+dataset_lists = {
+    "all": datasets_all,
+    "sample": datasets_sample,
+    "test": datasets_test,
+    "test_2": datasets_test_2,
+}
 # Convert all to Dataset objects
 for key in dataset_lists.keys():
     dataset_lists[key] = [Dataset(dataset) for dataset in dataset_lists[key]]
@@ -346,6 +363,9 @@ if __name__ == "__main__":
         N = int(args.downsample[0])
         i = int(args.downsample[1])
         dataset_list = dataset_list[i::N]
+        downsample_print = "[%d::%d]" % (i, N)
+    else:
+        downsample_print = ""
 
     # Test loading the image and corresponding bias files
     if args.test_image_and_bias_files:
@@ -365,12 +385,13 @@ if __name__ == "__main__":
     # ========
     for i_dataset, dataset in enumerate(dataset_list):
         print(
-            'Dataset "%s" (%d of %d in "%s", %d images, "%s")'
+            'Dataset "%s" (%d of %d in "%s"%s, %d images, "%s")'
             % (
                 dataset.name,
                 i_dataset + 1,
                 len(dataset_list),
                 list_name,
+                downsample_print,
                 dataset.n_images,
                 args.quadrants,
             )
@@ -396,7 +417,12 @@ if __name__ == "__main__":
                 print(
                     "  Consistent warm pixels (%s)..." % quadrant, end=" ", flush=True
                 )
-                fu.find_consistent_warm_pixels(dataset, quadrant)
+                fu.find_consistent_warm_pixels(
+                    dataset,
+                    quadrant,
+                    flux_min=ut.flux_bins[0],
+                    flux_max=ut.flux_bins[-1],
+                )
 
         # Plot distributions of warm pixels in the set
         if ut.need_to_make_file(
@@ -456,4 +482,4 @@ if __name__ == "__main__":
     # Plot the trap density evolution
     if args.plot_density:
         print("Plot trap density evolution...", end=" ", flush=True)
-        fu.plot_trap_density_evol(list_name, quadrant_sets)
+        fu.plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=False)

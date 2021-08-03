@@ -68,7 +68,18 @@ def find_dataset_warm_pixels(dataset, quadrant):
 
         # Find the warm pixel trails
         new_warm_pixels = find_warm_pixels(
-            image=image, trail_length=ut.trail_length, origin=image_name_q, date=date
+            image=image,
+            trail_length=ut.trail_length,
+            n_parallel_overscan=20,
+            n_serial_prescan=24,
+            ignore_bad_columns=True,
+            bad_column_factor=3.5,
+            bad_column_loops=5,
+            smooth_width=3,
+            unsharp_masking_factor=6,
+            flux_min=None,
+            origin=image_name_q,
+            date=date,
         )
         print("Found %d possible warm pixels " % len(new_warm_pixels))
 
@@ -86,7 +97,7 @@ def find_dataset_warm_pixels(dataset, quadrant):
     warm_pixels.save(dataset.saved_lines(quadrant))
 
 
-def find_consistent_warm_pixels(dataset, quadrant):
+def find_consistent_warm_pixels(dataset, quadrant, flux_min=None, flux_max=None):
     """Find the consistent warm pixels in a dataset.
 
     find_dataset_warm_pixels() must first be run for the dataset.
@@ -99,6 +110,10 @@ def find_consistent_warm_pixels(dataset, quadrant):
     quadrant : str (opt.)
         The quadrant (A, B, C, D) of the image to load.
 
+    flux_min, flux_max : float (opt.)
+        If provided, then before checking for consistent pixels, discard any
+        with fluxes outside of these limits.
+
     Saves
     -----
     warm_pixels : PixelLineCollection
@@ -109,8 +124,18 @@ def find_consistent_warm_pixels(dataset, quadrant):
     warm_pixels = PixelLineCollection()
     warm_pixels.load(dataset.saved_lines(quadrant))
 
-    # Find the warm pixels present in at least 2/3 of the images
-    consistent_lines = warm_pixels.find_consistent_lines(fraction_present=2 / 3)
+    if flux_min is not None:
+        sel_flux = np.where(
+            (warm_pixels.fluxes > flux_min) & (warm_pixels.fluxes < flux_max)
+        )[0]
+        print("Kept %d bounded fluxes of %d" % (len(sel_flux), warm_pixels.n_lines))
+        warm_pixels.lines = warm_pixels.lines[sel_flux]
+        print("    ", end="")
+
+    # Find the warm pixels present in at least e.g. 2/3 of the images
+    consistent_lines = warm_pixels.find_consistent_lines(
+        fraction_present=ut.fraction_present
+    )
     print(
         "Found %d consistents of %d possibles"
         % (len(consistent_lines), warm_pixels.n_lines)
@@ -156,9 +181,6 @@ def stack_dataset_warm_pixels(dataset, quadrants):
         ][::-1]
 
     # Stack the lines in bins by distance from readout and total flux
-    n_row_bins = 5
-    n_flux_bins = 10
-    n_background_bins = 1
     (
         stacked_lines,
         row_bins,
@@ -166,12 +188,15 @@ def stack_dataset_warm_pixels(dataset, quadrants):
         date_bins,
         background_bins,
     ) = warm_pixels.generate_stacked_lines_from_bins(
-        n_row_bins=n_row_bins,
-        n_flux_bins=n_flux_bins,
-        n_background_bins=n_background_bins,
+        n_row_bins=ut.n_row_bins,
+        flux_bins=ut.flux_bins,
+        n_background_bins=ut.n_background_bins,
         return_bin_info=True,
     )
-    print("Stacked lines in %d bins" % (n_row_bins * n_flux_bins * n_background_bins))
+    print(
+        "Stacked lines in %d bins"
+        % (ut.n_row_bins * ut.n_flux_bins * ut.n_background_bins)
+    )
 
     # Save
     stacked_lines.save(dataset.saved_stacked_lines(quadrants))
@@ -184,7 +209,7 @@ def stack_dataset_warm_pixels(dataset, quadrants):
     )
 
 
-def trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c):
+def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
     """Calculate the model shape of a CTI trail.
 
     Parameters
@@ -204,7 +229,7 @@ def trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c
     row : float
         The distance in pixels of the trailed pixel from the readout register.
 
-    alpha : float
+    beta : float
         The CCD well fill power.
 
     w : float
@@ -223,7 +248,7 @@ def trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c
     """
     return (
         rho_q
-        * ((n_e / w) ** alpha - (n_bg / w) ** alpha)
+        * ((n_e / w) ** beta - (n_bg / w) ** beta)
         * row
         * (
             A * np.exp((1 - x) / tau_a) * (1 - np.exp(-1 / tau_a))
@@ -247,7 +272,7 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
         The model charge values at each pixel in the trail (e-).
     """
     # CCD
-    alpha = 0.478
+    beta = 0.478
     w = 84700.0
     # Trap species
     A = 0.17
@@ -263,7 +288,7 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
         tau_b = 7.70
         tau_c = 37.0
 
-    return trail_model(x, rho_q, n_e, n_bg, row, alpha, w, A, B, C, tau_a, tau_b, tau_c)
+    return trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
 
 
 def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date):
@@ -293,7 +318,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
         The number of electrons in the trailed pixel's charge cloud (e-).
 
     n_bg_all : float or [float]
-        The Background number of electrons (e-).
+        The background number of electrons (e-).
 
     row_all : float or [float]
         Distance in pixels of the trailed pixel from the readout register.
@@ -384,9 +409,9 @@ def fit_dataset_total_trap_density(dataset, quadrants):
     # ========
     # Concatenate each stacked trail
     # ========
-    # Skip the lowest-row and lowest-flux bins
+    # Skip the lowest-row bins
     for i_row in range(1, n_row_bins):
-        for i_flux in range(1, n_flux_bins):
+        for i_flux in range(n_flux_bins):
             for i_background in range(n_background_bins):
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
@@ -820,7 +845,7 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
             if i_flux != 0:
                 ax.set_yticklabels([])
             elif i_row in [1, n_row_bins - 2]:
-                ax.set_ylabel("Charge (e$^-$)")
+                ax.set_ylabel("Charge above background (e$^-$)")
 
             # Bin edge labels
             if i_flux == n_flux_bins - 1:
@@ -1021,6 +1046,48 @@ def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
         )
 
     # ========
+    # Richard data
+    # ========
+    if True:  ###
+        # date, density, density_err
+        data = np.array(
+            [
+                [431.303, 0.179387, 0.0682717],  # shortSNe2
+                [804.024, 0.325217, 0.0512948],  # 05_2004
+                [1131.27, 0.456763, 0.762311],  # 04_2005
+                [1519.10, 0.627182, 0.0732714],  # 04_2006
+                [1599.39, 0.611703, 0.0760443],  # richmassey60490
+                [1613.18, 0.560601, 0.0496126],  # richmassey61093
+                [1629.13, 0.632204, 0.0515503],  # richmassey60491
+                [1655.14, 0.657068, 0.0503882],  # richmassey61092
+                [2803.10, 1.34501, 0.0720851],  # sm43
+                [3007.13, 1.45635, 0.0732634],  # 05_2010
+                [3321.37, 1.65278, 0.0453292],  # 04_2011
+                [3799.49, 1.89259, 0.0684670],  # huff_spt814b
+                [4050.26, 2.01314, 0.0802822],  # 04_2013
+                [4377.37, 2.07898, 0.0479423],  # 02_2014
+                [4709.00, 2.29900, 0.238915],  # 01_2015
+                [5058.00, 2.48080, 0.297159],  # 01_2016
+                [5514.32, 2.69825, 0.0761266],  # 04_2017
+                [5695.42, 2.58939, 0.0724275],  # 10_2017
+                [6008.27, 2.84505, 0.351008],  # 08_2018
+                [6240.09, 3.01478, 0.0649324],  # 04_2019
+                [6595.34, 3.16847, 0.606145],  # 03_2020
+                [6852.48, 3.26501, 0.209639],  # 12_2020
+            ]
+        )
+        ax.errorbar(
+            data[:, 0],
+            data[:, 1],
+            yerr=data[:, 2],
+            ls="none",
+            marker="+",
+            c="0.5",
+            capsize=3,
+            elinewidth=1,
+        )
+
+    # ========
     # Sunspots
     # ========
     if do_sunspots:
@@ -1035,6 +1102,7 @@ def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
             usecols=(2, 3, 4),
         )
         with warnings.catch_warnings():
+            # Ignore astropy.time's "dubious year" warnings
             warnings.simplefilter("ignore")
             sunspot_days = (
                 ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
