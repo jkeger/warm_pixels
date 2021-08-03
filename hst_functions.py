@@ -738,6 +738,7 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
             # Furthest row bin at the top
             ax = axes[n_row_bins - 1 - i_row][i_flux]
 
+            # Plot each background bin's stack
             for i_background, c in enumerate(colours):
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
@@ -777,9 +778,19 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
                     pixels[where_neg],
                     abs(trail[where_neg]),
                     color=c,
-                    facecolor="none",
+                    facecolor="w",
                     marker="o",
                     alpha=0.7,
+                    zorder=-1,
+                )
+                ax.errorbar(
+                    pixels[where_neg],
+                    abs(trail[where_neg]),
+                    yerr=noise[where_neg],
+                    color=c,
+                    fmt=",",
+                    alpha=0.7,
+                    zorder=-2,
                 )
 
                 # ========
