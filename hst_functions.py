@@ -1,5 +1,7 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
 
+from misc import *  # Plotting defaults etc
+
 import numpy as np
 import os
 import sys
@@ -14,7 +16,6 @@ from pixel_lines import PixelLineCollection
 from warm_pixels import find_warm_pixels
 
 import hst_utilities as ut
-from misc import *  # Plotting defaults etc
 
 sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
 import autoarray as aa

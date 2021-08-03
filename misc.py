@@ -1,5 +1,9 @@
 import numpy as np
 import matplotlib as mpl
+import os
+# Use a non-interactive backend if no display found
+if os.environ.get("DISPLAY", "") == "" or os.environ.get("NONINTERACTIVE") is not None:
+    mpl.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import warnings
