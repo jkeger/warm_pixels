@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib as mpl
 import os
+
 # Use a non-interactive backend if no display found
 if os.environ.get("DISPLAY", "") == "" or os.environ.get("NONINTERACTIVE") is not None:
     mpl.use("Agg")
@@ -15,7 +16,7 @@ import warnings
 font_size = 20
 params = {
     "backend": "ps",
-    "text.latex.preamble": r"\usepackage{gensymb}",
+    "text.latex.preamble": r"\usepackage{gensymb}" r"\newcommand{\mathdefault}[1][]{}",
     "axes.labelsize": font_size,
     "axes.titlesize": font_size,
     "font.size": font_size,
