@@ -5,6 +5,10 @@ import os
 # Use a non-interactive backend if no display found
 if os.environ.get("DISPLAY", "") == "" or os.environ.get("NONINTERACTIVE") is not None:
     mpl.use("Agg")
+    # Avoid weird latex plotting error
+    preamble = r"\usepackage{gensymb}" r"\newcommand{\mathdefault}[1][]{}"
+else:
+    preamble = r"\usepackage{gensymb}"
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import warnings
@@ -16,7 +20,7 @@ import warnings
 font_size = 20
 params = {
     "backend": "ps",
-    "text.latex.preamble": r"\usepackage{gensymb}" r"\newcommand{\mathdefault}[1][]{}",
+    "text.latex.preamble": preamble,
     "axes.labelsize": font_size,
     "axes.titlesize": font_size,
     "font.size": font_size,
