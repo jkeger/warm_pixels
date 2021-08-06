@@ -17,6 +17,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import ConnectionPatch
+import matplotlib.patheffects as path_effects
 
 from pixel_lines import PixelLineCollection
 from warm_pixels import find_warm_pixels
@@ -67,14 +68,14 @@ def save_fig(Fp_save, do_pdf=False):
         Fp_save += ".pdf"
     else:
         Fp_save += ".png"
-    plt.savefig(Fp_save)
+    plt.savefig(Fp_save, dpi=200)
     print("Saved %s" % Fp_save[-64:])
 
 
 # ========
 # Functions
 # ========
-def example_image_trails(do_pdf=False):
+def example_image_zooms(do_pdf=False):
     """Example HST ACS image with CTI trails"""
 
     image_path, quadrant = d_07_2020.path + "jdrwc3fcq_raw.fits", "D"
@@ -102,27 +103,27 @@ def example_image_trails(do_pdf=False):
     n_row, n_col = image.shape
     col_0 = n_col - 256
     col_1 = col_0 + 200
-    row_a_0 = 95
-    row_a_1 = row_a_0 + 120
-    row_b_0 = n_row - 153
-    row_b_1 = row_b_0 + 120
+    row1_0 = 95
+    row1_1 = row1_0 + 120
+    row2_0 = n_row - 153
+    row2_1 = row2_0 + 120
 
     # Plot the image and zooms
-    vmin, vmax = 0, 500
+    vmin, vmax = 0, 450
     im1 = ax1.imshow(X=image, aspect="equal", vmin=vmin, vmax=vmax)
     im2 = ax2.imshow(
-        X=image[row_a_0:row_a_1, col_0:col_1],
+        X=image[row1_0:row1_1, col_0:col_1],
         aspect="equal",
         vmin=vmin,
         vmax=vmax,
-        extent=[col_0, col_1, row_a_1, row_a_0],
+        extent=[col_0, col_1, row1_1, row1_0],
     )
     im3 = ax3.imshow(
-        X=image[row_b_0:row_b_1, col_0:col_1],
+        X=image[row2_0:row2_1, col_0:col_1],
         aspect="equal",
         vmin=vmin,
         vmax=vmax,
-        extent=[col_0, col_1, row_b_1, row_b_0],
+        extent=[col_0, col_1, row2_1, row2_0],
     )
 
     # Zoom lines
@@ -130,21 +131,21 @@ def example_image_trails(do_pdf=False):
     lw_zm = 1.4
     ax1.plot(
         [col_0, col_1, col_1, col_0, col_0],
-        [row_a_0, row_a_0, row_a_1, row_a_1, row_a_0],
+        [row1_0, row1_0, row1_1, row1_1, row1_0],
         c=c_zm,
         lw=lw_zm,
     )
     ax1.plot(
         [col_0, col_1, col_1, col_0, col_0],
-        [row_b_0, row_b_0, row_b_1, row_b_1, row_b_0],
+        [row2_0, row2_0, row2_1, row2_1, row2_0],
         c=c_zm,
         lw=lw_zm,
     )
     for xyA, xyB, axB in [
-        [(col_0, row_a_0), (0, 1), ax2],
-        [(col_0, row_a_1), (0, 0), ax2],
-        [(col_0, row_b_0), (0, 1), ax3],
-        [(col_0, row_b_1), (0, 0), ax3],
+        [(col_0, row1_0), (0, 1), ax2],
+        [(col_0, row1_1), (0, 0), ax2],
+        [(col_0, row2_0), (0, 1), ax3],
+        [(col_0, row2_1), (0, 0), ax3],
     ]:
         ax1.add_artist(
             ConnectionPatch(
@@ -171,11 +172,14 @@ def example_image_trails(do_pdf=False):
     for ax in [ax2.xaxis, ax2.yaxis, ax3.xaxis, ax3.yaxis]:
         ax.set_major_locator(mpl.ticker.MultipleLocator(base=50))
         ax.set_minor_locator(mpl.ticker.MultipleLocator(base=10))
+    cbar.ax.minorticks_on()
+    cbar.ax.yaxis.set_ticks(np.arange(vmin, vmax + 1, 100))
+    cbar.ax.yaxis.set_ticks(np.arange(50, vmax + 1, 100), minor=True)
     for ax in [ax1, ax2, ax3, cax]:
         set_large_ticks(ax)
 
     # Save
-    save_fig("example_image_trails", do_pdf)
+    save_fig("example_image_zooms", do_pdf)
 
 
 def found_warm_pixels(do_pdf=False):
@@ -192,8 +196,10 @@ def found_warm_pixels(do_pdf=False):
     ).native
 
     # Load warm pixels
+    poss_warm_pixels = PixelLineCollection()
+    poss_warm_pixels.load(d_07_2020.saved_lines(quadrant))
     warm_pixels = PixelLineCollection()
-    warm_pixels.load(d_07_2020.saved_lines(quadrant))
+    warm_pixels.load(d_07_2020.saved_consistent_lines(quadrant))
 
     # Figure
     fig = plt.figure(figsize=(10, 9), constrained_layout=False)
@@ -209,64 +215,90 @@ def found_warm_pixels(do_pdf=False):
     n_row, n_col = image.shape
     col_0 = n_col - int(256 * 3 / 4) + 1
     col_1 = col_0 + int(200 / 3)
-    row_a_0 = 95
-    row_a_1 = row_a_0 + int(120 / 3)
-    row_b_0 = n_row - 153
-    row_b_1 = row_b_0 + int(120 / 3)
+    row1_0 = 96
+    row1_1 = row1_0 + int(120 / 3)
+    row2_0 = n_row - 154
+    row2_1 = row2_0 + int(120 / 3)
 
     # Plot the image and zooms
-    vmin, vmax = 0, 500
+    vmin, vmax = 0, 450
     im1 = ax1.imshow(
-        X=image[row_a_0:row_a_1, col_0:col_1],
+        X=image[row1_0:row1_1, col_0:col_1],
         aspect="equal",
         vmin=vmin,
         vmax=vmax,
-        extent=[col_0, col_1, row_a_1, row_a_0],
+        extent=[col_0, col_1, row1_1, row1_0],
     )
     im2 = ax2.imshow(
-        X=image[row_b_0:row_b_1, col_0:col_1],
+        X=image[row2_0:row2_1, col_0:col_1],
         aspect="equal",
         vmin=vmin,
         vmax=vmax,
-        extent=[col_0, col_1, row_b_1, row_b_0],
+        extent=[col_0, col_1, row2_1, row2_0],
     )
 
     # Warm pixels
-    rows = warm_pixels.locations[:, 0]
-    cols = warm_pixels.locations[:, 1]
-    sel_a = np.where(
-        (cols > col_0)
-        & (cols < col_1)
-        & (rows > row_a_0)
-        & (rows < row_a_1)
-        & (warm_pixels.fluxes > ut.flux_bins[0])
-    )[0]
-    sel_b = np.where(
-        (cols > col_0)
-        & (cols < col_1)
-        & (rows > row_b_0)
-        & (rows < row_b_1)
-        & (warm_pixels.fluxes > ut.flux_bins[0])
-    )[0]
-    for ax, sel in [[ax1, sel_a], [ax2, sel_b]]:
-        for i in sel:
-            ax.plot(
-                [cols[i], cols[i] + 1, cols[i] + 1, cols[i], cols[i]],
-                [rows[i], rows[i], rows[i] + 1, rows[i] + 1, rows[i]],
-                c="r",
-                lw=0.7,
-                alpha=0.7,
-                zorder=99,
-            )
-            row_0 = rows[i] - ut.trail_length
-            row_1 = rows[i] + ut.trail_length
-            ax.plot(
-                [cols[i], cols[i] + 1, cols[i] + 1, cols[i], cols[i]],
-                [row_0, row_0, row_1, row_1, row_0],
-                c="w",
-                lw=0.7,
-                alpha=0.7,
-            )
+    for wp, do_trail in [[poss_warm_pixels, False], [warm_pixels, True]]:
+        # Select warm pixels in the regions and above the minimum flux
+        rows = wp.locations[:, 0]
+        cols = wp.locations[:, 1]
+        flux_min = ut.flux_bins[0]
+        sel1 = np.where(
+            (cols > col_0)
+            & (cols < col_1)
+            & (rows > row1_0)
+            & (rows < row1_1)
+            & (wp.fluxes > flux_min)
+        )[0]
+        sel2 = np.where(
+            (cols > col_0)
+            & (cols < col_1)
+            & (rows > row2_0)
+            & (rows < row2_1)
+            & (wp.fluxes > flux_min)
+        )[0]
+
+        if do_trail:
+            c = "#ff1100"
+            zorder = 99
+        else:
+            c = "#ee7711"
+            zorder = 88
+
+        # Plot the warm pixels (and trails)
+        for ax, sel in [[ax1, sel1], [ax2, sel2]]:
+            for i in sel:
+                # Outline warm pixel
+                c_0 = cols[i] - 0.03
+                c_1 = cols[i] + 1.03
+                r_0 = rows[i] - 0.03
+                r_1 = rows[i] + 1.03
+                ax.plot(
+                    [c_0, c_1, c_1, c_0, c_0],
+                    [r_0, r_0, r_1, r_1, r_0],
+                    c=c,
+                    lw=0.7,
+                    path_effects=[
+                        path_effects.Stroke(linewidth=1.4, foreground="k"),
+                        path_effects.Normal(),
+                    ],
+                    zorder=zorder,
+                )
+
+                if do_trail:
+                    # Outline trail, rounded edges
+                    r_0 += 1
+                    r_1 += ut.trail_length
+                    ax.plot(
+                        [c_0, c_0, c_1, c_1],
+                        [r_0, r_1, r_1, r_0],
+                        c="w",
+                        lw=0.7,
+                        path_effects=[
+                            path_effects.Stroke(linewidth=1.4, foreground="k"),
+                            path_effects.Normal(),
+                        ],
+                    )
 
     # Axes etc
     cbar = plt.colorbar(im1, cax=cax, extend="max")
@@ -275,9 +307,16 @@ def found_warm_pixels(do_pdf=False):
     ax2.set_xlabel("Column")
     ax1.set_ylabel("Row")
     ax2.set_ylabel("Row")
+    ax1.set_xlim(col_0, col_1)
+    ax2.set_xlim(col_0, col_1)
+    ax1.set_ylim(row1_1, row1_0)
+    ax2.set_ylim(row2_1, row2_0)
     for ax in [ax1.xaxis, ax1.yaxis, ax2.xaxis, ax2.yaxis]:
         ax.set_major_locator(mpl.ticker.MultipleLocator(base=10))
         ax.set_minor_locator(mpl.ticker.MultipleLocator(base=5))
+    cbar.ax.minorticks_on()
+    cbar.ax.yaxis.set_ticks(np.arange(vmin, vmax + 1, 100))
+    cbar.ax.yaxis.set_ticks(np.arange(50, vmax + 1, 100), minor=True)
     for ax in [ax1, ax2, cax]:
         set_large_ticks(ax)
 
@@ -294,7 +333,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Run functions
-    if run("example_image_trails"):
-        example_image_trails(args.pdf)
+    if run("example_image_zooms"):
+        example_image_zooms(args.pdf)
     if run("found_warm_pixels"):
         found_warm_pixels(args.pdf)
