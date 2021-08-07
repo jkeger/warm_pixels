@@ -324,6 +324,133 @@ def found_warm_pixels(do_pdf=False):
     save_fig("found_warm_pixels", do_pdf)
 
 
+def example_single_stack(do_pdf=False):
+    """Example single stack of warm-pixel trails and model fits."""
+
+    # Load
+    dataset = d_07_2020
+    quadrants = ["A", "B", "C", "D"]
+    stacked_lines = PixelLineCollection()
+    stacked_lines.load(dataset.saved_stacked_lines(quadrants))
+    npzfile = np.load(dataset.saved_stacked_info(quadrants))
+    row_bins, flux_bins, date_bins, background_bins = [
+        npzfile[var] for var in npzfile.files
+    ]
+    n_row_bins = len(row_bins) - 1
+    n_flux_bins = len(flux_bins) - 1
+    n_date_bins = len(date_bins) - 1
+    n_background_bins = len(background_bins) - 1
+
+    plt.figure()
+    ax = plt.gca()
+
+    # Select the example stack
+    bin_index = PixelLineCollection.stacked_bin_index(
+        i_row=n_row_bins - 1,
+        n_row_bins=n_row_bins,
+        i_flux=5,
+        n_flux_bins=n_flux_bins,
+        i_background=0,
+        n_background_bins=n_background_bins,
+    )
+    line = stacked_lines.lines[bin_index]
+
+    # Don't plot the warm pixel itself
+    pixels = np.arange(1, ut.trail_length + 1)
+    trail = line.data[-ut.trail_length :]
+    noise = line.noise[-ut.trail_length :]
+
+    # Check for negative values
+    where_pos = np.where(trail > 0)[0]
+    where_neg = np.where(trail < 0)[0]
+
+    # ========
+    # Plot data
+    # ========
+    c = "k"
+    ax.errorbar(
+        pixels[where_pos],
+        trail[where_pos],
+        yerr=noise[where_pos],
+        color=c,
+        capsize=2,
+        alpha=0.7,
+        label=r"$N_{\rm stack} = %d$" % line.n_stacked,
+    )
+    ax.scatter(
+        pixels[where_neg],
+        abs(trail[where_neg]),
+        color=c,
+        facecolor="w",
+        marker="o",
+        alpha=0.7,
+        zorder=-1,
+    )
+    ax.errorbar(
+        pixels[where_neg],
+        abs(trail[where_neg]),
+        yerr=noise[where_neg],
+        color=c,
+        fmt=",",
+        alpha=0.7,
+        zorder=-2,
+    )
+
+    # ========
+    # Plot fitted trail
+    # ========
+    # Fit the total trap density to this single stacked trail
+    rho_q, rho_q_std = fu.fit_total_trap_density(
+        x_all=pixels,
+        y_all=trail,
+        noise_all=noise,
+        n_e_all=line.mean_flux,
+        n_bg_all=line.mean_background,
+        row_all=line.mean_row,
+        date=dataset.date,
+    )
+    model_pixels = np.linspace(1, ut.trail_length, 20)
+    model_trail = fu.trail_model_hst(
+        x=model_pixels,
+        rho_q=rho_q,
+        n_e=line.mean_flux,
+        n_bg=line.mean_background,
+        row=line.mean_row,
+        date=dataset.date,
+    )
+    ax.plot(
+        model_pixels,
+        model_trail,
+        color=c,
+        ls="--",
+        alpha=0.7,
+        label=r"$\rho_{\rm q} = %.2f \pm %.2f$" % (rho_q, rho_q_std),
+    )
+
+    # Axes etc
+    ax.set_xlim(0.5, ut.trail_length + 0.5)
+    ax.set_xticks(np.arange(1, ut.trail_length + 0.1, 1))
+    ax.set_xlabel(r"Row relative to warm pixel")
+    ax.set_ylabel("Charge above background (e$^-$)")
+    ax.set_yscale("log")
+    ax.legend()
+
+    nice_plot()
+
+    # Save
+    save_fig("example_single_stack", do_pdf)
+
+
+def example_stacked_trails(do_pdf=False):
+    """Example stacked trails in bins."""
+
+    # Plot
+    fu.plot_stacked_trails(d_07_2020, quadrants=["A", "B", "C", "D"], save_path="None")
+
+    # Save
+    save_fig("example_stacked_trails", do_pdf)
+
+
 # ========
 # Main
 # ========
@@ -337,3 +464,7 @@ if __name__ == "__main__":
         example_image_zooms(args.pdf)
     if run("found_warm_pixels"):
         found_warm_pixels(args.pdf)
+    if run("example_single_stack"):
+        example_single_stack(args.pdf)
+    if run("example_stacked_trails"):
+        example_stacked_trails(args.pdf)
