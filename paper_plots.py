@@ -25,6 +25,12 @@ from warm_pixels import find_warm_pixels
 from hst_warm_pixels import *
 from misc import *
 
+sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
+import autoarray as aa
+
+sys.path.append(os.path.join(ut.path, "../arctic/"))
+import arcticpy as ac
+
 d_07_2020 = Dataset("07_2020")  # 2020/12/03, day 6852, 12 images
 
 
@@ -75,10 +81,13 @@ def save_fig(Fp_save, do_pdf=False):
 # ========
 # Functions
 # ========
-def example_image_zooms(do_pdf=False):
+def example_image_zooms(do_pdf=False, use_corrected=False):
     """Example HST ACS image with CTI trails"""
 
-    image_path, quadrant = d_07_2020.path + "jdrwc3fcq_raw.fits", "D"
+    if use_corrected:
+        image_path, quadrant = d_07_2020.path + "jdrwc3fcq_raw_cor_pp.fits", "D"
+    else:
+        image_path, quadrant = d_07_2020.path + "jdrwc3fcq_raw.fits", "D"
 
     # Load the image
     image = aa.acs.ImageACS.from_fits(
@@ -101,15 +110,15 @@ def example_image_zooms(do_pdf=False):
 
     # Zoom regions
     n_row, n_col = image.shape
-    col_0 = n_col - 256
-    col_1 = col_0 + 200
-    row1_0 = 95
-    row1_1 = row1_0 + 120
-    row2_0 = n_row - 153
-    row2_1 = row2_0 + 120
+    col_0 = n_col - 345
+    col_1 = col_0 + 300
+    row1_0 = 795
+    row1_1 = row1_0 + 180
+    row2_0 = n_row - 235
+    row2_1 = row2_0 + 180
 
     # Plot the image and zooms
-    vmin, vmax = 0, 450
+    vmin, vmax = 0, 400
     im1 = ax1.imshow(X=image, aspect="equal", vmin=vmin, vmax=vmax)
     im2 = ax2.imshow(
         X=image[row1_0:row1_1, col_0:col_1],
@@ -179,7 +188,174 @@ def example_image_zooms(do_pdf=False):
         set_large_ticks(ax)
 
     # Save
-    save_fig("example_image_zooms", do_pdf)
+    if use_corrected:
+        save_fig("example_image_corrected", do_pdf)
+    else:
+        save_fig("example_image_zooms", do_pdf)
+
+
+def example_image_corrected(do_pdf=False):
+    """Example HST ACS image with CTI trails removed by arctic"""
+
+    n_iterations = 1
+    image_name = "jdrwc3fcq_raw"
+    image_path = d_07_2020.path + image_name + ".fits"
+    cor_path = d_07_2020.path + image_name + "_cor_iter%d.fits" % n_iterations
+
+    # Remove CTI
+    if not True:
+        # Load each quadrant of the image
+        image_A, image_B, image_C, image_D = [
+            aa.acs.ImageACS.from_fits(
+                file_path=image_path,
+                quadrant_letter=quadrant,
+                bias_subtract_via_bias_file=True,
+                bias_subtract_via_prescan=True,
+            ).native
+            for quadrant in ["A", "B", "C", "D"]
+        ]
+
+        # CTI model
+        traps = [
+            ac.TrapInstantCapture(density=0.60, release_timescale=0.74),
+            ac.TrapInstantCapture(density=1.60, release_timescale=7.70),
+            ac.TrapInstantCapture(density=1.35, release_timescale=37.0),
+        ]
+        roe = ac.ROE()
+        ccd = ac.CCD(full_well_depth=84700, well_fill_power=0.478)
+
+        # Remove CTI
+        image_out_A, image_out_B, image_out_C, image_out_D = [
+            ac.remove_cti(
+                image=image,
+                n_iterations=1,
+                parallel_roe=roe,
+                parallel_ccd=ccd,
+                parallel_traps=traps,
+                parallel_express=5,
+                verbosity=1,
+            )
+            for image in [image_A, image_B, image_C, image_D]
+        ]
+
+        # Save the corrected image
+        aa.acs.output_quadrants_to_fits(
+            file_path=cor_path,
+            quadrant_a=image_out_A,
+            quadrant_b=image_out_B,
+            quadrant_c=image_out_C,
+            quadrant_d=image_out_D,
+            header_a=image_A.header,
+            header_b=image_B.header,
+            header_c=image_C.header,
+            header_d=image_D.header,
+            overwrite=True,
+        )
+
+        print("Saved %s" % cor_path[-36:])
+
+    # Load the images
+    quadrant = "D"
+    image = aa.acs.ImageACS.from_fits(
+        file_path=image_path,
+        quadrant_letter=quadrant,
+        bias_subtract_via_bias_file=True,
+        bias_subtract_via_prescan=True,
+    ).native
+    image_cor = aa.acs.ImageACS.from_fits(
+        file_path=cor_path,
+        quadrant_letter=quadrant,
+        bias_subtract_via_bias_file=True,
+        bias_subtract_via_prescan=True,
+    ).native
+    # Diff
+    image_diff = image_cor - image
+
+    # Figure
+    fig = plt.figure(figsize=(17.4, 9), constrained_layout=False)
+    widths = [1, 1, 0.03, 0.06, 0.17, 0.06]
+    heights = [1, 1]
+    gs = fig.add_gridspec(nrows=2, ncols=6, width_ratios=widths, height_ratios=heights)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax3 = fig.add_subplot(gs[0, 1])
+    ax4 = fig.add_subplot(gs[1, 1])
+    cax1 = fig.add_subplot(gs[:, 3])
+    cax2 = fig.add_subplot(gs[:, 5])
+    gs.update(wspace=0, hspace=0.03)
+
+    # Zoom regions
+    n_row, n_col = image.shape
+    col_0 = n_col - 345
+    col_1 = col_0 + 300
+    row1_0 = 795
+    row1_1 = row1_0 + 180
+    row2_0 = n_row - 235
+    row2_1 = row2_0 + 180
+
+    # Plot the image and zooms
+    vmin, vmax = 0, 400
+    im1 = ax1.imshow(
+        X=image_cor[row1_0:row1_1, col_0:col_1],
+        aspect="equal",
+        vmin=vmin,
+        vmax=vmax,
+        extent=[col_0, col_1, row1_1, row1_0],
+    )
+    im2 = ax2.imshow(
+        X=image_cor[row2_0:row2_1, col_0:col_1],
+        aspect="equal",
+        vmin=vmin,
+        vmax=vmax,
+        extent=[col_0, col_1, row2_1, row2_0],
+    )
+    diffmin, diffmax = -60, 60
+    im3 = ax3.imshow(
+        X=image_diff[row1_0:row1_1, col_0:col_1],
+        aspect="equal",
+        cmap=plt.cm.binary_r,
+        vmin=diffmin,
+        vmax=diffmax,
+        extent=[col_0, col_1, row1_1, row1_0],
+    )
+    im4 = ax4.imshow(
+        X=image_diff[row2_0:row2_1, col_0:col_1],
+        aspect="equal",
+        cmap=plt.cm.binary_r,
+        vmin=diffmin,
+        vmax=diffmax,
+        extent=[col_0, col_1, row2_1, row2_0],
+    )
+
+    # Axes etc
+    cbar1 = plt.colorbar(im1, cax=cax1, extend="max")
+    cbar1.set_label(r"Flux (e$^-$)")
+    cbar2 = plt.colorbar(im3, cax=cax2, extend="both")
+    cbar2.set_label(r"Corrected $-$ Original (e$^-$)")
+    ax1.xaxis.set_visible(False)
+    ax3.xaxis.set_visible(False)
+    ax3.yaxis.set_visible(False)
+    ax4.yaxis.set_visible(False)
+    ax1.set_ylabel("Row")
+    ax2.set_xlabel("Column")
+    ax2.set_ylabel("Row")
+    ax4.set_xlabel("Column")
+    for ax in [ax1, ax2, ax3, ax4]:
+        ax.xaxis.set_major_locator(mpl.ticker.MultipleLocator(base=50))
+        ax.xaxis.set_minor_locator(mpl.ticker.MultipleLocator(base=10))
+        ax.yaxis.set_major_locator(mpl.ticker.MultipleLocator(base=50))
+        ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(base=10))
+    cbar1.ax.minorticks_on()
+    cbar1.ax.yaxis.set_ticks(np.arange(vmin, vmax + 1, 100))
+    cbar1.ax.yaxis.set_ticks(np.arange(50, vmax + 1, 100), minor=True)
+    cbar2.ax.minorticks_on()
+    cbar2.ax.yaxis.set_ticks(np.arange(diffmin, diffmax + 1, 20))
+    cbar2.ax.yaxis.set_ticks(np.arange(diffmin + 10, diffmax + 1, 20), minor=True)
+    for ax in [ax1, ax2, ax3, ax4, cax1, cax2]:
+        set_large_ticks(ax)
+
+    # Save
+    save_fig("example_image_corrected", do_pdf)
 
 
 def found_warm_pixels(do_pdf=False):
@@ -220,7 +396,7 @@ def found_warm_pixels(do_pdf=False):
     row2_0 = n_row - 154
     row2_1 = row2_0 + int(120 / 3)
 
-    # Plot the image and zooms
+    # Plot the zooms
     vmin, vmax = 0, 450
     im1 = ax1.imshow(
         X=image[row1_0:row1_1, col_0:col_1],
@@ -426,9 +602,45 @@ def example_single_stack(do_pdf=False):
         alpha=0.7,
         label=r"$\rho_{\rm q} = %.2f \pm %.2f$" % (rho_q, rho_q_std),
     )
+    # Plot each exponential
+    for i in range(3):
+        # CCD
+        beta = 0.478
+        w = 84700.0
+        # Trap species (one at a time)
+        A = 0.17 if i == 0 else 0
+        B = 0.45 if i == 1 else 0
+        C = 0.38 if i == 2 else 0
+        # Trap lifetimes before or after the temperature change
+        if line.date < ut.date_T_change:
+            tau_a = 0.48
+            tau_b = 4.86
+            tau_c = 20.6
+        else:
+            tau_a = 0.74
+            tau_b = 7.70
+            tau_c = 37.0
+
+        model_i = fu.trail_model(
+            x=model_pixels,
+            rho_q=rho_q,
+            n_e=line.mean_flux,
+            n_bg=line.mean_background,
+            row=line.mean_row,
+            beta=beta,
+            w=w,
+            A=A,
+            B=B,
+            C=C,
+            tau_a=tau_a,
+            tau_b=tau_b,
+            tau_c=tau_c,
+        )
+        ax.plot(model_pixels, model_i, color=c, ls=":", alpha=0.7)
 
     # Axes etc
     ax.set_xlim(0.5, ut.trail_length + 0.5)
+    ax.set_ylim(0.9 * min(model_trail[-1], np.amin(trail[where_pos])), None)
     ax.set_xticks(np.arange(1, ut.trail_length + 0.1, 1))
     ax.set_xlabel(r"Row relative to warm pixel")
     ax.set_ylabel("Charge above background (e$^-$)")
@@ -462,6 +674,8 @@ if __name__ == "__main__":
     # Run functions
     if run("example_image_zooms"):
         example_image_zooms(args.pdf)
+    if run("example_image_corrected"):
+        example_image_corrected(args.pdf)
     if run("found_warm_pixels"):
         found_warm_pixels(args.pdf)
     if run("example_single_stack"):
