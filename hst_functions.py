@@ -12,13 +12,16 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import warnings
 
-from pixel_lines import PixelLineCollection
+from pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels import find_warm_pixels
 
 import hst_utilities as ut
 
 sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
 import autoarray as aa
+
+sys.path.append(os.path.join(ut.path, "../arctic/"))
+import arcticpy as ac
 
 
 # ========
@@ -125,6 +128,7 @@ def find_consistent_warm_pixels(dataset, quadrant, flux_min=None, flux_max=None)
     warm_pixels = PixelLineCollection()
     warm_pixels.load(dataset.saved_lines(quadrant))
 
+    # Ignore warm pixels below the minimum flux
     if flux_min is not None:
         sel_flux = np.where(
             (warm_pixels.fluxes > flux_min) & (warm_pixels.fluxes < flux_max)
@@ -149,7 +153,78 @@ def find_consistent_warm_pixels(dataset, quadrant, flux_min=None, flux_max=None)
     warm_pixels.save(dataset.saved_consistent_lines(quadrant))
 
 
-def stack_dataset_warm_pixels(dataset, quadrants):
+def extract_consistent_warm_pixels_corrected(dataset, quadrant):
+    """Extract the corresponding warm pixels from the corrected images with CTI
+    removed, in the same locations as the orignal consistent warm pixels.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The dataset object with a list of image file paths and metadata.
+
+    quadrant : str (opt.)
+        The quadrant (A, B, C, D) of the image to load.
+
+    Saves
+    -----
+    warm_pixels_cor : PixelLineCollection
+        The set of consistent warm pixel trails, saved to
+        dataset.saved_consistent_lines_cor().
+    """
+    # Load original warm pixels
+    warm_pixels = PixelLineCollection()
+    warm_pixels.load(dataset.saved_consistent_lines(quadrant))
+
+    # Corrected images
+    warm_pixels_cor = PixelLineCollection()
+    for i_image in range(dataset.n_images):
+        image_path = dataset.cor_paths[i_image]
+        image_name = dataset.image_names[i_image]
+        print(
+            "    %s_cor_%s (%d of %d) "
+            % (image_name, quadrant, i_image + 1, dataset.n_images),
+            end="",
+            flush=True,
+        )
+
+        # Load the image
+        image = aa.acs.ImageACS.from_fits(
+            file_path=image_path,
+            quadrant_letter=quadrant,
+            bias_subtract_via_bias_file=True,
+            bias_subtract_via_prescan=True,
+        ).native
+
+        image_name_q = image_name + "_%s" % quadrant
+
+        # Select warm pixels found from this image
+        sel = np.where(warm_pixels.origins == image_name_q)
+        for i in sel:
+            line = warm_pixels.lines[i]
+            row, column = line.location
+            # Copy the original metadata and take the data from the corrected image
+            warm_pixels_cor.append(
+                PixelLine(
+                    data=image[
+                        row - ut.trail_length : row + ut.trail_length + 1, column
+                    ],
+                    origin=line.origin,
+                    location=line.location,
+                    date=line.date,
+                    background=line.background,
+                )
+            )
+
+    print(
+        "Extracted %d lines from %d originals"
+        % (warm_pixels_cor.n_lines, warm_pixels.n_lines)
+    )
+
+    # Save
+    warm_pixels_cor.save(dataset.saved_consistent_lines(quadrant, use_corrected=True))
+
+
+def stack_dataset_warm_pixels(dataset, quadrants, use_corrected=False):
     """Stack a set of premade warm pixel trails into bins.
 
     find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
@@ -164,6 +239,9 @@ def stack_dataset_warm_pixels(dataset, quadrants):
         The list of quadrants (A, B, C, D) of the images to load, combined
         together if more than one provided.
 
+    use_corrected : bool (opt.)
+        If True, then use the corrected images with CTI removed instead.
+
     Saves
     -----
     stacked_lines : PixelLineCollection
@@ -173,7 +251,7 @@ def stack_dataset_warm_pixels(dataset, quadrants):
     warm_pixels = PixelLineCollection()
     # Append data from each quadrant
     for quadrant in quadrants:
-        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
+        warm_pixels.load(dataset.saved_consistent_lines(quadrant, use_corrected))
 
     # Subtract preceeding pixels in each line before stacking
     for i in range(warm_pixels.n_lines):
@@ -200,9 +278,9 @@ def stack_dataset_warm_pixels(dataset, quadrants):
     )
 
     # Save
-    stacked_lines.save(dataset.saved_stacked_lines(quadrants))
+    stacked_lines.save(dataset.saved_stacked_lines(quadrants, use_corrected))
     np.savez(
-        dataset.saved_stacked_info(quadrants),
+        dataset.saved_stacked_info(quadrants, use_corrected),
         row_bins,
         flux_bins,
         date_bins,
@@ -367,7 +445,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     return result.params.get("rho_q").value, result.params.get("rho_q").stderr
 
 
-def fit_dataset_total_trap_density(dataset, quadrants):
+def fit_dataset_total_trap_density(dataset, quadrants, use_corrected=False):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
 
     Parameters
@@ -379,6 +457,9 @@ def fit_dataset_total_trap_density(dataset, quadrants):
         The list of quadrants (A, B, C, D) of the images to load, combined
         together if more than one provided.
 
+    use_corrected : bool (opt.)
+        If True, then use the corrected images with CTI removed instead.
+
     Returns
     -------
     rho_q : float
@@ -389,8 +470,8 @@ def fit_dataset_total_trap_density(dataset, quadrants):
     """
     # Load
     stacked_lines = PixelLineCollection()
-    stacked_lines.load(dataset.saved_stacked_lines(quadrants))
-    npzfile = np.load(dataset.saved_stacked_info(quadrants))
+    stacked_lines.load(dataset.saved_stacked_lines(quadrants, use_corrected))
+    npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
     row_bins, flux_bins, date_bins, background_bins = [
         npzfile[var] for var in npzfile.files
     ]
@@ -449,7 +530,7 @@ def fit_dataset_total_trap_density(dataset, quadrants):
     return rho_q, rho_q_std
 
 
-def fit_total_trap_densities(dataset_list, list_name, quadrants):
+def fit_total_trap_densities(dataset_list, list_name, quadrants, use_corrected=False):
     """Call fit_dataset_total_trap_density() for each dataset and compile and
     save the results.
 
@@ -464,6 +545,9 @@ def fit_total_trap_densities(dataset_list, list_name, quadrants):
     quadrants : [str]
         The list of quadrants (A, B, C, D) of the images to load, combined
         together if more than one provided.
+
+    use_corrected : bool (opt.)
+        If True, then use the corrected images with CTI removed instead.
 
     Saves
     -----
@@ -490,7 +574,9 @@ def fit_total_trap_densities(dataset_list, list_name, quadrants):
         )
 
         # Fit the density
-        rho_q, rho_q_std = fit_dataset_total_trap_density(dataset, quadrants)
+        rho_q, rho_q_std = fit_dataset_total_trap_density(
+            dataset, quadrants, use_corrected
+        )
 
         # Skip bad fits
         if rho_q is None or rho_q_std is None:
@@ -511,11 +597,159 @@ def fit_total_trap_densities(dataset_list, list_name, quadrants):
 
     # Save
     np.savez(
-        ut.dataset_list_saved_density_evol(list_name, quadrants),
+        ut.dataset_list_saved_density_evol(list_name, quadrants, use_corrected),
         days,
         densities,
         density_errors,
     )
+
+
+def cti_model_hst(date):
+    """
+    Return arcticpy objects that provide a preset CTI model for the Hubble Space
+    Telescope (HST) Advanced Camera for Surveys (ACS).
+
+    The returned objects are ready to be passed to add_cti() or remove_cti(),
+    for parallel clocking.
+
+    See Massey et al. (2014). Updated model and references coming soon.
+
+    Parameters
+    ----------
+    date : float
+        The Julian date. Should not be before the ACS launch date.
+
+    Returns
+    -------
+    roe : ROE
+        The ROE object that describes the read-out electronics.
+
+    ccd : CCD
+        The CCD object that describes how electrons fill the volume.
+
+    traps : [Trap]
+        A list of trap objects that set the parameters for each trap species.
+    """
+    assert date >= ut.date_acs_launch, "Date must be after ACS launch (2002/03/01)"
+
+    # Trap species
+    relative_densities = np.array([0.17, 0.45, 0.38])
+    if date < ut.date_T_change:
+        release_times = np.array([0.48, 4.86, 20.6])
+    else:
+        release_times = np.array([0.74, 7.70, 37.0])
+
+    # Density evolution
+    if date < ut.date_sm4_repair:
+        initial_total_trap_density = 0.017845
+        trap_growth_rate = 3.5488e-4
+    else:
+        initial_total_trap_density = -0.246591 * 1.011
+        trap_growth_rate = 0.000558980 * 1.011
+    total_trap_density = initial_total_trap_density + trap_growth_rate * (
+        date - ut.date_acs_launch
+    )
+    trap_densities = relative_densities * total_trap_density
+
+    # arctic objects
+    roe = ac.ROE(
+        dwell_times=[1.0],
+        empty_traps_between_columns=True,
+        empty_traps_for_first_transfers=False,
+        force_release_away_from_readout=True,
+        use_integer_express_matrix=False,
+    )
+
+    # Single-phase CCD
+    ccd = ac.CCD(full_well_depth=84700, well_notch_depth=0.0, well_fill_power=0.478)
+
+    # Instant-capture traps
+    traps = [
+        ac.TrapInstantCapture(
+            density=trap_densities[i], release_timescale=release_times[i]
+        )
+        for i in range(len(trap_densities))
+    ]
+
+    return roe, ccd, traps
+
+
+def remove_cti_dataset(dataset):
+    """Call fit_dataset_total_trap_density() for each dataset and compile and
+    save the results.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The dataset object with a list of image file paths and metadata.
+
+    Saves
+    -----
+    dataset.cor_paths
+        The corrected images with CTI removed in the same location as the
+        originals.
+    """
+    # Remove CTI from each image
+    for i_image in range(dataset.n_images):
+        image_path = dataset.image_paths[i_image]
+        image_name = dataset.image_names[i_image]
+        cor_path = dataset.cor_paths[i_image]
+        print(
+            "    Correcting %s (%d of %d)" % (image_name, i_image + 1, dataset.n_images)
+        )
+
+        # Load each quadrant of the image
+        image_A, image_B, image_C, image_D = [
+            aa.acs.ImageACS.from_fits(
+                file_path=image_path,
+                quadrant_letter=quadrant,
+                bias_subtract_via_bias_file=True,
+                bias_subtract_via_prescan=True,
+            ).native
+            for quadrant in ["A", "B", "C", "D"]
+        ]
+
+        # CTI model
+        date = 2400000.5 + image_A.header.modified_julian_date
+        roe, ccd, traps = cti_model_hst(date)
+
+        def remove_cti(image, verbosity=0):
+            return ac.remove_cti(
+                image=image,
+                n_iterations=5,
+                parallel_roe=roe,
+                parallel_ccd=ccd,
+                parallel_traps=traps,
+                parallel_express=5,
+                verbosity=verbosity,
+            )
+
+        # Remove CTI (only print first time)
+        if i_image == 0:
+            image_out_A = remove_cti(image_A, verbosity=1)
+            image_out_B, image_out_C, image_out_D = [
+                remove_cti(image) for image in [image_B, image_C, image_D]
+            ]
+        else:
+            image_out_A, image_out_B, image_out_C, image_out_D = [
+                remove_cti(image) for image in [image_A, image_B, image_C, image_D]
+            ]
+
+        # Save the corrected image
+        aa.acs.output_quadrants_to_fits(
+            file_path=cor_path,
+            quadrant_a=image_out_A,
+            quadrant_b=image_out_B,
+            quadrant_c=image_out_C,
+            quadrant_d=image_out_D,
+            header_a=image_A.header,
+            header_b=image_B.header,
+            header_c=image_C.header,
+            header_d=image_D.header,
+            overwrite=True,
+        )
+
+        print("    Saved %s" % cor_path[-48:])
 
 
 # ========
@@ -542,8 +776,8 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
 
     im = plt.imshow(X=image, aspect="equal", vmin=0, vmax=500)
     plt.scatter(
-        warm_pixels.locations[:, 1],
-        warm_pixels.locations[:, 0],
+        warm_pixels.locations[:, 1] + 0.5,
+        warm_pixels.locations[:, 0] + 0.5,
         marker=".",
         c="r",
         edgecolor="none",
@@ -921,7 +1155,7 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
                 if rho_q_set is None or rho_q_std_set is None:
                     text = "fit error"
                 else:
-                    text = r"$\rho_{\rm q} = %.2g \pm %.2g$" % (
+                    text = r"$\rho_{\rm q} = %.3f \pm %.3f$" % (
                         rho_q_set,
                         rho_q_std_set,
                     )
@@ -948,13 +1182,17 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
 
     if save_path is None:
         plt.show()
+    elif save_path == "None":
+        return
     else:
         plt.savefig(save_path, dpi=200)
         plt.close()
         print("Saved", save_path[-40:])
 
 
-def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
+def plot_trap_density_evol(
+    list_name, quadrant_sets, do_sunspots=True, use_corrected=False
+):
     """Plot the evolution of the total trap density.
 
     fit_total_trap_densities() must first be run for the dataset list.
@@ -972,20 +1210,84 @@ def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
 
     do_sunspots : bool (opt.)
         Whether or not to also plot the monthly average sunspot number.
-    """
-    # Linear fits
-    def linear(x, m, c):
-        return m * x + c
 
+    use_corrected : bool (opt.)
+        If True, then also plot the results from the corrected images with CTI
+        removed.
+    """
     # Colours
     if len(quadrant_sets) == 1:
         colours = ["k"]
     else:
         colours = A1_c[: len(quadrant_sets)]
 
+    # Set date limits
+    npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrant_sets[0]))
+    days, densities, errors = [npzfile[var] for var in npzfile.files]
+    day_0 = 0
+    day_1 = np.amax(days) * 1.02
+
     # Plot
     plt.figure(figsize=(12, 10))
     ax = plt.gca()
+
+    # ========
+    # Load and plot sunspot data
+    # ========
+    if do_sunspots:
+        # Load
+        # https://wwwbis.sidc.be/silso/datafiles#total monthly mean
+        # Year | Month | Decimal year | N sunspots | Std dev | N obs | Provisional?
+        sunspot_data = np.genfromtxt(
+            "SN_m_tot_V2.0.txt",
+            dtype=[("dcml_year", float), ("sunspots", float), ("sunspots_err", float)],
+            usecols=(2, 3, 4),
+        )
+        with warnings.catch_warnings():
+            # Ignore astropy.time's "dubious year" warnings
+            warnings.simplefilter("ignore")
+            sunspot_days = (
+                ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
+            )
+
+        # Restrict to the relevant dates
+        sel_ss = np.where((day_0 < sunspot_days) & (sunspot_days < day_1))[0]
+        sunspot_data = sunspot_data[sel_ss]
+        sunspot_days = sunspot_days[sel_ss]
+
+        # Plot
+        ax2 = ax.twinx()
+        ax2.errorbar(
+            sunspot_days,
+            sunspot_data["sunspots"],
+            yerr=sunspot_data["sunspots_err"],
+            c="0.8",
+            ls="none",
+            marker=".",
+            capsize=3,
+            elinewidth=1,
+        )
+
+        # Label on primary axes
+        ax.errorbar(
+            [],
+            [],
+            yerr=[],
+            c="0.8",
+            ls="none",
+            marker=".",
+            capsize=3,
+            elinewidth=1,
+            label="Sunspot number",
+        )
+
+        # Axes etc
+        ax.patch.set_visible(False)
+        ax2.patch.set_visible(True)
+        ax2.set_zorder(-1)
+        ax2.set_ylabel(r"Sunspot Number, Monthly Average")
+        ax2.set_ylim(0, None)
+        plt.sca(ax)
 
     # ========
     # Load and plot data
@@ -995,54 +1297,80 @@ def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
         npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrants))
         days, densities, errors = [npzfile[var] for var in npzfile.files]
 
-        day_0 = 0
-        day_1 = np.amax(days) * 1.02
-
         label = "".join(quadrants)
         c = colours[i_q]
 
         # Fit trends
         sel_pre_T_change = np.where(days < ut.day_T_change)[0]
         sel_post_T_change = np.where(days > ut.day_T_change)[0]
-        for sel in [sel_pre_T_change, sel_post_T_change]:
+        for i_sel, sel in enumerate([sel_pre_T_change, sel_post_T_change]):
             if len(sel) == 0:
                 continue
 
-            # Fit (around middle t for nicer error plotting)
-            day_mid = np.mean(days[sel])
-            popt, pcov = curve_fit(
-                linear, days[sel] - day_mid, densities[sel], sigma=errors[sel]
-            )
-            grad, icpt = popt
-            err_grad = np.sqrt(pcov[0, 0])
-            err_icpt = np.sqrt(pcov[1, 1])
-            if days[sel][-1] > ut.day_T_change:
-                # Extrapolate on to the plot edge
-                days_fit = np.append(days[sel], [day_1])
-                if days[sel][0] < ut.day_side2_fail:
-                    # And back to the T change
-                    days_fit = np.append([ut.day_T_change], days_fit)
+            # Sunspot fit
+            if do_sunspots and False:
+                # Cumulative sunspot number
+                sunspot_cum = np.cumsum(sunspot_data["sunspots"])
+                sunspot_cum_err = np.sqrt(np.cumsum(sunspot_data["sunspots"] ** 2))
+
+                # Plot cumulative sunspot number
+                if i_sel == 0 and True:  ##
+                    ax2.errorbar(
+                        days,
+                        np.interp(days, sunspot_days, sunspot_cum),
+                        yerr=np.interp(days, sunspot_days, sunspot_cum_err),
+                        c="0.8",
+                        ls="none",
+                        marker="o",
+                        capsize=3,
+                        elinewidth=1,
+                    )
+                    ax2.set_ylim(0, sunspot_cum[-1] * 1.05)
+                    ax2.set_ylabel(r"Cumulative Sunspot Number")
+                    plt.sca(ax)
+            # Linear fit
             else:
-                # Extrapolate on to the T change
-                days_fit = np.append(days[sel], [ut.day_T_change])
-                # And back to the plot edge
-                days_fit = np.append([day_0], days_fit)
-            fit_densities = linear(days_fit - day_mid, grad, icpt)
+                # Fitting function
+                def linear(x, m, c):
+                    return m * x + c
 
-            # Plot
-            ax.plot(days_fit, fit_densities, c=c, lw=1)
-            fit_errors = np.sqrt(err_icpt ** 2 + ((days_fit - day_mid) * err_grad) ** 2)
-            ax.plot(days_fit, fit_densities + fit_errors, c=c, lw=1, alpha=0.25)
-            ax.plot(days_fit, fit_densities - fit_errors, c=c, lw=1, alpha=0.25)
+                # Fit (around middle t for nicer error plotting)
+                day_mid = np.mean(days[sel])
+                popt, pcov = curve_fit(
+                    linear, days[sel] - day_mid, densities[sel], sigma=errors[sel]
+                )
+                grad, icpt = popt
+                err_grad = np.sqrt(pcov[0, 0])
+                err_icpt = np.sqrt(pcov[1, 1])
+                if days[sel][-1] > ut.day_T_change:
+                    # Extrapolate on to the plot edge
+                    days_fit = np.append(days[sel], [day_1])
+                    if days[sel][0] < ut.day_side2_fail:
+                        # And back to the T change
+                        days_fit = np.append([ut.day_T_change], days_fit)
+                else:
+                    # Extrapolate on to the T change
+                    days_fit = np.append(days[sel], [ut.day_T_change])
+                    # And back to the plot edge
+                    days_fit = np.append([day_0], days_fit)
+                fit_densities = linear(days_fit - day_mid, grad, icpt)
 
-            # Shift for neater function of t
-            icpt -= grad * day_mid
+                # Plot
+                ax.plot(days_fit, fit_densities, c=c, lw=1)
+                fit_errors = np.sqrt(
+                    err_icpt ** 2 + ((days_fit - day_mid) * err_grad) ** 2
+                )
+                ax.plot(days_fit, fit_densities + fit_errors, c=c, lw=1, alpha=0.25)
+                ax.plot(days_fit, fit_densities - fit_errors, c=c, lw=1, alpha=0.25)
 
-            label += str(
-                "\n"
-                + r"$(%.2g \pm %.2g) \!\times\! 10^{-4}\;\, t \,+\, (%.2g \pm %.2g)$"
-                % (grad / 1e-4, err_grad / 1e-4, icpt, err_icpt)
-            )
+                # Shift for neater function of t
+                icpt -= grad * day_mid
+
+                label += str(
+                    "\n"
+                    + r"$(%.2g \pm %.2g) \!\times\! 10^{-4}\;\, t \,+\, (%.2g \pm %.2g)$"
+                    % (grad / 1e-4, err_grad / 1e-4, icpt, err_icpt)
+                )
 
         # Data
         ax.errorbar(
@@ -1057,10 +1385,31 @@ def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
             label=label,
         )
 
+        # Corrected images with CTI removed
+        if use_corrected:
+            # Load
+            npzfile = np.load(
+                ut.dataset_list_saved_density_evol(list_name, quadrants, use_corrected)
+            )
+            days, densities, errors = [npzfile[var] for var in npzfile.files]
+
+            # Data
+            ax.errorbar(
+                days,
+                densities,
+                yerr=errors,
+                c=c,
+                ls="none",
+                marker="x",
+                capsize=3,
+                elinewidth=1,
+                alpha=0.6,
+            )
+
     # ========
     # Richard data
     # ========
-    if True:  ###
+    if not True:  ##
         # date, density, density_err
         data = np.array(
             [
@@ -1094,64 +1443,9 @@ def plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=True):
             yerr=data[:, 2],
             ls="none",
             marker="+",
-            c="0.5",
             capsize=3,
             elinewidth=1,
         )
-
-    # ========
-    # Sunspots
-    # ========
-    if do_sunspots:
-        ax2 = ax.twinx()
-
-        # Load
-        # https://wwwbis.sidc.be/silso/datafiles#total monthly mean
-        # Year | Month | Decimal year | N sunspots | Std dev | N obs | Provisional?
-        sunspot_data = np.genfromtxt(
-            "SN_m_tot_V2.0.txt",
-            dtype=[("dcml_year", float), ("sunspots", float), ("sunspots_err", float)],
-            usecols=(2, 3, 4),
-        )
-        with warnings.catch_warnings():
-            # Ignore astropy.time's "dubious year" warnings
-            warnings.simplefilter("ignore")
-            sunspot_days = (
-                ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
-            )
-        sel_ss = np.where((day_0 < sunspot_days) & (sunspot_days < day_1))[0]
-
-        # Plot
-        ax2.errorbar(
-            sunspot_days[sel_ss],
-            sunspot_data["sunspots"][sel_ss],
-            yerr=sunspot_data["sunspots_err"][sel_ss],
-            c="0.8",
-            ls="none",
-            marker=".",
-            capsize=3,
-            elinewidth=1,
-        )
-        # Label on primary axes
-        ax.errorbar(
-            [],
-            [],
-            yerr=[],
-            c="0.8",
-            ls="none",
-            marker=".",
-            capsize=3,
-            elinewidth=1,
-            label="Sunspot number",
-        )
-
-        # Axes etc
-        ax.patch.set_visible(False)
-        ax2.patch.set_visible(True)
-        ax2.set_zorder(-1)
-        ax2.set_ylabel(r"Sunspot Number, Monthly Average")
-        ax2.set_ylim(0, None)
-        plt.sca(ax)
 
     # Axes etc
     ax.set_xlabel("Days Since ACS Launch")

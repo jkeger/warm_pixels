@@ -87,6 +87,14 @@ def prep_parser():
 
     # Date requirements for re-making files
     parser.add_argument(
+        "-a",
+        "--mdate_all",
+        default=None,
+        type=str,
+        required=False,
+        help="Oldest valid date for all saved files.",
+    )
+    parser.add_argument(
         "-f",
         "--mdate_find",
         default=None,
@@ -127,12 +135,12 @@ def prep_parser():
         help="Oldest valid date for plot stacked trails.",
     )
     parser.add_argument(
-        "-a",
-        "--mdate_all",
-        default=None,
+        "-r",
+        "--mdate_remove_cti",
+        default="0",
         type=str,
         required=False,
-        help="Oldest valid date for all saved files.",
+        help="Oldest valid date for removing CTI.",
     )
 
     # Other functions
@@ -151,6 +159,14 @@ def prep_parser():
         default=False,
         required=False,
         help="Plot the evolution of the total trap density.",
+    )
+    parser.add_argument(
+        "-u",
+        "--use_corrected",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Use the corrected images with CTI removed instead of the originals.",
     )
     parser.add_argument(
         "-t",
@@ -260,9 +276,17 @@ def test_image_and_bias_files(dataset):
     return all_okay
 
 
-def dataset_list_saved_density_evol(list_name, quadrants):
+def dataset_list_saved_density_evol(list_name, quadrants, use_corrected=False):
     """Return the file path for the saved density data for a dataset list."""
-    return dataset_root + "density_evol_%s_%s.npz" % (list_name, "".join(quadrants))
+    if use_corrected:
+        suffix = "_cor"
+    else:
+        suffix = ""
+    return dataset_root + "density_evol_%s_%s%s.npz" % (
+        list_name,
+        "".join(quadrants),
+        suffix,
+    )
 
 
 def dataset_list_plotted_density_evol(list_name, quadrant_sets):

@@ -10,14 +10,19 @@ Full pipeline:
     + Plot distributions of the warm pixels
     + Stack the warm pixel trails in bins
     + Plot the stacked trails
+Then:
 + Fit the total trap density across all datasets
 + Plot the evolution of the total trap density
+Then:
++ Use the fitted trap model to remove CTI from the images
++ Repeat the analysis using the corrected images and check the trap density
 
 See hst_utilities.py to set parameters like the trail length and bin edges.
 
-By default, runs all the functions for the chosen list of image datasets,
-skipping any that have been run before and saved their output. Use the optional
-flags to choose manually which functions to run.
+By default, runs all the first-stage functions for the chosen list of image
+datasets, skipping any that have been run before and saved their output.
+Use the optional flags to choose manually which functions to run and to run
+the next-stage functions.
 
 Parameters
 ----------
@@ -36,6 +41,9 @@ dataset_list : str (opt.)
     date. Defaults to only check whether a file already exists. Alternatively,
     set "1" to force remaking or "0" to force not.
 
+    --mdate_all, -a
+        Sets the default for all others, can be overridden individually.
+
     --mdate_find, -f
         Find warm pixels.
 
@@ -51,14 +59,19 @@ dataset_list : str (opt.)
     --mdate_plot_stack, -S
         Plot stacked trails.
 
-    --mdate_all, -a
-        Sets the default for all others, can be overridden individually.
+    --mdate_remove_cti, -r
+        Remove CTI from the images in each dataset, default "0".
 
 --prep_density, -d
     Fit the total trap density across all datasets.
 
 --plot_density, -D
     Plot the evolution of the total trap density.
+
+--use_corrected, -u
+    Use the corrected images with CTI removed instead of the originals for
+    the trails etc (keeping the same selected warm pixel locations). Must first
+    remove CTI from the images in each dataset (-r 1).
 
 --downsample, -w N i : int int
     Downsample the dataset list to run 1/N of the datasets, starting with set i.
@@ -101,6 +114,9 @@ class Dataset(object):
         image_paths : [str]
             The list of image file names, excluding and including the full path
             and extension, respectively.
+
+        cor_paths : [str]
+            The list of image files names for corrected images with removed CTI.
         """
         self.name = name
         self.path = ut.dataset_root + self.name + "/"
@@ -109,6 +125,7 @@ class Dataset(object):
         files = os.listdir(ut.dataset_root + self.name)
         self.image_names = [f[:-5] for f in files if f[-9:] == "_raw.fits"]
         self.image_paths = [self.path + name + ".fits" for name in self.image_names]
+        self.cor_paths = [self.path + name + "_cor.fits" for name in self.image_names]
         self.n_images = len(self.image_names)
 
     @property
@@ -126,17 +143,23 @@ class Dataset(object):
         """Return the file name including the path for saving derived data."""
         return self.path + "saved_lines_%s.pickle" % quadrant
 
-    def saved_consistent_lines(self, quadrant):
+    def saved_consistent_lines(self, quadrant, use_corrected=False):
         """Return the file name including the path for saving derived data."""
-        return self.path + "saved_consistent_lines_%s.pickle" % quadrant
+        suffix = "_cor" if use_corrected else ""
+        return self.path + "saved_consistent_lines_%s%s.pickle" % (quadrant, suffix)
 
-    def saved_stacked_lines(self, quadrants):
+    def saved_stacked_lines(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
-        return self.path + "saved_stacked_lines_%s.pickle" % "".join(quadrants)
+        suffix = "_cor" if use_corrected else ""
+        return self.path + "saved_stacked_lines_%s%s.pickle" % (
+            "".join(quadrants),
+            suffix,
+        )
 
-    def saved_stacked_info(self, quadrants):
+    def saved_stacked_info(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
-        return self.path + "saved_stacked_info_%s.npz" % "".join(quadrants)
+        suffix = "_cor" if use_corrected else ""
+        return self.path + "saved_stacked_info_%s%s.npz" % ("".join(quadrants), suffix)
 
     def plotted_stacked_trails(self, quadrants):
         """Return the file name including the path for saving derived data."""
@@ -302,7 +325,8 @@ datasets_sample = [
     "03_2020",  # 2020/03/21, day 6595, 6 images
     "12_2020",  # 2020/12/03, day 6852, 12 images
 ]
-datasets_test = ["huff_spt814b"]
+# datasets_test = ["huff_spt814b"]
+datasets_test = ["07_2020"]
 datasets_test_2 = [
     "richmassey60491",  # 2006/08/16, day 1629, 7 images
     "richmassey61092",  # 2006/09/11, day 1655, 4 images
@@ -345,7 +369,7 @@ if __name__ == "__main__":
     # All quadrants, ignoring subsets
     all_quadrants = [q for qs in quadrant_sets for q in qs]
 
-    # Date/override requirements
+    # Override unset modified-date requirements
     if args.mdate_all is not None:
         if args.mdate_find is None:
             args.mdate_find = args.mdate_all
@@ -357,6 +381,8 @@ if __name__ == "__main__":
             args.mdate_stack = args.mdate_all
         if args.mdate_plot_stack is None:
             args.mdate_plot_stack = args.mdate_all
+        if args.mdate_remove_cti is None:
+            args.mdate_remove_cti = args.mdate_all
 
     # Downsample the dataset list
     if args.downsample is not None:
@@ -379,6 +405,10 @@ if __name__ == "__main__":
 
         if not all_okay:
             exit()
+
+    # Use the corrected images with CTI removed instead
+    if args.use_corrected:
+        print("Using the corrected images with CTI removed. \n")
 
     # ========
     # Find and stack warm pixels in each dataset
@@ -424,6 +454,16 @@ if __name__ == "__main__":
                     flux_max=ut.flux_bins[-1],
                 )
 
+            # Consistent warm pixels from corrected images with CTI removed
+            if args.use_corrected and ut.need_to_make_file(
+                dataset.saved_consistent_lines_cor(quadrant),
+                date_old=args.mdate_consistent,
+            ):
+                print(
+                    "  CTI-removed warm pixels (%s)..." % quadrant, end=" ", flush=True
+                )
+                fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
+
         # Plot distributions of warm pixels in the set
         if ut.need_to_make_file(
             dataset.plotted_distributions(all_quadrants),
@@ -440,14 +480,15 @@ if __name__ == "__main__":
         for quadrants in quadrant_sets:
             # Stack in bins
             if ut.need_to_make_file(
-                dataset.saved_stacked_lines(quadrants), date_old=args.mdate_stack
+                dataset.saved_stacked_lines(quadrants, args.use_corrected),
+                date_old=args.mdate_stack,
             ):
                 print(
                     "  Stack warm pixel trails (%s)..." % "".join(quadrants),
                     end=" ",
                     flush=True,
                 )
-                fu.stack_dataset_warm_pixels(dataset, quadrants)
+                fu.stack_dataset_warm_pixels(dataset, quadrants, args.use_corrected)
 
             # Plot stacked lines
             if ut.need_to_make_file(
@@ -465,6 +506,10 @@ if __name__ == "__main__":
                     save_path=dataset.plotted_stacked_trails(quadrants),
                 )
 
+        # Remove CTI
+        if ut.need_to_make_file(dataset.cor_paths[-1], date_old=args.mdate_remove_cti):
+            fu.remove_cti_dataset(dataset)
+
     # ========
     # Compiled results from all datasets
     # ========
@@ -477,9 +522,13 @@ if __name__ == "__main__":
                 end=" ",
                 flush=True,
             )
-            fu.fit_total_trap_densities(dataset_list, list_name, quadrants)
+            fu.fit_total_trap_densities(
+                dataset_list, list_name, quadrants, args.use_corrected
+            )
 
     # Plot the trap density evolution
     if args.plot_density:
         print("Plot trap density evolution...", end=" ", flush=True)
-        fu.plot_trap_density_evol(list_name, quadrant_sets, do_sunspots=False)
+        fu.plot_trap_density_evol(
+            list_name, quadrant_sets, do_sunspots=True, use_corrected=args.use_corrected
+        )
