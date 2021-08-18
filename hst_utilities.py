@@ -289,9 +289,13 @@ def dataset_list_saved_density_evol(list_name, quadrants, use_corrected=False):
     )
 
 
-def dataset_list_plotted_density_evol(list_name, quadrant_sets):
+def dataset_list_plotted_density_evol(list_name, quadrant_sets, do_pdf=False):
     """Return the file path for the saved density plot for a dataset list."""
     quadrant_label = ""
     for qs in quadrant_sets:
         quadrant_label += "_%s" % "".join(qs)
-    return path + "/density_evol_%s%s.png" % (list_name, quadrant_label)
+    if do_pdf:
+        ext = "pdf"
+    else:
+        ext = "png"
+    return path + "/density_evol_%s%s.%s" % (list_name, quadrant_label, ext)

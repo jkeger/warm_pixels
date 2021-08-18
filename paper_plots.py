@@ -10,6 +10,9 @@ run : [str]
     Save as pdf not png.
 """
 
+from hst_warm_pixels import *
+from misc import *
+
 import numpy as np
 import os
 import argparse
@@ -22,16 +25,19 @@ import matplotlib.patheffects as path_effects
 from pixel_lines import PixelLineCollection
 from warm_pixels import find_warm_pixels
 
-from hst_warm_pixels import *
-from misc import *
-
 sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
 import autoarray as aa
 
 sys.path.append(os.path.join(ut.path, "../arctic/"))
 import arcticpy as ac
 
-d_07_2020 = Dataset("07_2020")  # 2020/12/03, day 6852, 12 images
+# Example dataset and image
+dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
+image_name = "jdrwc3fcq_raw"
+image_path = dataset.path + image_name + ".fits"
+quadrant = "D"
+n_iterations = 1
+cor_path = dataset.path + image_name + "_cor_iter%d.fits" % n_iterations
 
 
 # ========
@@ -43,11 +49,7 @@ def prep_parser():
 
     # Positional arguments
     parser.add_argument(
-        "run",
-        nargs="*",
-        default=["all"],
-        type=str,
-        help="Which function(s) to run.",
+        "run", nargs="*", default=["all"], type=str, help="Which function(s) to run."
     )
 
     # Optional arguments
@@ -86,9 +88,7 @@ def example_image_zooms(do_pdf=False, use_corrected=False):
     """Example HST ACS image with CTI trails"""
 
     if use_corrected:
-        image_path, quadrant = d_07_2020.path + "jdrwc3fcq_raw_cor_pp.fits", "D"
-    else:
-        image_path, quadrant = d_07_2020.path + "jdrwc3fcq_raw.fits", "D"
+        image_path = cor_path
 
     # Load the image
     image = aa.acs.ImageACS.from_fits(
@@ -198,11 +198,6 @@ def example_image_zooms(do_pdf=False, use_corrected=False):
 def example_image_corrected(do_pdf=False):
     """Example HST ACS image with CTI trails removed by arctic"""
 
-    n_iterations = 1
-    image_name = "jdrwc3fcq_raw"
-    image_path = d_07_2020.path + image_name + ".fits"
-    cor_path = d_07_2020.path + image_name + "_cor_iter%d.fits" % n_iterations
-
     # Remove CTI
     if not True:
         # Load each quadrant of the image
@@ -236,6 +231,7 @@ def example_image_corrected(do_pdf=False):
                 parallel_express=10,
                 verbosity=verbosity,
             )
+
         image_out_A = remove_cti(image_A, verbosity=1)
         image_out_B, image_out_C, image_out_D = [
             remove_cti(image) for image in [image_B, image_C, image_D]
@@ -258,7 +254,6 @@ def example_image_corrected(do_pdf=False):
         print("Saved %s" % cor_path[-36:])
 
     # Load the images
-    quadrant = "D"
     image = aa.acs.ImageACS.from_fits(
         file_path=image_path,
         quadrant_letter=quadrant,
@@ -364,8 +359,6 @@ def example_image_corrected(do_pdf=False):
 def found_warm_pixels(do_pdf=False):
     """Example HST ACS image with identified warm pixels"""
 
-    image_path, quadrant = d_07_2020.path + "jdrwc3fcq_raw.fits", "D"
-
     # Load the image
     image = aa.acs.ImageACS.from_fits(
         file_path=image_path,
@@ -376,9 +369,9 @@ def found_warm_pixels(do_pdf=False):
 
     # Load warm pixels
     poss_warm_pixels = PixelLineCollection()
-    poss_warm_pixels.load(d_07_2020.saved_lines(quadrant))
+    poss_warm_pixels.load(dataset.saved_lines(quadrant))
     warm_pixels = PixelLineCollection()
-    warm_pixels.load(d_07_2020.saved_consistent_lines(quadrant))
+    warm_pixels.load(dataset.saved_consistent_lines(quadrant))
 
     # Figure
     fig = plt.figure(figsize=(10, 9), constrained_layout=False)
@@ -507,7 +500,6 @@ def example_single_stack(do_pdf=False):
     """Example single stack of warm-pixel trails and model fits."""
 
     # Load
-    dataset = d_07_2020
     quadrants = ["A", "B", "C", "D"]
     stacked_lines = PixelLineCollection()
     stacked_lines.load(dataset.saved_stacked_lines(quadrants))
@@ -554,7 +546,8 @@ def example_single_stack(do_pdf=False):
         color=c,
         capsize=2,
         alpha=0.7,
-        label=r"$N_{\rm stack} = %d$" % line.n_stacked,
+        # label=r"$N_{\rm stack} = %d$" % line.n_stacked,
+        label="Stacked trail",
     )
     ax.scatter(
         pixels[where_neg],
@@ -601,49 +594,97 @@ def example_single_stack(do_pdf=False):
         model_pixels,
         model_trail,
         color=c,
-        ls="--",
+        ls=ls_dash,
         alpha=0.7,
         label=r"$\rho_{\rm q} = %.2f \pm %.2f$" % (rho_q, rho_q_std),
     )
     # Plot each exponential
-    for i in range(3):
-        # CCD
-        beta = 0.478
-        w = 84700.0
-        # Trap species (one at a time)
-        A = 0.17 if i == 0 else 0
-        B = 0.45 if i == 1 else 0
-        C = 0.38 if i == 2 else 0
-        # Trap lifetimes before or after the temperature change
-        if line.date < ut.date_T_change:
-            tau_a = 0.48
-            tau_b = 4.86
-            tau_c = 20.6
-        else:
-            tau_a = 0.74
-            tau_b = 7.70
-            tau_c = 37.0
+    if not True:
+        for i in range(3):
+            # CCD
+            beta = 0.478
+            w = 84700.0
+            # Trap species (one at a time)
+            A = 0.17 if i == 0 else 0
+            B = 0.45 if i == 1 else 0
+            C = 0.38 if i == 2 else 0
+            # Trap lifetimes before or after the temperature change
+            if line.date < ut.date_T_change:
+                tau_a = 0.48
+                tau_b = 4.86
+                tau_c = 20.6
+            else:
+                tau_a = 0.74
+                tau_b = 7.70
+                tau_c = 37.0
 
-        model_i = fu.trail_model(
-            x=model_pixels,
-            rho_q=rho_q,
-            n_e=line.mean_flux,
-            n_bg=line.mean_background,
-            row=line.mean_row,
-            beta=beta,
-            w=w,
-            A=A,
-            B=B,
-            C=C,
-            tau_a=tau_a,
-            tau_b=tau_b,
-            tau_c=tau_c,
-        )
-        ax.plot(model_pixels, model_i, color=c, ls=":", alpha=0.7)
+            model_i = fu.trail_model(
+                x=model_pixels,
+                rho_q=rho_q,
+                n_e=line.mean_flux,
+                n_bg=line.mean_background,
+                row=line.mean_row,
+                beta=beta,
+                w=w,
+                A=A,
+                B=B,
+                C=C,
+                tau_a=tau_a,
+                tau_b=tau_b,
+                tau_c=tau_c,
+            )
+            ax.plot(model_pixels, model_i, color=c, ls=ls_dot, alpha=0.7)
 
+    # ========
+    # Plot corrected trail
+    # ========
+    # Load
+    stacked_lines_cor = PixelLineCollection()
+    stacked_lines_cor.load(dataset.saved_stacked_lines(quadrants, use_corrected=True))
+    line_cor = stacked_lines_cor.lines[bin_index]
+
+    # Don't plot the warm pixel itself
+    trail_cor = line_cor.data[-ut.trail_length :]
+    noise_cor = line_cor.noise[-ut.trail_length :]
+
+    # Check for negative values
+    where_pos = np.where(trail_cor > 0)[0]
+    where_neg = np.where(trail_cor < 0)[0]
+
+    # Plot
+    c = "0.4"
+    ax.errorbar(
+        pixels[where_pos],
+        trail_cor[where_pos],
+        yerr=noise_cor[where_pos],
+        color=c,
+        capsize=2,
+        alpha=0.7,
+        label="After correction",
+    )
+    ax.scatter(
+        pixels[where_neg],
+        abs(trail_cor[where_neg]),
+        color=c,
+        facecolor="w",
+        marker="o",
+        alpha=0.7,
+        zorder=-1,
+    )
+    ax.errorbar(
+        pixels[where_neg],
+        abs(trail_cor[where_neg]),
+        yerr=noise_cor[where_neg],
+        color=c,
+        fmt=",",
+        alpha=0.7,
+        zorder=-2,
+    )
+
+    # ========
     # Axes etc
+    # ========
     ax.set_xlim(0.5, ut.trail_length + 0.5)
-    ax.set_ylim(0.9 * min(model_trail[-1], np.amin(trail[where_pos])), None)
     ax.set_xticks(np.arange(1, ut.trail_length + 0.1, 1))
     ax.set_xlabel(r"Row relative to warm pixel")
     ax.set_ylabel("Charge above background (e$^-$)")
@@ -660,10 +701,22 @@ def example_stacked_trails(do_pdf=False):
     """Example stacked trails in bins."""
 
     # Plot
-    fu.plot_stacked_trails(d_07_2020, quadrants=["A", "B", "C", "D"], save_path="None")
+    fu.plot_stacked_trails(dataset, quadrants=["A", "B", "C", "D"], save_path="None")
 
     # Save
     save_fig("example_stacked_trails", do_pdf)
+
+
+def density_evol(do_pdf=False):
+    """Evolution of the total trap density."""
+
+    list_name = "sample"
+    quadrant_sets = [["A", "B", "C", "D"]]
+
+    # Plot
+    fu.plot_trap_density_evol(
+        list_name, quadrant_sets, do_sunspots=True, use_corrected=True, do_pdf=do_pdf
+    )
 
 
 # ========
@@ -685,3 +738,5 @@ if __name__ == "__main__":
         example_single_stack(args.pdf)
     if run("example_stacked_trails"):
         example_stacked_trails(args.pdf)
+    if run("density_evol"):
+        density_evol(args.pdf)

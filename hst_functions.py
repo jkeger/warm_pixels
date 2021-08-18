@@ -635,11 +635,11 @@ def cti_model_hst(date):
 
     # Density evolution
     if date < ut.date_sm4_repair:
-        initial_total_trap_density = 0.017845
-        trap_growth_rate = 3.5488e-4
+        initial_total_trap_density = -0.020
+        trap_growth_rate = 4.22e-4
     else:
-        initial_total_trap_density = -0.246591 * 1.011
-        trap_growth_rate = 0.000558980 * 1.011
+        initial_total_trap_density = -0.261
+        trap_growth_rate = 5.55e-4
     total_trap_density = initial_total_trap_density + trap_growth_rate * (
         date - ut.date_acs_launch
     )
@@ -1075,7 +1075,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     row=line.mean_row,
                     date=dataset.date,
                 )
-                ax.plot(model_pixels, model_trail, color=c, ls="--", alpha=0.7)
+                ax.plot(model_pixels, model_trail, color=c, ls=ls_dash, alpha=0.7)
                 # Also plot the full-set fit
                 model_trail = trail_model_hst(
                     x=model_pixels,
@@ -1085,7 +1085,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     row=line.mean_row,
                     date=dataset.date,
                 )
-                ax.plot(model_pixels, model_trail, color=c, ls=":", alpha=0.7)
+                ax.plot(model_pixels, model_trail, color=c, ls=ls_dot, alpha=0.7)
 
                 # Annotate
                 if i_background == 0:
@@ -1221,7 +1221,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
 
 
 def plot_trap_density_evol(
-    list_name, quadrant_sets, do_sunspots=True, use_corrected=False
+    list_name, quadrant_sets, do_sunspots=True, use_corrected=False, do_pdf=False
 ):
     """Plot the evolution of the total trap density.
 
@@ -1244,6 +1244,9 @@ def plot_trap_density_evol(
     use_corrected : bool (opt.)
         If True, then also plot the results from the corrected images with CTI
         removed.
+
+    do_pdf : bool (opt.)
+        If True, then save as a pdf instead of a png.
     """
     # Colours
     if len(quadrant_sets) == 1:
@@ -1400,7 +1403,7 @@ def plot_trap_density_evol(
 
                 label += str(
                     "\n"
-                    + r"$(%.2g \pm %.2g) \!\times\! 10^{-4}\;\, t \,+\, (%.2g \pm %.2g)$"
+                    + r"$(%.3f \pm %.3f) \!\times\! 10^{-4}\;\, t \,+\, (%.3f \pm %.3f)$"
                     % (grad / 1e-4, err_grad / 1e-4, icpt, err_icpt)
                 )
 
@@ -1441,6 +1444,7 @@ def plot_trap_density_evol(
                 marker="x",
                 capsize=3,
                 elinewidth=1,
+                label="After correction",
             )
             ax.scatter(
                 days[where_neg],
@@ -1554,6 +1558,8 @@ def plot_trap_density_evol(
     nice_plot(ax)
     nice_plot(ax_yr)
 
-    save_path = ut.dataset_list_plotted_density_evol(list_name, quadrant_sets)
+    save_path = ut.dataset_list_plotted_density_evol(
+        list_name, quadrant_sets, do_pdf=do_pdf
+    )
     plt.savefig(save_path, dpi=200)
     print("Saved", save_path[-40:])

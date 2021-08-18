@@ -62,6 +62,10 @@ A1_c = [
 ]
 mpl.rcParams["axes.prop_cycle"] = mpl.cycler(color=A1_c)
 
+# Line styles
+ls_dot = (0, (1, 3))
+ls_dash = (0, (4, 3))
+
 
 # ========
 # Plotting functions

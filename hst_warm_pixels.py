@@ -434,6 +434,10 @@ if __name__ == "__main__":
             )
         )
 
+        # Remove CTI
+        if ut.need_to_make_file(dataset.cor_paths[-1], mdate_old=args.mdate_remove_cti):
+            fu.remove_cti_dataset(dataset)
+
         # Find warm pixels in each image quadrant
         for quadrant in all_quadrants:
             # Find possible warm pixels in each image
@@ -447,28 +451,32 @@ if __name__ == "__main__":
                 )
                 fu.find_dataset_warm_pixels(dataset, quadrant)
 
-            # Consistent warm pixels in the set
-            if ut.need_to_make_file(
-                dataset.saved_consistent_lines(quadrant),
-                mdate_old=args.mdate_consistent,
-            ):
-                print(
-                    "  Consistent warm pixels (%s)..." % quadrant, end=" ", flush=True
-                )
-                fu.find_consistent_warm_pixels(
-                    dataset,
-                    quadrant,
-                    flux_min=ut.flux_bins[0],
-                    flux_max=ut.flux_bins[-1],
-                )
-
-            # Consistent warm pixels from corrected images with CTI removed
-            if args.use_corrected and ut.need_to_make_file(
-                dataset.saved_consistent_lines(quadrant, use_corrected=True),
-                mdate_old=args.mdate_consistent,
-            ):
-                print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
-                fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
+            # Consistent warm pixels
+            if args.use_corrected:
+                # Extract from corrected images with CTI removed
+                if ut.need_to_make_file(
+                    dataset.saved_consistent_lines(quadrant, use_corrected=True),
+                    mdate_old=args.mdate_consistent,
+                ):
+                    print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
+                    fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
+            else:
+                # Find consistent warm pixels in the set
+                if ut.need_to_make_file(
+                    dataset.saved_consistent_lines(quadrant),
+                    mdate_old=args.mdate_consistent,
+                ):
+                    print(
+                        "  Consistent warm pixels (%s)..." % quadrant,
+                        end=" ",
+                        flush=True,
+                    )
+                    fu.find_consistent_warm_pixels(
+                        dataset,
+                        quadrant,
+                        flux_min=ut.flux_bins[0],
+                        flux_max=ut.flux_bins[-1],
+                    )
 
         # Plot distributions of warm pixels in the set
         if ut.need_to_make_file(
@@ -514,10 +522,6 @@ if __name__ == "__main__":
                         quadrants, args.use_corrected
                     ),
                 )
-
-        # Remove CTI
-        if ut.need_to_make_file(dataset.cor_paths[-1], mdate_old=args.mdate_remove_cti):
-            fu.remove_cti_dataset(dataset)
 
     # ========
     # Compiled results from all datasets
