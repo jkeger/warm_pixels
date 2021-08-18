@@ -2,12 +2,12 @@
 
 Parameters
 ----------
---pdf, -p
-    Save as pdf not png.
-
---run, -r : str (opt.)
+run : [str]
     Which function(s) to run, chosen by the function name or a substring of the
     name. Accepts multiple values. Defaults to run all.
+
+--pdf, -p
+    Save as pdf not png.
 """
 
 import numpy as np
@@ -41,6 +41,16 @@ def prep_parser():
     """Prepare the sys args parser."""
     parser = argparse.ArgumentParser()
 
+    # Positional arguments
+    parser.add_argument(
+        "run",
+        nargs="*",
+        default=["all"],
+        type=str,
+        help="Which function(s) to run.",
+    )
+
+    # Optional arguments
     parser.add_argument(
         "-p",
         "--pdf",
@@ -48,15 +58,6 @@ def prep_parser():
         default=False,
         required=False,
         help="Save as pdf not png.",
-    )
-
-    parser.add_argument(
-        "-r",
-        "--run",
-        nargs="*",
-        default=["all"],
-        required=False,
-        help="Which function(s) to run.",
     )
 
     return parser
@@ -225,17 +226,19 @@ def example_image_corrected(do_pdf=False):
         ccd = ac.CCD(full_well_depth=84700, well_fill_power=0.478)
 
         # Remove CTI
-        image_out_A, image_out_B, image_out_C, image_out_D = [
-            ac.remove_cti(
+        def remove_cti(image, verbosity=0):
+            return ac.remove_cti(
                 image=image,
-                n_iterations=1,
+                n_iterations=n_iterations,
                 parallel_roe=roe,
                 parallel_ccd=ccd,
                 parallel_traps=traps,
-                parallel_express=5,
-                verbosity=1,
+                parallel_express=10,
+                verbosity=verbosity,
             )
-            for image in [image_A, image_B, image_C, image_D]
+        image_out_A = remove_cti(image_A, verbosity=1)
+        image_out_B, image_out_C, image_out_D = [
+            remove_cti(image) for image in [image_B, image_C, image_D]
         ]
 
         # Save the corrected image
