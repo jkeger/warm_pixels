@@ -189,7 +189,7 @@ def prep_parser():
     return parser
 
 
-def need_to_make_file(filepath, date_old=None):
+def need_to_make_file(filepath, mdate_old=None):
     """Return True if a file needs to be (re)made.
 
     Parameters
@@ -197,15 +197,15 @@ def need_to_make_file(filepath, date_old=None):
     filepath : str
         The file that might need to be remade.
 
-    date_old : str (opt.)
+    mdate_old : str (opt.)
         A "year/month/day"-format date requirement to remake files saved before
-        this date. Defaults to only check whether a file already exists.
-        Alternatively, set "1" to force remaking or "0" to force not.
+        this date. Default None or "." to only check whether a file already
+        exists. Alternatively, set "1" to force remaking or "0" to force not.
     """
     # Overrides
-    if date_old == "1":
+    if mdate_old == "1":
         return True
-    elif date_old == "0":
+    elif mdate_old == "0":
         return False
 
     # If the file doesn't exist
@@ -213,11 +213,11 @@ def need_to_make_file(filepath, date_old=None):
         return True
 
     # If the file was saved too long ago
-    if date_old is not None:
+    if mdate_old is not None and mdate_old != ".":
         # Compare with modified date
         time_mod = os.path.getmtime(filepath)
         time_old = time.mktime(
-            datetime.datetime.strptime(date_old, "%Y/%m/%d").timetuple()
+            datetime.datetime.strptime(mdate_old, "%Y/%m/%d").timetuple()
         )
         if time_mod < time_old:
             return True

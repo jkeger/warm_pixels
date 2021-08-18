@@ -169,9 +169,9 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
     -----
     warm_pixels_cor : PixelLineCollection
         The set of consistent warm pixel trails, saved to
-        dataset.saved_consistent_lines_cor().
+        dataset.saved_consistent_lines(use_corrected=True).
     """
-    # Load original warm pixels
+    # Load original warm pixels for the whole dataset
     warm_pixels = PixelLineCollection()
     warm_pixels.load(dataset.saved_consistent_lines(quadrant))
 
@@ -181,7 +181,7 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
         image_path = dataset.cor_paths[i_image]
         image_name = dataset.image_names[i_image]
         print(
-            "    %s_cor_%s (%d of %d) "
+            "\r    %s_cor_%s (%d of %d) "
             % (image_name, quadrant, i_image + 1, dataset.n_images),
             end="",
             flush=True,
@@ -195,14 +195,14 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
             bias_subtract_via_prescan=True,
         ).native
 
+        # Select consistent warm pixels found from this image
         image_name_q = image_name + "_%s" % quadrant
-
-        # Select warm pixels found from this image
-        sel = np.where(warm_pixels.origins == image_name_q)
+        sel = np.where(warm_pixels.origins == image_name_q)[0]
         for i in sel:
             line = warm_pixels.lines[i]
             row, column = line.location
-            # Copy the original metadata and take the data from the corrected image
+
+            # Copy the original metadata but take the data from the corrected image
             warm_pixels_cor.append(
                 PixelLine(
                     data=image[
@@ -215,10 +215,7 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
                 )
             )
 
-    print(
-        "Extracted %d lines from %d originals"
-        % (warm_pixels_cor.n_lines, warm_pixels.n_lines)
-    )
+    print("Extracted %d lines" % warm_pixels_cor.n_lines)
 
     # Save
     warm_pixels_cor.save(dataset.saved_consistent_lines(quadrant, use_corrected=True))
@@ -416,15 +413,12 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
     # Initialise the fitting model
     model = lmfit.models.Model(
-        func=trail_model_hst,
-        independent_vars=["x", "n_e", "n_bg", "row", "date"],
-        nan_policy="propagate",  ## not "omit"? If any needed at all?
+        func=trail_model_hst, independent_vars=["x", "n_e", "n_bg", "row", "date"]
     )
     params = model.make_params()
 
     # Initialise the fit
-    params["rho_q"].value = 0.1
-    params["rho_q"].min = 0.0
+    params["rho_q"].value = 1.0
 
     # Weight using the noise
     weights = 1 / noise_all ** 2
@@ -440,7 +434,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
         row=row_all,
         date=date,
     )
-    # print(result.fit_report())
+    # print(result.fit_report())  ##
 
     return result.params.get("rho_q").value, result.params.get("rho_q").stderr
 
@@ -695,7 +689,10 @@ def remove_cti_dataset(dataset):
         image_name = dataset.image_names[i_image]
         cor_path = dataset.cor_paths[i_image]
         print(
-            "    Correcting %s (%d of %d)" % (image_name, i_image + 1, dataset.n_images)
+            "  Correcting %s (%d of %d)... "
+            % (image_name, i_image + 1, dataset.n_images),
+            end="",
+            flush=True,
         )
 
         # Load each quadrant of the image
@@ -726,6 +723,7 @@ def remove_cti_dataset(dataset):
 
         # Remove CTI (only print first time)
         if i_image == 0:
+            print("")
             image_out_A = remove_cti(image_A, verbosity=1)
             image_out_B, image_out_C, image_out_D = [
                 remove_cti(image) for image in [image_B, image_C, image_D]
@@ -749,7 +747,7 @@ def remove_cti_dataset(dataset):
             overwrite=True,
         )
 
-        print("    Saved %s" % cor_path[-48:])
+        print("Saved %s" % cor_path[-30:])
 
 
 # ========
@@ -905,7 +903,7 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
         print("Saved", save_path[-36:])
 
 
-def plot_stacked_trails(dataset, quadrants, save_path=None):
+def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None):
     """Plot a tiled set of stacked trails.
 
     stack_dataset_warm_pixels() must first be run for the dataset.
@@ -919,13 +917,16 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
         The list of quadrants (A, B, C, D) of the images to load, combined
         together if more than one provided.
 
+    use_corrected : bool (opt.)
+        If True, then use the corrected images with CTI removed instead.
+
     save_path : str (opt.)
         The file path for saving the figure. If None, then show the figure.
     """
     # Load
     stacked_lines = PixelLineCollection()
-    stacked_lines.load(dataset.saved_stacked_lines(quadrants))
-    npzfile = np.load(dataset.saved_stacked_info(quadrants))
+    stacked_lines.load(dataset.saved_stacked_lines(quadrants, use_corrected))
+    npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
     row_bins, flux_bins, date_bins, background_bins = [
         npzfile[var] for var in npzfile.files
     ]
@@ -946,15 +947,31 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
     # Don't plot the warm pixel itself
     pixels = np.arange(1, ut.trail_length + 1)
     sel_non_zero = np.where(stacked_lines.data[:, -ut.trail_length :] != 0)
-    y_min = np.partition(
-        abs(np.ravel(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])), 2
-    )[1]
-    y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
-    log10_y_min = np.ceil(np.log10(y_min))
-    log10_y_max = np.floor(np.log10(y_max))
-    y_min = min(y_min, 10 ** (log10_y_min - 0.4))
-    y_max = max(y_max, 10 ** (log10_y_max + 0.4))
-    y_ticks = 10 ** np.arange(log10_y_min, log10_y_max + 0.1, 1)
+    # Set y limits
+    if use_corrected:
+        # For symlog scale
+        # Assume ymin < 0
+        y_min = 4 * np.amin(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        log10_y_min = np.ceil(np.log10(abs(y_min)))
+        log10_y_max = np.floor(np.log10(y_max))
+        y_min = min(y_min, -10 ** (log10_y_min + 0.6))
+        y_max = max(y_max, 10 ** (log10_y_max + 0.6))
+        y_ticks = np.append(
+            -10 ** np.arange(log10_y_min, -0.1, -1),
+            10 ** np.arange(0, log10_y_max + 0.1, 1),
+        )
+    else:
+        # For log scale
+        y_min = np.partition(
+            abs(np.ravel(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])), 2
+        )[1]
+        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        log10_y_min = np.ceil(np.log10(y_min))
+        log10_y_max = np.floor(np.log10(y_max))
+        y_min = min(y_min, 10 ** (log10_y_min - 0.4))
+        y_max = max(y_max, 10 ** (log10_y_max + 0.4))
+        y_ticks = 10 ** np.arange(log10_y_min, log10_y_max + 0.1, 1)
     if n_background_bins == 1:
         colours = ["k"]
     else:
@@ -964,7 +981,9 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
     fontsize = 14
 
     # Fit the total trap density to the full dataset
-    rho_q_set, rho_q_std_set = fit_dataset_total_trap_density(dataset, quadrants)
+    rho_q_set, rho_q_std_set = fit_dataset_total_trap_density(
+        dataset, quadrants, use_corrected=use_corrected
+    )
 
     # Plot each stack
     for i_row in range(n_row_bins):
@@ -1000,32 +1019,39 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
                 # ========
                 # Plot data
                 # ========
-                ax.errorbar(
-                    pixels[where_pos],
-                    trail[where_pos],
-                    yerr=noise[where_pos],
-                    color=c,
-                    capsize=2,
-                    alpha=0.7,
-                )
-                ax.scatter(
-                    pixels[where_neg],
-                    abs(trail[where_neg]),
-                    color=c,
-                    facecolor="w",
-                    marker="o",
-                    alpha=0.7,
-                    zorder=-1,
-                )
-                ax.errorbar(
-                    pixels[where_neg],
-                    abs(trail[where_neg]),
-                    yerr=noise[where_neg],
-                    color=c,
-                    fmt=",",
-                    alpha=0.7,
-                    zorder=-2,
-                )
+                if use_corrected:
+                    # Plot positives and negatives together for symlog scale
+                    ax.errorbar(
+                        pixels, trail, yerr=noise, color=c, capsize=2, alpha=0.7
+                    )
+                else:
+                    # Plot positives and negatives separately for log scale
+                    ax.errorbar(
+                        pixels[where_pos],
+                        trail[where_pos],
+                        yerr=noise[where_pos],
+                        color=c,
+                        capsize=2,
+                        alpha=0.7,
+                    )
+                    ax.scatter(
+                        pixels[where_neg],
+                        abs(trail[where_neg]),
+                        color=c,
+                        facecolor="w",
+                        marker="o",
+                        alpha=0.7,
+                        zorder=-1,
+                    )
+                    ax.errorbar(
+                        pixels[where_neg],
+                        abs(trail[where_neg]),
+                        yerr=noise[where_neg],
+                        color=c,
+                        fmt=",",
+                        alpha=0.7,
+                        zorder=-2,
+                    )
 
                 # ========
                 # Plot fitted trail
@@ -1079,7 +1105,11 @@ def plot_stacked_trails(dataset, quadrants, save_path=None):
             ax.set_xlim(0.5, ut.trail_length + 0.5)
             ax.set_xticks(np.arange(2, ut.trail_length + 0.1, 2))
             ax.set_xticks(np.arange(1, ut.trail_length + 0.1, 2), minor=True)
-            ax.set_yscale("log")
+            if use_corrected:
+                ax.set_yscale("symlog", linthreshy=1, linscaley=0.5)
+                ax.axhline(0, lw=0.5, c="0.7", zorder=-99)
+            else:
+                ax.set_yscale("log")
             ax.set_ylim(y_min, y_max)
             ax.set_yticks(y_ticks)
 
@@ -1218,8 +1248,10 @@ def plot_trap_density_evol(
     # Colours
     if len(quadrant_sets) == 1:
         colours = ["k"]
+        colours_cor = ["0.35"]
     else:
         colours = A1_c[: len(quadrant_sets)]
+        colours_cor = A1_c[: len(quadrant_sets)]
 
     # Set date limits
     npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrant_sets[0]))
@@ -1387,23 +1419,46 @@ def plot_trap_density_evol(
 
         # Corrected images with CTI removed
         if use_corrected:
+            c = colours_cor[i_q]
+
             # Load
             npzfile = np.load(
                 ut.dataset_list_saved_density_evol(list_name, quadrants, use_corrected)
             )
-            days, densities, errors = [npzfile[var] for var in npzfile.files]
+            days, densities_cor, errors_cor = [npzfile[var] for var in npzfile.files]
+
+            # Plot negative values separately
+            where_pos = np.where(densities_cor > 0)[0]
+            where_neg = np.where(densities_cor < 0)[0]
 
             # Data
             ax.errorbar(
-                days,
-                densities,
-                yerr=errors,
+                days[where_pos],
+                densities_cor[where_pos],
+                yerr=errors_cor[where_pos],
                 c=c,
                 ls="none",
                 marker="x",
                 capsize=3,
                 elinewidth=1,
-                alpha=0.6,
+            )
+            ax.scatter(
+                days[where_neg],
+                abs(densities_cor[where_neg]),
+                color=c,
+                facecolor="w",
+                marker="o",
+                zorder=-2,
+            )
+            ax.errorbar(
+                days[where_neg],
+                abs(densities_cor[where_neg]),
+                yerr=errors_cor[where_neg],
+                c=c,
+                ls="none",
+                capsize=3,
+                elinewidth=1,
+                zorder=-1,
             )
 
     # ========
@@ -1458,7 +1513,7 @@ def plot_trap_density_evol(
     ax.yaxis.set_minor_locator(MultipleLocator(0.1))
 
     # Legend
-    plt.legend(loc="lower right", prop={"size": 14})
+    plt.legend(loc="center left", prop={"size": 14})
 
     # Mark dates
     ax.axvline(ut.day_T_change, c="k", lw=1)

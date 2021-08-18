@@ -31,7 +31,7 @@ params = {
     "figure.figsize": [9, 9],
     "font.family": "serif",
     "savefig.dpi": 100,
-    "legend.framealpha": 0.7,
+    "legend.framealpha": 0.85,
     "lines.linewidth": 1.7,
 }
 mpl.rcParams.update(params)

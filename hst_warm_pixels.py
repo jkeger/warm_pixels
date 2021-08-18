@@ -36,10 +36,10 @@ dataset_list : str (opt.)
     use e.g. "A_B_C_D", or e.g. "AB_CD" for combined A & B kept separate from
     combined C & D.
 
---mdate_old_*, -* DATE : str (opt.)
-    A "year/month/day" requirement to remake files saved/modified before this
-    date. Defaults to only check whether a file already exists. Alternatively,
-    set "1" to force remaking or "0" to force not.
+--mdate_old_*, -* <DATE> : str (opt.)
+    A DATE="year/month/day" requirement to remake files saved/modified before
+    this date. Default None or "." to only check whether a file already exists.
+    Alternatively, set "1" to force remaking or "0" to force not.
 
     --mdate_all, -a
         Sets the default for all others, can be overridden individually.
@@ -71,9 +71,10 @@ dataset_list : str (opt.)
 --use_corrected, -u
     Use the corrected images with CTI removed instead of the originals for
     the trails etc (keeping the same selected warm pixel locations). Must first
-    remove CTI from the images in each dataset (-r 1).
+    remove CTI from the images in each dataset (e.g. with `-r .`).
+    Note, mdate_plot_stack defaults to "0" in this mode.
 
---downsample, -w N i : int int
+--downsample, -w <N> <i> : int int
     Downsample the dataset list to run 1/N of the datasets, starting with set i.
     e.g. -w 10 5 will run the datasets with indices 5, 15, 25, ... in the list.
 
@@ -161,11 +162,13 @@ class Dataset(object):
         suffix = "_cor" if use_corrected else ""
         return self.path + "saved_stacked_info_%s%s.npz" % ("".join(quadrants), suffix)
 
-    def plotted_stacked_trails(self, quadrants):
+    def plotted_stacked_trails(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
-        return ut.path + "/stacked_trail_plots/%s_plotted_stacked_trails_%s.png" % (
+        suffix = "_cor" if use_corrected else ""
+        return ut.path + "/stacked_trail_plots/%s_plotted_stacked_trails_%s%s.png" % (
             self.name,
             "".join(quadrants),
+            suffix,
         )
 
     def plotted_distributions(self, quadrants):
@@ -381,8 +384,12 @@ if __name__ == "__main__":
             args.mdate_stack = args.mdate_all
         if args.mdate_plot_stack is None:
             args.mdate_plot_stack = args.mdate_all
-        if args.mdate_remove_cti is None:
-            args.mdate_remove_cti = args.mdate_all
+
+    # Modified defaults
+    if args.use_corrected:
+        # Don't automatically plot stacked plots of the corrected images
+        if args.mdate_plot_stack is None:
+            args.mdate_plot_stack = "0"
 
     # Downsample the dataset list
     if args.downsample is not None:
@@ -395,7 +402,7 @@ if __name__ == "__main__":
 
     # Test loading the image and corresponding bias files
     if args.test_image_and_bias_files:
-        print("Testing image and bias files...")
+        print("# Testing image and bias files...")
         all_okay = True
 
         for dataset in dataset_list:
@@ -408,7 +415,7 @@ if __name__ == "__main__":
 
     # Use the corrected images with CTI removed instead
     if args.use_corrected:
-        print("Using the corrected images with CTI removed. \n")
+        print("# Using the corrected images with CTI removed. \n")
 
     # ========
     # Find and stack warm pixels in each dataset
@@ -431,7 +438,7 @@ if __name__ == "__main__":
         for quadrant in all_quadrants:
             # Find possible warm pixels in each image
             if ut.need_to_make_file(
-                dataset.saved_lines(quadrant), date_old=args.mdate_find
+                dataset.saved_lines(quadrant), mdate_old=args.mdate_find
             ):
                 print(
                     "  Find possible warm pixels (%s)..." % quadrant,
@@ -442,7 +449,8 @@ if __name__ == "__main__":
 
             # Consistent warm pixels in the set
             if ut.need_to_make_file(
-                dataset.saved_consistent_lines(quadrant), date_old=args.mdate_consistent
+                dataset.saved_consistent_lines(quadrant),
+                mdate_old=args.mdate_consistent,
             ):
                 print(
                     "  Consistent warm pixels (%s)..." % quadrant, end=" ", flush=True
@@ -456,18 +464,16 @@ if __name__ == "__main__":
 
             # Consistent warm pixels from corrected images with CTI removed
             if args.use_corrected and ut.need_to_make_file(
-                dataset.saved_consistent_lines_cor(quadrant),
-                date_old=args.mdate_consistent,
+                dataset.saved_consistent_lines(quadrant, use_corrected=True),
+                mdate_old=args.mdate_consistent,
             ):
-                print(
-                    "  CTI-removed warm pixels (%s)..." % quadrant, end=" ", flush=True
-                )
+                print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
                 fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
 
         # Plot distributions of warm pixels in the set
         if ut.need_to_make_file(
             dataset.plotted_distributions(all_quadrants),
-            date_old=args.mdate_plot_consistent,
+            mdate_old=args.mdate_plot_consistent,
         ):
             print("  Distributions of warm pixels...", end=" ", flush=True)
             fu.plot_warm_pixel_distributions(
@@ -481,7 +487,7 @@ if __name__ == "__main__":
             # Stack in bins
             if ut.need_to_make_file(
                 dataset.saved_stacked_lines(quadrants, args.use_corrected),
-                date_old=args.mdate_stack,
+                mdate_old=args.mdate_stack,
             ):
                 print(
                     "  Stack warm pixel trails (%s)..." % "".join(quadrants),
@@ -492,8 +498,8 @@ if __name__ == "__main__":
 
             # Plot stacked lines
             if ut.need_to_make_file(
-                dataset.plotted_stacked_trails(quadrants),
-                date_old=args.mdate_plot_stack,
+                dataset.plotted_stacked_trails(quadrants, args.use_corrected),
+                mdate_old=args.mdate_plot_stack,
             ):
                 print(
                     "  Plot stacked trails (%s)..." % "".join(quadrants),
@@ -503,11 +509,14 @@ if __name__ == "__main__":
                 fu.plot_stacked_trails(
                     dataset,
                     quadrants,
-                    save_path=dataset.plotted_stacked_trails(quadrants),
+                    use_corrected=args.use_corrected,
+                    save_path=dataset.plotted_stacked_trails(
+                        quadrants, args.use_corrected
+                    ),
                 )
 
         # Remove CTI
-        if ut.need_to_make_file(dataset.cor_paths[-1], date_old=args.mdate_remove_cti):
+        if ut.need_to_make_file(dataset.cor_paths[-1], mdate_old=args.mdate_remove_cti):
             fu.remove_cti_dataset(dataset)
 
     # ========
