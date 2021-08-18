@@ -143,7 +143,11 @@ if True:
     # Save
     stacked_lines.save(dataset_path + "stacked_pixel_lines")
     np.savez(
-        dataset_path + "stacked_pixel_line_bins.npz", row_bins, flux_bins, date_bins, background_bins
+        dataset_path + "stacked_pixel_line_bins.npz",
+        row_bins,
+        flux_bins,
+        date_bins,
+        background_bins,
     )
 
     # Load
@@ -203,13 +207,7 @@ for i_row in range(n_row_bins):
                 text = "$N=%d$" % line.n_stacked
             else:
                 text = "\n" * i_background + "$%d$" % line.n_stacked
-            ax.text(
-                (length + 1) * 0.9,
-                y_max * 0.8,
-                text,
-                ha="right",
-                va="top",
-            )
+            ax.text((length + 1) * 0.9, y_max * 0.8, text, ha="right", va="top")
 
         ax.set_yscale("log")
         ax.set_ylim(y_min, y_max)

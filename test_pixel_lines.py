@@ -24,12 +24,7 @@ class TestPixelLine:
         assert line.flux == 7.89
 
         line = PixelLine(
-            data=None,
-            origin=None,
-            location=None,
-            date=None,
-            background=None,
-            flux=None,
+            data=None, origin=None, location=None, date=None, background=None, flux=None
         )
 
         assert line.length is None
@@ -400,9 +395,7 @@ class TestPixelLineCollection:
         )
 
         stacked_lines = lines.generate_stacked_lines_from_bins(
-            row_bins=[0, 7, 14, 999.9],
-            flux_bins=[1, np.pi, 10],
-            n_date_bins=1,
+            row_bins=[0, 7, 14, 999.9], flux_bins=[1, np.pi, 10], n_date_bins=1
         )
 
         assert stacked_lines.n_lines == 6
