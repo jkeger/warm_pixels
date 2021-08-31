@@ -5,7 +5,7 @@ from pixel_lines import PixelLine
 
 def find_warm_pixels(
     image,
-    trail_length=8,
+    trail_length=9,
     n_parallel_overscan=0,
     n_serial_prescan=0,
     ignore_bad_columns=True,
