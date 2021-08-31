@@ -669,8 +669,7 @@ def cti_model_hst(date):
 
 
 def remove_cti_dataset(dataset):
-    """Call fit_dataset_total_trap_density() for each dataset and compile and
-    save the results.
+    """Remove CTI trails using arctic from all images in the dataset.
 
     Parameters
     ----------

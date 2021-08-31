@@ -336,6 +336,7 @@ datasets_test_2 = [
     "04_2017",  # 2017/04/05, day 5514, 7 images
     "10_2017",  # 2017/10/03, day 5695, 5 images
 ]
+
 # Dictionary of choosable list names
 dataset_lists = {
     "all": datasets_all,
