@@ -6,7 +6,7 @@ class PixelLine(object):
     def __init__(
         self,
         data=None,
-        error=None,
+        noise=None,
         origin=None,
         location=None,
         date=None,
@@ -24,8 +24,8 @@ class PixelLine(object):
         data : [float]
             The pixel counts, in units of electrons.
 
-        error : [float]
-            The standard errors on the pixel counts, in units of electrons.
+        noise : [float]
+            The noise errors on the pixel counts, in units of electrons.
 
         origin : str
             An identifier for the origin (e.g. image name) of the data.
@@ -55,7 +55,7 @@ class PixelLine(object):
             The number of pixels in the data array.
         """
         self.data = data
-        self.error = error
+        self.noise = noise
         self.origin = origin
         self.location = location
         self.date = date
@@ -91,6 +91,10 @@ class PixelLineCollection(object):
         data : [[float]]
             The pixel counts of each line, in units of electrons.
 
+        noises : [[float]]
+            The noise errors on the pixel counts of each line, in units of
+            electrons.
+
         origins : [str]
             The identifiers for the origins (e.g. image name) of each line.
 
@@ -123,8 +127,8 @@ class PixelLineCollection(object):
         return np.array([line.data for line in self.lines])
 
     @property
-    def errors(self):
-        return np.array([line.error for line in self.lines])
+    def noises(self):
+        return np.array([line.noise for line in self.lines])
 
     @property
     def origins(self):
@@ -363,7 +367,10 @@ class PixelLineCollection(object):
             n_flux_bins = len(flux_bins) - 1
         else:
             if flux_min is None:
-                flux_min = np.amin(self.fluxes)
+                if flux_scale == "linear":
+                    flux_min = np.amin(self.fluxes)
+                else:
+                    flux_min = np.amin(self.fluxes[self.fluxes > 0])
             if flux_max is None:
                 flux_max = np.amax(self.fluxes)
 
@@ -486,9 +493,7 @@ class PixelLineCollection(object):
                 stacked_lines[index].data = [line.data]
             else:
                 stacked_lines[index].data = np.append(
-                    stacked_lines[index].data,
-                    [line.data],
-                    axis=0,
+                    stacked_lines[index].data, [line.data], axis=0
                 )
             stacked_lines[index].n_stacked += 1
 
@@ -503,7 +508,7 @@ class PixelLineCollection(object):
         # Take the means and standard errors
         for index, line in enumerate(stacked_lines):
             if line.n_stacked > 0:
-                line.error = np.std(line.data, axis=0) / np.sqrt(line.n_stacked)
+                line.noise = np.std(line.data, axis=0) / np.sqrt(line.n_stacked)
 
                 line.mean_row = sum_rows[index] / line.n_stacked
                 line.rms_row = np.sqrt(sum_sq_rows[index] / line.n_stacked)
@@ -514,7 +519,7 @@ class PixelLineCollection(object):
                 line.mean_flux = sum_fluxes[index] / line.n_stacked
                 line.rms_flux = np.sqrt(sum_sq_fluxes[index] / line.n_stacked)
             else:
-                line.error = np.zeros(length)
+                line.noise = np.zeros(length)
 
                 line.mean_row = None
                 line.rms_row = None

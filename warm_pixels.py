@@ -12,8 +12,8 @@ def find_warm_pixels(
     bad_column_factor=3.5,
     bad_column_loops=5,
     smooth_width=3,
-    unsharp_masking_factor=4,
-    flux_min=0,
+    unsharp_masking_factor=6,
+    flux_min=None,
     origin=None,
     date=None,
 ):
@@ -30,8 +30,9 @@ def find_warm_pixels(
         register is above row 0.
 
     trail_length : int
-        The number of pixels including the warm pixel to save as a trail. The
-        same number (minus one) of preceeding pixels are also included.
+        The number of pixels in a trail, not including the warm pixel itself.
+        The warm pixel itself and the same number of preceeding pixels are also
+        included in the saved line.
 
     n_parallel_overscan : int
         The number of rows in the overscan region of the input image. i.e. the
@@ -65,8 +66,8 @@ def find_warm_pixels(
 
     flux_min : float
         Pixels below this value AFTER background subtraction will be ignored.
-        Set None to not ignore any pixels. Defaults to 0 to ignore pixels below
-        the background.
+        Defaults to None to not ignore any pixels. Set to 0 to ignore warm
+        pixels below the background.
 
     origin : str
         An identifier for the origin (e.g. image name) of the data, for the
@@ -98,7 +99,7 @@ def find_warm_pixels(
         where_not_ignored *= 0
 
         # Remove columns with means far away from the median
-        for i in range(1, bad_column_loops):
+        for i in range(bad_column_loops):
             median = np.median(column_means[good_columns])
             stddev = np.std(column_means[good_columns])
             # Keep columns with means close to the median
@@ -123,35 +124,17 @@ def find_warm_pixels(
     image_smooth = uniform_filter(image_no_bg, size=smooth_width)
 
     # Ignore the very top of the CCD since we can't get full trails
-    where_not_ignored[:trail_length, :] = 0
+    where_not_ignored[: trail_length + 1, :] = 0
     # Ignore parallel overscan
-    where_not_ignored[-(n_parallel_overscan + trail_length) :, :] = 0
+    where_not_ignored[-(n_parallel_overscan + trail_length + 1) :, :] = 0
     # Ignore serial prescan
     where_not_ignored[:, :n_serial_prescan] = 0
 
     # Calculate the maximum of the neighbouring pixels in the same column for
     # each pixel, not including that pixel
     nearby_maxima = np.maximum.reduce(
-        [
-            np.roll(image_no_bg, 1, axis=0),
-            np.roll(image_no_bg, 2, axis=0),
-            np.roll(image_no_bg, 3, axis=0),
-            np.roll(image_no_bg, 4, axis=0),
-            np.roll(image_no_bg, 5, axis=0),
-            np.roll(image_no_bg, 6, axis=0),
-            np.roll(image_no_bg, 7, axis=0),
-            np.roll(image_no_bg, 8, axis=0),
-            np.roll(image_no_bg, 9, axis=0),
-            np.roll(image_no_bg, -1, axis=0),
-            np.roll(image_no_bg, -2, axis=0),
-            np.roll(image_no_bg, -3, axis=0),
-            np.roll(image_no_bg, -4, axis=0),
-            np.roll(image_no_bg, -5, axis=0),
-            np.roll(image_no_bg, -6, axis=0),
-            np.roll(image_no_bg, -7, axis=0),
-            np.roll(image_no_bg, -8, axis=0),
-            np.roll(image_no_bg, -9, axis=0),
-        ]
+        [np.roll(image_no_bg, i + 1, axis=0) for i in range(trail_length)]
+        + [np.roll(image_no_bg, -(i + 1), axis=0) for i in range(trail_length)]
     )
 
     # Identify warm pixels
@@ -160,8 +143,8 @@ def find_warm_pixels(
         (where_not_ignored.astype(bool))
         # Local maximum
         & (image_no_bg > nearby_maxima)
-        & (image_no_bg > np.roll(image_no_bg, 1, axis=0))
-        & (image_no_bg > np.roll(image_no_bg, -1, axis=0))
+        & (image_no_bg > np.roll(image_no_bg, 1, axis=1))
+        & (image_no_bg > np.roll(image_no_bg, -1, axis=1))
         # Still local maximum after unsharp masking
         & (image_no_bg > unsharp_masking_factor * np.roll(image_smooth, 1, axis=0))
         & (image_no_bg > unsharp_masking_factor * np.roll(image_smooth, -1, axis=0))
@@ -180,16 +163,9 @@ def find_warm_pixels(
     for location in warm_pixel_locations:
         row, column = location
 
-        # Subtract a mirror of the preceding pixels from the trail to remove
-        # e.g. a star's profile
-        data = image[row - trail_length + 1 : row + trail_length, column] - background
-        if not True:
-            data[trail_length:] -= data[: trail_length - 1]
-        data += background
-
         warm_pixels.append(
             PixelLine(
-                data=data,
+                data=image[row - trail_length : row + trail_length + 1, column],
                 origin=origin,
                 location=[row, column],
                 date=date,
