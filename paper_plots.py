@@ -25,11 +25,8 @@ import matplotlib.patheffects as path_effects
 from pixel_lines import PixelLineCollection
 from warm_pixels import find_warm_pixels
 
-sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
-import autoarray as aa
-
 sys.path.append(os.path.join(ut.path, "../arctic/"))
-import arcticpy as ac
+import arcticpy as cti
 
 # Example dataset and image
 dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
@@ -73,6 +70,7 @@ def run(name):
 
 def save_fig(Fp_save, do_pdf=False):
     """Save a figure and print the file path"""
+    Fp_save = "plots/" + Fp_save
     if do_pdf:
         Fp_save += ".pdf"
     else:
@@ -213,16 +211,16 @@ def example_image_corrected(do_pdf=False):
 
         # CTI model
         traps = [
-            ac.TrapInstantCapture(density=0.60, release_timescale=0.74),
-            ac.TrapInstantCapture(density=1.60, release_timescale=7.70),
-            ac.TrapInstantCapture(density=1.35, release_timescale=37.0),
+            cti.TrapInstantCapture(density=0.60, release_timescale=0.74),
+            cti.TrapInstantCapture(density=1.60, release_timescale=7.70),
+            cti.TrapInstantCapture(density=1.35, release_timescale=37.0),
         ]
-        roe = ac.ROE()
-        ccd = ac.CCD(full_well_depth=84700, well_fill_power=0.478)
+        roe = cti.ROE()
+        ccd = cti.CCD(full_well_depth=84700, well_fill_power=0.478)
 
         # Remove CTI
         def remove_cti(image, verbosity=0):
-            return ac.remove_cti(
+            return cti.remove_cti(
                 image=image,
                 n_iterations=n_iterations,
                 parallel_roe=roe,
@@ -569,7 +567,7 @@ def example_single_stack(do_pdf=False):
     )
 
     # ========
-    # Plot fitted trail
+    # Fitted exponentials trail
     # ========
     # Fit the total trap density to this single stacked trail
     rho_q, rho_q_std = fu.fit_total_trap_density(
@@ -634,6 +632,62 @@ def example_single_stack(do_pdf=False):
                 tau_c=tau_c,
             )
             ax.plot(model_pixels, model_i, color=c, ls=ls_dot, alpha=0.7)
+
+    # ========
+    # Fitted arctic trail
+    # ========
+    density_a, density_b, density_c = fu.fit_trap_densities_arctic(
+        y_all=[line.data],
+        noise_all=[line.noise],
+        n_e_all=[line.mean_flux],
+        n_bg_all=[line.mean_background],
+        row_all=[line.mean_row],
+        date=dataset.date,
+    )
+
+    # Model trail
+    model_pixels = np.linspace(1, line.mean_row + ut.trail_length, 20)
+    pre_cti = np.zeros((line.mean_row + ut.trail_length), 1)
+    pre_cti[line.mean_row, 1] = line.mean_flux
+    pre_cti += line.mean_background
+
+    # trap_densities = np.array([0.17, 0.45, 0.38]) * rho_q
+    trap_densities = [density_a, density_b, density_c]
+    if dataset.date < ut.date_T_change:
+        release_times = np.array([0.48, 4.86, 20.6])
+    else:
+        release_times = np.array([0.74, 7.70, 37.0])
+    roe = cti.ROE(
+        dwell_times=[1.0],
+        empty_traps_between_columns=True,
+        empty_traps_for_first_transfers=False,
+        force_release_away_from_readout=True,
+        use_integer_express_matrix=False,
+    )
+    ccd = cti.CCD(full_well_depth=84700, well_notch_depth=0.0, well_fill_power=0.478)
+    traps = [
+        cti.TrapInstantCapture(
+            density=trap_densities[i], release_timescale=release_times[i]
+        )
+        for i in range(len(trap_densities))
+    ]
+
+    model_trail = cti.add_cti(
+        image=pre_cti,
+        parallel_roe=roe,
+        parallel_ccd=ccd,
+        parallel_traps=traps,
+        parallel_express=express,
+        verbosity=0,
+    )
+    ax.plot(
+        model_pixels,
+        model_trail,
+        color=c,
+        ls=ls_dot,
+        alpha=0.7,
+        label=r"$\rho_{\rm q} = %.2f \pm %.2f$" % (rho_q, rho_q_std),
+    )
 
     # ========
     # Plot corrected trail
@@ -740,3 +794,5 @@ if __name__ == "__main__":
         example_stacked_trails(args.pdf)
     if run("density_evol"):
         density_evol(args.pdf)
+    if run("test_autofit_model"):
+        test_autofit_model(args.pdf)

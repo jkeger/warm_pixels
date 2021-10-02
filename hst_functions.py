@@ -17,11 +17,17 @@ from warm_pixels import find_warm_pixels
 
 import hst_utilities as ut
 
+sys.path.append(os.path.join(ut.path, "../arctic/"))
+import arcticpy as cti
+
 sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
 import autoarray as aa
 
-sys.path.append(os.path.join(ut.path, "../arctic/"))
-import arcticpy as ac
+sys.path.append(os.path.join(ut.path, "../PyAutoFit/"))
+import autofit as af
+
+sys.path.append(os.path.join(ut.path, "../PyAutoCTI/"))
+import autocti as ac
 
 
 # ========
@@ -439,6 +445,142 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     return result.params.get("rho_q").value, result.params.get("rho_q").stderr
 
 
+def fit_trap_densities_arctic(
+    y_all, noise_all, n_e_all, n_bg_all, row_all, date
+):
+    """Fit the trap densities for a set of one or more trails, using arctic.
+
+    Parameters
+    ----------
+    y_all : [[float]]
+        The charge values, for each trail.
+
+    noise_all : [[float]]
+        The charge noise error values, for each trail.
+
+    n_e_all : [float]
+        The number of electrons in the trailed pixel's charge cloud (e-), for
+        each trail.
+
+    n_bg_all : [float]
+        The background number of electrons (e-), for each trail.
+
+    row_all : [float]
+        Distance in pixels of the trailed pixel from the readout register,
+        for each trail.
+
+    date : float
+        The Julian date of the images, used to set the trap model.
+
+    Returns
+    -------
+    rho_q : float
+        The best-fit total number density of traps per pixel.
+
+    rho_q_std : float
+        The standard error on the total trap density.
+    """
+    ###Currently just does a single trail
+
+    row_all = np.array(row_all).astype(int)
+
+    # Conversion value for HST ACS
+    pixel_scale = 0.05
+
+    # Set the correct length of the 1D lines given the row
+    pre_cti = np.zeros(row_all[0] + ut.trail_length)
+    pre_cti[row_all[0]] = n_e_all[0]
+    post_cti = np.append(np.zeros(row_all[0] - ut.trail_length - 1), y_all[0])
+    noise = np.append(np.zeros(row_all[0] - ut.trail_length - 1), noise_all[0])
+
+    # Include the background
+    pre_cti += n_bg_all[0]
+    post_cti += n_bg_all[0]
+
+    print("Pre-CTI:", pre_cti)  ###
+    print("Post-CTI:", post_cti)  ###
+
+    # Convert to AutoCTI objects
+    post_cti = ac.Array1D.manual_native(array=post_cti, pixel_scales=pixel_scale)
+    noise = ac.Array1D.manual_native(array=noise, pixel_scales=pixel_scale)
+    pre_cti = ac.Array1D.manual_native(array=pre_cti, pixel_scales=pixel_scale)
+
+    shape_native = (row_all[0] + ut.trail_length, 1)
+    region_1d_list = [(row_all[0], row_all[0] + 1)]
+    normalization = np.sum(pre_cti)
+    layout = ac.Layout1DLine(
+        shape_1d=shape_native, region_list=region_1d_list, normalization=normalization
+    )
+
+    dataset_line = ac.DatasetLine(
+        data=post_cti, noise_map=noise, pre_cti_data=pre_cti, layout=layout
+    )
+
+    # Set up fitting CTI model
+    clocker = ac.Clocker1D(express=5)
+
+    # Trap species
+    # Relative densities
+    A = 0.17
+    B = 0.45
+    C = 0.38
+    # Trap lifetimes before or after the temperature change
+    if date < ut.date_T_change:
+        tau_a = 0.48
+        tau_b = 4.86
+        tau_c = 20.6
+    else:
+        tau_a = 0.74
+        tau_b = 7.70
+        tau_c = 37.0
+
+    # Free parameter(s): densities only
+    trap_a = af.Model(ac.TrapInstantCapture)
+    trap_a.density = af.UniformPrior(lower_limit=0.0, upper_limit=20.0)
+    trap_a.release_timescale = tau_a
+    trap_a.fractional_volume_none_exposed = 0.0
+    trap_a.fractional_volume_full_exposed = 0.0
+
+    trap_b = af.Model(ac.TrapInstantCapture)
+    trap_b.density = af.UniformPrior(lower_limit=0.0, upper_limit=20.0)#trap_a.density * B / A
+    trap_b.release_timescale = tau_b
+    trap_b.fractional_volume_none_exposed = 0.0
+    trap_b.fractional_volume_full_exposed = 0.0
+
+    trap_c = af.Model(ac.TrapInstantCapture)
+    trap_c.density = af.UniformPrior(lower_limit=0.0, upper_limit=20.0)#trap_a.density * C / A
+    trap_c.release_timescale = tau_c
+    trap_c.fractional_volume_none_exposed = 0.0
+    trap_c.fractional_volume_full_exposed = 0.0
+
+    trap_list = [trap_a, trap_b, trap_c]
+
+    # CCD
+    ccd = af.Model(ac.CCDPhase)
+    ccd.well_notch_depth = 0.0
+    ccd.well_fill_power = 0.478
+    ccd.full_well_depth = 84700.0
+
+    model = af.Collection(cti=af.Model(ac.CTI1D, traps=trap_list, ccd=ccd))
+
+    # Run the fit, currently writes the output to file
+    search = af.DynestyStatic(path_prefix="dynesty/", name="tmp", nlive=10)
+    analysis = ac.AnalysisDatasetLine(dataset_line=dataset_line, clocker=clocker)
+    result = search.fit(model=model, analysis=analysis)
+
+    # Extract results
+    fitted_model = result.max_log_likelihood_instance.cti
+    # total_density = fitted_model.traps[0].density / A
+    density_a = fitted_model.traps[0].density
+    density_b = fitted_model.traps[1].density
+    density_c = fitted_model.traps[2].density
+    print(density_a, density_b, density_c)###
+
+    ### std
+
+    return density_a, density_b, density_c
+
+
 def fit_dataset_total_trap_density(dataset, quadrants, use_corrected=False):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
 
@@ -646,7 +788,7 @@ def cti_model_hst(date):
     trap_densities = relative_densities * total_trap_density
 
     # arctic objects
-    roe = ac.ROE(
+    roe = cti.ROE(
         dwell_times=[1.0],
         empty_traps_between_columns=True,
         empty_traps_for_first_transfers=False,
@@ -655,11 +797,11 @@ def cti_model_hst(date):
     )
 
     # Single-phase CCD
-    ccd = ac.CCD(full_well_depth=84700, well_notch_depth=0.0, well_fill_power=0.478)
+    ccd = cti.CCD(full_well_depth=84700, well_notch_depth=0.0, well_fill_power=0.478)
 
     # Instant-capture traps
     traps = [
-        ac.TrapInstantCapture(
+        cti.TrapInstantCapture(
             density=trap_densities[i], release_timescale=release_times[i]
         )
         for i in range(len(trap_densities))
@@ -710,7 +852,7 @@ def remove_cti_dataset(dataset):
         roe, ccd, traps = cti_model_hst(date)
 
         def remove_cti(image, verbosity=0):
-            return ac.remove_cti(
+            return cti.remove_cti(
                 image=image,
                 n_iterations=5,
                 parallel_roe=roe,
