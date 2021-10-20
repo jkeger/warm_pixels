@@ -28,13 +28,17 @@ from warm_pixels import find_warm_pixels
 sys.path.append(os.path.join(ut.path, "../arctic/"))
 import arcticpy as cti
 
-# Example dataset and image
-dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
-image_name = "jdrwc3fcq_raw"
-image_path = dataset.path + image_name + ".fits"
-quadrant = "D"
-n_iterations = 1
-cor_path = dataset.path + image_name + "_cor_iter%d.fits" % n_iterations
+
+#
+# RJM: Jacob set up variables here, thinking they had global scope. They don't.
+#
+# Example dataset and image   
+#dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
+#image_name = "jdrwc3fcq_raw"
+#image_path = dataset.path + image_name + ".fits"
+#quadrant = "D"
+#n_iterations = 1
+#cor_path = dataset.path + image_name + "_cor_iter%d.fits" % n_iterations
 
 
 # ========
@@ -70,11 +74,12 @@ def run(name):
 
 def save_fig(Fp_save, do_pdf=False):
     """Save a figure and print the file path"""
-    Fp_save = "plots/" + Fp_save
+    Fp_path = "paper_plots/"
+    if not os.path.exists(Fp_path): os.mkdir(Fp_path)
     if do_pdf:
-        Fp_save += ".pdf"
+        Fp_save = Fp_path + Fp_save + ".pdf"
     else:
-        Fp_save += ".png"
+        Fp_save = Fp_path + Fp_save + ".png"
     plt.savefig(Fp_save, dpi=200)
     print("Saved %s" % Fp_save[-64:])
 
@@ -82,19 +87,23 @@ def save_fig(Fp_save, do_pdf=False):
 # ========
 # Functions
 # ========
-def example_image_zooms(do_pdf=False, use_corrected=False):
+def example_image_zooms(image_path, cor_path, quadrant, do_pdf=False, use_corrected=False):
     """Example HST ACS image with CTI trails"""
 
     if use_corrected:
-        image_path = cor_path
+        file_path = cor_path
+    else:
+        file_path = image_path
 
     # Load the image
     image = aa.acs.ImageACS.from_fits(
-        file_path=image_path,
+        file_path=file_path,
         quadrant_letter=quadrant,
         bias_subtract_via_bias_file=True,
         bias_subtract_via_prescan=True,
     ).native
+
+    print("image read")
 
     # Figure
     fig = plt.figure(figsize=(18, 9), constrained_layout=False)
@@ -193,20 +202,20 @@ def example_image_zooms(do_pdf=False, use_corrected=False):
         save_fig("example_image_zooms", do_pdf)
 
 
-def example_image_corrected(do_pdf=False):
+def example_image_corrected(image_path, cor_path, quadrant, n_iterations, do_pdf=False):
     """Example HST ACS image with CTI trails removed by arctic"""
 
     # Remove CTI
-    if not True:
+    if True:
         # Load each quadrant of the image
         image_A, image_B, image_C, image_D = [
             aa.acs.ImageACS.from_fits(
                 file_path=image_path,
-                quadrant_letter=quadrant,
+                quadrant_letter=quadrant_letter,
                 bias_subtract_via_bias_file=True,
                 bias_subtract_via_prescan=True,
             ).native
-            for quadrant in ["A", "B", "C", "D"]
+            for quadrant_letter in ["A", "B", "C", "D"]
         ]
 
         # CTI model
@@ -217,9 +226,15 @@ def example_image_corrected(do_pdf=False):
         ]
         roe = cti.ROE()
         ccd = cti.CCD(full_well_depth=84700, well_fill_power=0.478)
+        
+        print(traps)
+
 
         # Remove CTI
         def remove_cti(image, verbosity=0):
+            
+            print("fff")
+            print(traps)
             return cti.remove_cti(
                 image=image,
                 n_iterations=n_iterations,
@@ -230,7 +245,10 @@ def example_image_corrected(do_pdf=False):
                 verbosity=verbosity,
             )
 
+        print("hw2")
+
         image_out_A = remove_cti(image_A, verbosity=1)
+        print("hw3")
         image_out_B, image_out_C, image_out_D = [
             remove_cti(image) for image in [image_B, image_C, image_D]
         ]
@@ -354,7 +372,7 @@ def example_image_corrected(do_pdf=False):
     save_fig("example_image_corrected", do_pdf)
 
 
-def found_warm_pixels(do_pdf=False):
+def found_warm_pixels(image_path, quadrant, do_pdf=False):
     """Example HST ACS image with identified warm pixels"""
 
     # Load the image
@@ -494,7 +512,7 @@ def found_warm_pixels(do_pdf=False):
     save_fig("found_warm_pixels", do_pdf)
 
 
-def example_single_stack(do_pdf=False):
+def example_single_stack(dataset, do_pdf=False):
     """Example single stack of warm-pixel trails and model fits."""
 
     # Load
@@ -632,108 +650,113 @@ def example_single_stack(do_pdf=False):
                 tau_c=tau_c,
             )
             ax.plot(model_pixels, model_i, color=c, ls=ls_dot, alpha=0.7)
-
-    # ========
-    # Fitted arctic trail
-    # ========
-    density_a, density_b, density_c = fu.fit_trap_densities_arctic(
-        y_all=[line.data],
-        noise_all=[line.noise],
-        n_e_all=[line.mean_flux],
-        n_bg_all=[line.mean_background],
-        row_all=[line.mean_row],
-        date=dataset.date,
-    )
-
-    # Model trail
-    model_pixels = np.linspace(1, line.mean_row + ut.trail_length, 20)
-    pre_cti = np.zeros((line.mean_row + ut.trail_length), 1)
-    pre_cti[line.mean_row, 1] = line.mean_flux
-    pre_cti += line.mean_background
-
-    # trap_densities = np.array([0.17, 0.45, 0.38]) * rho_q
-    trap_densities = [density_a, density_b, density_c]
-    if dataset.date < ut.date_T_change:
-        release_times = np.array([0.48, 4.86, 20.6])
-    else:
-        release_times = np.array([0.74, 7.70, 37.0])
-    roe = cti.ROE(
-        dwell_times=[1.0],
-        empty_traps_between_columns=True,
-        empty_traps_for_first_transfers=False,
-        force_release_away_from_readout=True,
-        use_integer_express_matrix=False,
-    )
-    ccd = cti.CCD(full_well_depth=84700, well_notch_depth=0.0, well_fill_power=0.478)
-    traps = [
-        cti.TrapInstantCapture(
-            density=trap_densities[i], release_timescale=release_times[i]
-        )
-        for i in range(len(trap_densities))
-    ]
-
-    model_trail = cti.add_cti(
-        image=pre_cti,
-        parallel_roe=roe,
-        parallel_ccd=ccd,
-        parallel_traps=traps,
-        parallel_express=express,
-        verbosity=0,
-    )
-    ax.plot(
-        model_pixels,
-        model_trail,
-        color=c,
-        ls=ls_dot,
-        alpha=0.7,
-        label=r"$\rho_{\rm q} = %.2f \pm %.2f$" % (rho_q, rho_q_std),
-    )
-
-    # ========
-    # Plot corrected trail
-    # ========
-    # Load
-    stacked_lines_cor = PixelLineCollection()
-    stacked_lines_cor.load(dataset.saved_stacked_lines(quadrants, use_corrected=True))
-    line_cor = stacked_lines_cor.lines[bin_index]
-
-    # Don't plot the warm pixel itself
-    trail_cor = line_cor.data[-ut.trail_length :]
-    noise_cor = line_cor.noise[-ut.trail_length :]
-
-    # Check for negative values
-    where_pos = np.where(trail_cor > 0)[0]
-    where_neg = np.where(trail_cor < 0)[0]
-
-    # Plot
-    c = "0.4"
-    ax.errorbar(
-        pixels[where_pos],
-        trail_cor[where_pos],
-        yerr=noise_cor[where_pos],
-        color=c,
-        capsize=2,
-        alpha=0.7,
-        label="After correction",
-    )
-    ax.scatter(
-        pixels[where_neg],
-        abs(trail_cor[where_neg]),
-        color=c,
-        facecolor="w",
-        marker="o",
-        alpha=0.7,
-        zorder=-1,
-    )
-    ax.errorbar(
-        pixels[where_neg],
-        abs(trail_cor[where_neg]),
-        yerr=noise_cor[where_neg],
-        color=c,
-        fmt=",",
-        alpha=0.7,
-        zorder=-2,
-    )
+    #
+    # RJM: Jacob's attempt to use arctic instead of exponentials
+    #
+    #    # ========
+    #    # Fitted arctic trail
+    #    # ========
+    #    density_a, density_b, density_c = fu.fit_trap_densities_arctic(
+    #        y_all=[line.data],
+    #        noise_all=[line.noise],
+    #        n_e_all=[line.mean_flux],
+    #        n_bg_all=[line.mean_background],
+    #        row_all=[line.mean_row],
+    #        date=dataset.date,
+    #    )
+    #
+    #    # Model trail
+    #    model_pixels = np.linspace(1, line.mean_row + ut.trail_length, 20)
+    #    pre_cti = np.zeros((line.mean_row + ut.trail_length), 1)
+    #    pre_cti[line.mean_row, 1] = line.mean_flux
+    #    pre_cti += line.mean_background
+    #
+    #    # trap_densities = np.array([0.17, 0.45, 0.38]) * rho_q
+    #    trap_densities = [density_a, density_b, density_c]
+    #    if dataset.date < ut.date_T_change:
+    #        release_times = np.array([0.48, 4.86, 20.6])
+    #    else:
+    #        release_times = np.array([0.74, 7.70, 37.0])
+    #    roe = cti.ROE(
+    #        dwell_times=[1.0],
+    #        empty_traps_between_columns=True,
+    #        empty_traps_for_first_transfers=False,
+    #        force_release_away_from_readout=True,
+    #        use_integer_express_matrix=False,
+    #    )
+    #    ccd = cti.CCD(full_well_depth=84700, well_notch_depth=0.0, well_fill_power=0.478)
+    #    traps = [
+    #        cti.TrapInstantCapture(
+    #            density=trap_densities[i], release_timescale=release_times[i]
+    #        )
+    #        for i in range(len(trap_densities))
+    #    ]
+    #
+    #    model_trail = cti.add_cti(
+    #        image=pre_cti,
+    #        parallel_roe=roe,
+    #        parallel_ccd=ccd,
+    #        parallel_traps=traps,
+    #        parallel_express=express,
+    #        verbosity=0,
+    #    )
+    #    ax.plot(
+    #        model_pixels,
+    #        model_trail,
+    #        color=c,
+    #        ls=ls_dot,
+    #        alpha=0.7,
+    #        label=r"$\rho_{\rm q} = %.2f \pm %.2f$" % (rho_q, rho_q_std),
+    #    )
+    
+    #
+    # RJM: temporarily commenting out overlay of results after correction, to avoid running slow correction
+    #
+    #    # ========
+    #    # Plot corrected trail
+    #    # ========
+    #    # Load
+    #    stacked_lines_cor = PixelLineCollection()
+    #    stacked_lines_cor.load(dataset.saved_stacked_lines(quadrants, use_corrected=True))
+    #    line_cor = stacked_lines_cor.lines[bin_index]
+    #
+    #    # Don't plot the warm pixel itself
+    #    trail_cor = line_cor.data[-ut.trail_length :]
+    #    noise_cor = line_cor.noise[-ut.trail_length :]
+    #
+    #    # Check for negative values
+    #    where_pos = np.where(trail_cor > 0)[0]
+    #    where_neg = np.where(trail_cor < 0)[0]
+    #
+    #    # Plot
+    #    c = "0.4"
+    #    ax.errorbar(
+    #        pixels[where_pos],
+    #        trail_cor[where_pos],
+    #        yerr=noise_cor[where_pos],
+    #        color=c,
+    #        capsize=2,
+    #        alpha=0.7,
+    #        label="After correction",
+    #    )
+    #    ax.scatter(
+    #        pixels[where_neg],
+    #        abs(trail_cor[where_neg]),
+    #        color=c,
+    #        facecolor="w",
+    #        marker="o",
+    #        alpha=0.7,
+    #        zorder=-1,
+    #    )
+    #    ax.errorbar(
+    #        pixels[where_neg],
+    #        abs(trail_cor[where_neg]),
+    #        yerr=noise_cor[where_neg],
+    #        color=c,
+    #        fmt=",",
+    #        alpha=0.7,
+    #        zorder=-2,
+    #    )
 
     # ========
     # Axes etc
@@ -751,7 +774,7 @@ def example_single_stack(do_pdf=False):
     save_fig("example_single_stack", do_pdf)
 
 
-def example_stacked_trails(do_pdf=False):
+def example_stacked_trails(dataset, do_pdf=False):
     """Example stacked trails in bins."""
 
     # Plot
@@ -780,19 +803,38 @@ if __name__ == "__main__":
     # Parse arguments
     parser = prep_parser()
     args = parser.parse_args()
+    
+    
+    # Example dataset and image
+    dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
+    image_name = "jdrwc3fcq_raw"
+    quadrant = "D"
+    n_iterations = 1
+    use_corrected=False
+   
+    # Where to find the example data (dataset.path is defined in hst_utilities.py)
+    image_path = dataset.path + image_name + ".fits"
+    cor_path = dataset.path + image_name + "_cor_iter%d.fits" % n_iterations
+
 
     # Run functions
-    if run("example_image_zooms"):
-        example_image_zooms(args.pdf)
-    if run("example_image_corrected"):
-        example_image_corrected(args.pdf)
-    if run("found_warm_pixels"):
-        found_warm_pixels(args.pdf)
-    if run("example_single_stack"):
-        example_single_stack(args.pdf)
-    if run("example_stacked_trails"):
-        example_stacked_trails(args.pdf)
+    #if run("example_image_zooms"):
+    #    example_image_zooms( image_path, cor_path, quadrant, args.pdf, use_corrected )
+    #print("done1")
+    #if run("example_image_corrected"):
+    #    example_image_corrected(image_path, cor_path, quadrant, n_iterations, args.pdf )
+    #print("done2")
+    #if run("found_warm_pixels"):
+    #    found_warm_pixels( image_path, quadrant, args.pdf )
+    #print("done3")
+    #if run("example_single_stack"):
+    #    example_single_stack( dataset, args.pdf )
+    #print("done4")
+    #if run("example_stacked_trails"):
+    #    example_stacked_trails( dataset, args.pdf )
+    #print("done5")
     if run("density_evol"):
         density_evol(args.pdf)
-    if run("test_autofit_model"):
-        test_autofit_model(args.pdf)
+    print("done6")
+    #if run("test_autofit_model"):
+    #    test_autofit_model(args.pdf)

@@ -487,6 +487,10 @@ def fit_trap_densities_arctic(
     # Conversion value for HST ACS
     pixel_scale = 0.05
 
+
+    ### RJM These conversions from 20 pixel arrays to autofit arrays have a bug
+    
+
     # Set the correct length of the 1D lines given the row
     pre_cti = np.zeros(row_all[0] + ut.trail_length)
     pre_cti[row_all[0]] = n_e_all[0]

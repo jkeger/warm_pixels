@@ -24,6 +24,13 @@ datasets, skipping any that have been run before and saved their output.
 Use the optional flags to choose manually which functions to run and to run
 the next-stage functions.
 
+
+Example use
+-----------
+
+python3 hst_warm_pixels.py sample
+
+
 Parameters
 ----------
 dataset_list : str (opt.)
@@ -417,6 +424,14 @@ if __name__ == "__main__":
     # Use the corrected images with CTI removed instead
     if args.use_corrected:
         print("# Using the corrected images with CTI removed. \n")
+
+    # ========
+    # Create directories to contain output plots
+    # ========
+    if not os.path.exists(ut.path + "/stacked_trail_plots"):
+        os.mkdir(ut.path + "/stacked_trail_plots")
+    if not os.path.exists(ut.path + "/plotted_distributions"):
+        os.mkdir(ut.path + "/plotted_distributions")
 
     # ========
     # Find and stack warm pixels in each dataset
