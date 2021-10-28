@@ -1123,10 +1123,10 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     )
 
     # Fit the total trap density to the full dataset
-    print("Performing global fit using arCTIc")
-    rho_q_set, rho_q_std_set, y_fit = fit_dataset_arctic_trap_model(
-        dataset, quadrants, use_corrected=use_corrected
-    )
+    #print("Performing global fit using arCTIc")
+    #rho_q_set, rho_q_std_set, y_fit = fit_dataset_arctic_trap_model(
+    #    dataset, quadrants, use_corrected=use_corrected
+    #)
 
     # Fit to each trail individually, and plot as we go along
     print("Performing individual fits:")

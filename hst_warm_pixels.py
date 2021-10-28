@@ -514,11 +514,11 @@ if __name__ == "__main__":
         for quadrants in quadrant_sets:
             # Stack in bins
             #RJM
-            if True:
-            #if ut.need_to_make_file(
-            #    dataset.saved_stacked_lines(quadrants, args.use_corrected),
-            #    mdate_old=args.mdate_stack,
-            #):
+            #if True:
+            if ut.need_to_make_file(
+                dataset.saved_stacked_lines(quadrants, args.use_corrected),
+                mdate_old=args.mdate_stack,
+            ):
                 print(
                     "  Stack warm pixel trails (%s)..." % "".join(quadrants),
                     end=" ",
@@ -528,11 +528,11 @@ if __name__ == "__main__":
 
             # Plot stacked lines
             #RJM
-            if True:
-            #if ut.need_to_make_file(
-            #    dataset.plotted_stacked_trails(quadrants, args.use_corrected),
-            #    mdate_old=args.mdate_plot_stack,
-            #):
+            #if True:
+            if ut.need_to_make_file(
+                dataset.plotted_stacked_trails(quadrants, args.use_corrected),
+                mdate_old=args.mdate_plot_stack,
+            ):
                 print(
                     "  Plot stacked trails (%s)..." % "".join(quadrants),
                     end=" ",
