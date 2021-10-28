@@ -13,6 +13,7 @@ class PixelLine(object):
         background=None,
         flux=None,
         n_stacked=None,
+        format=None
     ):
         """A 1D line of pixels (e.g. a single CTI trail) with metadata.
 
@@ -62,6 +63,7 @@ class PixelLine(object):
         self.background = background
         self.flux = flux
         self.n_stacked = n_stacked
+        self.format = None
 
         # Default flux from data
         if self.flux is None and self.data is not None:
@@ -73,6 +75,68 @@ class PixelLine(object):
             return len(self.data)
         else:
             return None
+
+    def remove_symmetry(self, n_pixels_used_for_background=5):
+        """Convert a line with a warm pixel in the middle to just the trail (without background),
+        suitable for modelling as sums of exponentials.
+        """
+        
+        #assert self.format == None
+        assert (len(self.data) % 2) == 1 
+        trail_length = ( len(self.data) - 1 ) // 2
+        n_pixels_used_for_background = min(n_pixels_used_for_background, trail_length)
+        
+        self.flux_noise = self.noise[trail_length]
+        self.noise = np.sqrt( self.noise[-trail_length :] ** 2 + np.flip(self.noise[: trail_length]) ** 2 )
+        new_line = self.data[-trail_length :] - np.flip(self.data[: trail_length])
+        self.background = np.mean( self.data[: n_pixels_used_for_background] )
+        #self.flux = self.data[trail_length] + max(sum(new_line),0)
+        self.flux = self.data[trail_length] #+ sum(new_line)
+        self.data = new_line # + self.background
+        self.format = "trail"
+        # RJM: do we also need to shift the location by length pixels?
+        
+        return 
+
+    @property 
+    def model_untrailed(self):
+        """Convert a line with a warm pixel in the middle to an entire column (with background),
+        suitable for passing to arCTIc.
+        """
+        #assert self.format == "trail"
+        copy = self
+        copy.remove_symmetry()
+        model = np.ones(np.int(np.floor(copy.mean_row) + 1 + len(copy.data))) * copy.background
+        model[-len(copy.data)-1] = copy.flux + sum(copy.data)
+        return model
+ 
+    @property 
+    def model_trailed(self):
+        """Convert a line with a warm pixel in the middle to an entire column (with background),
+        suitable for passing to arCTIc.
+        """
+        #assert self.format == "trail"
+        copy = self
+        copy.remove_symmetry()
+        model = np.ones(np.int(np.floor(copy.mean_row) + 1 + len(copy.data))) * copy.background
+        model[-len(copy.data)-1] = copy.flux
+        model[-len(copy.data):] += copy.data
+        return model
+ 
+    @property 
+    def model_noise(self):
+        """Convert a line with a warm pixel in the middle to an entire column (with background),
+        suitable for passing to arCTIc.
+        """
+        #assert self.format == "trail"
+        copy = self
+        copy.remove_symmetry()
+        model = np.ones(np.int(np.floor(copy.mean_row) + 1 + len(copy.data))) * np.sqrt(copy.background) # Could set to infinity, to downweight in fit
+        model[-len(copy.data)-1] = copy.flux_noise
+        model[-len(copy.data):] = copy.noise
+        return model
+ 
+       
 
 
 class PixelLineCollection(object):
@@ -120,7 +184,8 @@ class PixelLineCollection(object):
         if lines is None:
             self.lines = None
         else:
-            self.lines = np.array(lines)
+            self.lines = np.array(lines) # RJM: Can you have an array of lines, rather than a list?
+            #self.lines = [lines] # RJM: I would have thought it would be better to do this.
 
     @property
     def data(self):
@@ -184,6 +249,33 @@ class PixelLineCollection(object):
         # Load the lines
         with open(filename, "rb") as f:
             self.append(pickle.load(f))
+
+    def remove_symmetry(self, n_pixels_used_for_background=5):
+        """Convert each line from a format that has a warm pixel in the middle (and background) 
+        to just the trail (without background)."""
+        self = np.array([line.remove_symmetry(n_pixels_used_for_background) for line in self.lines])
+        return
+    
+    @property 
+    def model_untrailed(self):
+        """Convert a line with a warm pixel in the middle to an entire column (with background),
+        suitable for passing to arCTIc.
+        """
+        return np.array([line.model_untrailed() for line in self.lines])
+    
+    @property 
+    def model_trailed(self):
+        """Convert a line with a warm pixel in the middle to an entire column (with background),
+        suitable for passing to arCTIc.
+        """
+        return np.array([line.model_trailed() for line in self.lines])
+    
+    @property 
+    def model_trailed(self):
+        """Convert a line with a warm pixel in the middle to an entire column (with background),
+        suitable for passing to arCTIc.
+        """
+        return np.array([line.model_noise() for line in self.lines])
 
     def find_consistent_lines(self, fraction_present=2 / 3):
         """Identify lines that are consistently present across several images.
@@ -469,10 +561,14 @@ class PixelLineCollection(object):
         sum_sq_fluxes = np.zeros(n_bins)
 
         # Add the line data to each stack
+        #
+        # RJM: Does this loop over each line too many times? Should only need to look at each line once
+        #
         for i_row, i_flux, i_date, i_background, line in zip(
             row_indices, flux_indices, date_indices, background_indices, self.lines
         ):
             # Discard lines with values outside of the bins
+            #print(i_row, i_flux, i_date, i_background)
             if -1 in [i_row, i_flux, i_date, i_background]:
                 continue
 
@@ -488,6 +584,10 @@ class PixelLineCollection(object):
                 n_background_bins=n_background_bins,
             )
 
+            #
+            # RJM: This is REALLY slow! It loops over all warm pixels, and appends them to bins, rather than just adding them.
+            #      But it does avoid floating point errors when adding LOTS of small numbers.
+            #
             # Append the line data
             if stacked_lines[index].n_stacked == 0:
                 stacked_lines[index].data = [line.data]
@@ -506,6 +606,9 @@ class PixelLineCollection(object):
             sum_sq_fluxes[index] += line.flux ** 2
 
         # Take the means and standard errors
+        #
+        # RJM: adding variables like this, which are not defined in the general class descriptor, seems a bit dodgy
+        #
         for index, line in enumerate(stacked_lines):
             if line.n_stacked > 0:
                 line.noise = np.std(line.data, axis=0) / np.sqrt(line.n_stacked)
@@ -529,7 +632,7 @@ class PixelLineCollection(object):
                 line.rms_flux = None
 
             line.data = np.mean(line.data, axis=0)
-
+        
         if return_bin_info:
             return (
                 PixelLineCollection(lines=stacked_lines),

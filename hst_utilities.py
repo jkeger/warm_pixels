@@ -18,7 +18,7 @@ print(dataset_root)
 # Input parameters
 # ========
 # Number of pixels for each trail, not including the warm pixel itself
-trail_length = 9
+trail_length = 12#9
 # The minimum fraction of images in which a warm pixel must be present.
 # fraction_present = 0.9
 fraction_present = 2 / 3

@@ -541,11 +541,12 @@ def example_single_stack(dataset, do_pdf=False):
         n_background_bins=n_background_bins,
     )
     line = stacked_lines.lines[bin_index]
+    line.remove_symmetry()
 
     # Don't plot the warm pixel itself
     pixels = np.arange(1, ut.trail_length + 1)
-    trail = line.data[-ut.trail_length :]
-    noise = line.noise[-ut.trail_length :]
+    trail = line.data  #[-ut.trail_length :]
+    noise = line.noise #[-ut.trail_length :]
 
     # Check for negative values
     where_pos = np.where(trail > 0)[0]
@@ -588,7 +589,7 @@ def example_single_stack(dataset, do_pdf=False):
     # Fitted exponentials trail
     # ========
     # Fit the total trap density to this single stacked trail
-    rho_q, rho_q_std = fu.fit_total_trap_density(
+    rho_q, rho_q_std, y_fit = fu.fit_total_trap_density(
         x_all=pixels,
         y_all=trail,
         noise_all=noise,
@@ -710,7 +711,7 @@ def example_single_stack(dataset, do_pdf=False):
     #    )
     
     #
-    # RJM: temporarily commenting out overlay of results after correction, to avoid running slow correction
+    # RJM: temporarily commenting out overlay of results after correction, to avoid having to run the (slow) CTI correction
     #
     #    # ========
     #    # Plot corrected trail
@@ -784,6 +785,16 @@ def example_stacked_trails(dataset, do_pdf=False):
     save_fig("example_stacked_trails", do_pdf)
 
 
+def example_stacked_trails(dataset, do_pdf=False):
+    """Example stacked trails in bins, using arCTIc."""
+
+    # Plot
+    fu.plot_stacked_trails(dataset, quadrants=["A", "B", "C", "D"], save_path="None")
+
+    # Save
+    save_fig("example_stacked_arctic_trails", do_pdf)
+
+
 def density_evol(do_pdf=False):
     """Evolution of the total trap density."""
 
@@ -820,21 +831,18 @@ if __name__ == "__main__":
     # Run functions
     #if run("example_image_zooms"):
     #    example_image_zooms( image_path, cor_path, quadrant, args.pdf, use_corrected )
-    #print("done1")
     #if run("example_image_corrected"):
     #    example_image_corrected(image_path, cor_path, quadrant, n_iterations, args.pdf )
-    #print("done2")
     #if run("found_warm_pixels"):
     #    found_warm_pixels( image_path, quadrant, args.pdf )
-    #print("done3")
-    #if run("example_single_stack"):
-    #    example_single_stack( dataset, args.pdf )
-    #print("done4")
-    #if run("example_stacked_trails"):
-    #    example_stacked_trails( dataset, args.pdf )
-    #print("done5")
-    if run("density_evol"):
-        density_evol(args.pdf)
-    print("done6")
+    if run("example_single_stack"):
+        example_single_stack( dataset, args.pdf )
+    if run("example_stacked_trails"):
+        example_stacked_trails( dataset, args.pdf )
+    if run("example_stacked_trails"):
+        example_stacked_trails( dataset, args.pdf )
+    #if run("density_evol"):
+    #    density_evol(args.pdf)
+    #print("done6")
     #if run("test_autofit_model"):
     #    test_autofit_model(args.pdf)

@@ -343,13 +343,17 @@ datasets_test_2 = [
     "04_2017",  # 2017/04/05, day 5514, 7 images
     "10_2017",  # 2017/10/03, day 5695, 5 images
 ]
+datasets_test_3 = [
+    "shortSNe2",  # 2003/05/06, day 431, 3 images
+]
 
 # Dictionary of choosable list names
 dataset_lists = {
-    "all": datasets_all,
+    #"all": datasets_all,
     "sample": datasets_sample,
     "test": datasets_test,
     "test_2": datasets_test_2,
+    "test_3": datasets_test_3,
 }
 # Convert all to Dataset objects
 for key in dataset_lists.keys():
@@ -509,10 +513,12 @@ if __name__ == "__main__":
         # Stack warm pixels in each image quadrant or combined quadrants
         for quadrants in quadrant_sets:
             # Stack in bins
-            if ut.need_to_make_file(
-                dataset.saved_stacked_lines(quadrants, args.use_corrected),
-                mdate_old=args.mdate_stack,
-            ):
+            #RJM
+            if True:
+            #if ut.need_to_make_file(
+            #    dataset.saved_stacked_lines(quadrants, args.use_corrected),
+            #    mdate_old=args.mdate_stack,
+            #):
                 print(
                     "  Stack warm pixel trails (%s)..." % "".join(quadrants),
                     end=" ",
@@ -521,10 +527,12 @@ if __name__ == "__main__":
                 fu.stack_dataset_warm_pixels(dataset, quadrants, args.use_corrected)
 
             # Plot stacked lines
-            if ut.need_to_make_file(
-                dataset.plotted_stacked_trails(quadrants, args.use_corrected),
-                mdate_old=args.mdate_plot_stack,
-            ):
+            #RJM
+            if True:
+            #if ut.need_to_make_file(
+            #    dataset.plotted_stacked_trails(quadrants, args.use_corrected),
+            #    mdate_old=args.mdate_plot_stack,
+            #):
                 print(
                     "  Plot stacked trails (%s)..." % "".join(quadrants),
                     end=" ",

@@ -257,10 +257,14 @@ def stack_dataset_warm_pixels(dataset, quadrants, use_corrected=False):
         warm_pixels.load(dataset.saved_consistent_lines(quadrant, use_corrected))
 
     # Subtract preceeding pixels in each line before stacking
-    for i in range(warm_pixels.n_lines):
-        warm_pixels.lines[i].data[ut.trail_length + 1 :] -= warm_pixels.lines[i].data[
-            : ut.trail_length
-        ][::-1]
+    #
+    # RJM - global background estimates may not be accurate, so keeping this information at this stage.
+    #       It is always possible to do this subtraction after stacking.
+    #
+    #for i in range(warm_pixels.n_lines):
+    #    warm_pixels.lines[i].data[ut.trail_length + 1 :] -= warm_pixels.lines[i].data[
+    #        : ut.trail_length
+    #    ][::-1]
 
     # Stack the lines in bins by distance from readout and total flux
     (
@@ -328,15 +332,18 @@ def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
     trail : [float]
         The model charge values at each pixel in the trail (e-).
     """
+    #print(n_bg,n_e)
+    notch = 0 
     return (
         rho_q
-        * ((n_e / w) ** beta - (n_bg / w) ** beta)
+        * ( ((n_e - notch) / (w - notch)) ** beta - ((n_bg - notch) / (w - notch)) ** beta )
         * row
         * (
             A * np.exp((1 - x) / tau_a) * (1 - np.exp(-1 / tau_a))
             + B * np.exp((1 - x) / tau_b) * (1 - np.exp(-1 / tau_b))
             + C * np.exp((1 - x) / tau_c) * (1 - np.exp(-1 / tau_c))
         )
+        #+ n_bg
     )
 
 
@@ -425,6 +432,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
     # Initialise the fit
     params["rho_q"].value = 1.0
+    params["rho_q"].min = 0.0
 
     # Weight using the noise
     weights = 1 / noise_all ** 2
@@ -440,153 +448,20 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
         row=row_all,
         date=date,
     )
-    # print(result.fit_report())  ##
+    #print(result.fit_report())  ##
 
-    return result.params.get("rho_q").value, result.params.get("rho_q").stderr
-
-
-def fit_trap_densities_arctic(
-    y_all, noise_all, n_e_all, n_bg_all, row_all, date
-):
-    """Fit the trap densities for a set of one or more trails, using arctic.
-
-    Parameters
-    ----------
-    y_all : [[float]]
-        The charge values, for each trail.
-
-    noise_all : [[float]]
-        The charge noise error values, for each trail.
-
-    n_e_all : [float]
-        The number of electrons in the trailed pixel's charge cloud (e-), for
-        each trail.
-
-    n_bg_all : [float]
-        The background number of electrons (e-), for each trail.
-
-    row_all : [float]
-        Distance in pixels of the trailed pixel from the readout register,
-        for each trail.
-
-    date : float
-        The Julian date of the images, used to set the trap model.
-
-    Returns
-    -------
-    rho_q : float
-        The best-fit total number density of traps per pixel.
-
-    rho_q_std : float
-        The standard error on the total trap density.
-    """
-    ###Currently just does a single trail
-
-    row_all = np.array(row_all).astype(int)
-
-    # Conversion value for HST ACS
-    pixel_scale = 0.05
+    return result.params.get("rho_q").value, result.params.get("rho_q").stderr, result.eval()
 
 
-    ### RJM These conversions from 20 pixel arrays to autofit arrays have a bug
-    
 
-    # Set the correct length of the 1D lines given the row
-    pre_cti = np.zeros(row_all[0] + ut.trail_length)
-    pre_cti[row_all[0]] = n_e_all[0]
-    post_cti = np.append(np.zeros(row_all[0] - ut.trail_length - 1), y_all[0])
-    noise = np.append(np.zeros(row_all[0] - ut.trail_length - 1), noise_all[0])
-
-    # Include the background
-    pre_cti += n_bg_all[0]
-    post_cti += n_bg_all[0]
-
-    print("Pre-CTI:", pre_cti)  ###
-    print("Post-CTI:", post_cti)  ###
-
-    # Convert to AutoCTI objects
-    post_cti = ac.Array1D.manual_native(array=post_cti, pixel_scales=pixel_scale)
-    noise = ac.Array1D.manual_native(array=noise, pixel_scales=pixel_scale)
-    pre_cti = ac.Array1D.manual_native(array=pre_cti, pixel_scales=pixel_scale)
-
-    shape_native = (row_all[0] + ut.trail_length, 1)
-    region_1d_list = [(row_all[0], row_all[0] + 1)]
-    normalization = np.sum(pre_cti)
-    layout = ac.Layout1DLine(
-        shape_1d=shape_native, region_list=region_1d_list, normalization=normalization
-    )
-
-    dataset_line = ac.DatasetLine(
-        data=post_cti, noise_map=noise, pre_cti_data=pre_cti, layout=layout
-    )
-
-    # Set up fitting CTI model
-    clocker = ac.Clocker1D(express=5)
-
-    # Trap species
-    # Relative densities
-    A = 0.17
-    B = 0.45
-    C = 0.38
-    # Trap lifetimes before or after the temperature change
-    if date < ut.date_T_change:
-        tau_a = 0.48
-        tau_b = 4.86
-        tau_c = 20.6
-    else:
-        tau_a = 0.74
-        tau_b = 7.70
-        tau_c = 37.0
-
-    # Free parameter(s): densities only
-    trap_a = af.Model(ac.TrapInstantCapture)
-    trap_a.density = af.UniformPrior(lower_limit=0.0, upper_limit=20.0)
-    trap_a.release_timescale = tau_a
-    trap_a.fractional_volume_none_exposed = 0.0
-    trap_a.fractional_volume_full_exposed = 0.0
-
-    trap_b = af.Model(ac.TrapInstantCapture)
-    trap_b.density = af.UniformPrior(lower_limit=0.0, upper_limit=20.0)#trap_a.density * B / A
-    trap_b.release_timescale = tau_b
-    trap_b.fractional_volume_none_exposed = 0.0
-    trap_b.fractional_volume_full_exposed = 0.0
-
-    trap_c = af.Model(ac.TrapInstantCapture)
-    trap_c.density = af.UniformPrior(lower_limit=0.0, upper_limit=20.0)#trap_a.density * C / A
-    trap_c.release_timescale = tau_c
-    trap_c.fractional_volume_none_exposed = 0.0
-    trap_c.fractional_volume_full_exposed = 0.0
-
-    trap_list = [trap_a, trap_b, trap_c]
-
-    # CCD
-    ccd = af.Model(ac.CCDPhase)
-    ccd.well_notch_depth = 0.0
-    ccd.well_fill_power = 0.478
-    ccd.full_well_depth = 84700.0
-
-    model = af.Collection(cti=af.Model(ac.CTI1D, traps=trap_list, ccd=ccd))
-
-    # Run the fit, currently writes the output to file
-    search = af.DynestyStatic(path_prefix="dynesty/", name="tmp", nlive=10)
-    analysis = ac.AnalysisDatasetLine(dataset_line=dataset_line, clocker=clocker)
-    result = search.fit(model=model, analysis=analysis)
-
-    # Extract results
-    fitted_model = result.max_log_likelihood_instance.cti
-    # total_density = fitted_model.traps[0].density / A
-    density_a = fitted_model.traps[0].density
-    density_b = fitted_model.traps[1].density
-    density_c = fitted_model.traps[2].density
-    print(density_a, density_b, density_c)###
-
-    ### std
-
-    return density_a, density_b, density_c
-
-
-def fit_dataset_total_trap_density(dataset, quadrants, use_corrected=False):
+def fit_dataset_total_trap_density(
+        dataset, quadrants, use_corrected=False, 
+        row_bins=None, flux_bins=None, background_bins=None
+    ):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
+    
+    RJM: It would be nice to save the best fit so it can be plotted later, 
+         rather than having to repeat the fit!
 
     Parameters
     ----------
@@ -612,13 +487,14 @@ def fit_dataset_total_trap_density(dataset, quadrants, use_corrected=False):
     stacked_lines = PixelLineCollection()
     stacked_lines.load(dataset.saved_stacked_lines(quadrants, use_corrected))
     npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
-    row_bins, flux_bins, date_bins, background_bins = [
-        npzfile[var] for var in npzfile.files
+    n_row_bins, n_flux_bins, n_date_bins, n_background_bins = [
+        (len(npzfile[var]) - 1) for var in npzfile.files
     ]
-    n_row_bins = len(row_bins) - 1
-    n_flux_bins = len(flux_bins) - 1
-    n_date_bins = len(date_bins) - 1
-    n_background_bins = len(background_bins) - 1
+    
+    # Decide which bin to fit
+    if row_bins is None: row_bins = range(n_row_bins)
+    if flux_bins is None: flux_bins = range(n_flux_bins)
+    if background_bins is None: background_bins = range(n_background_bins)
 
     # Compile the data from all stacked lines
     n_lines_used = 0
@@ -631,10 +507,9 @@ def fit_dataset_total_trap_density(dataset, quadrants, use_corrected=False):
     # ========
     # Concatenate each stacked trail
     # ========
-    # Skip the lowest-row bins
-    for i_row in range(1, n_row_bins):
-        for i_flux in range(n_flux_bins):
-            for i_background in range(n_background_bins):
+    for i_row in row_bins:
+        for i_flux in flux_bins:
+            for i_background in background_bins:
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
                     n_row_bins=n_row_bins,
@@ -645,29 +520,144 @@ def fit_dataset_total_trap_density(dataset, quadrants, use_corrected=False):
                 )
 
                 line = stacked_lines.lines[bin_index]
-
+                
                 if line.n_stacked >= 3:
-                    y_all = np.append(y_all, line.data[-ut.trail_length :])
-                    noise_all = np.append(noise_all, line.noise[-ut.trail_length :])
-                    n_e_each = np.append(n_e_each, line.mean_flux)
-                    n_bg_each = np.append(n_bg_each, line.mean_background)
+                        
+                    #
+                    # Compile data into easy form to fit
+                    #
+                    line.remove_symmetry()
+                    y_all = np.append(y_all, line.data)
+                    #n_e_each = np.append(n_e_each, line.flux + sum(y_all))  # Putting back flux in line Consider max(sum(y_all),0)
+                    n_e_each = np.append(n_e_each, line.flux) 
+                    n_bg_each = np.append(n_bg_each, line.background)
                     row_each = np.append(row_each, line.mean_row)
+                    noise_all = np.append(noise_all, line.noise )
                     n_lines_used += 1
-
+     
+    if n_lines_used == 0: return None, None, np.zeros(ut.trail_length)
+    
     # Duplicate the x arrays for all trails
-    x_all = np.tile(np.arange(ut.trail_length) + 1, n_lines_used)
+    x_all = np.tile(np.arange(ut.trail_length) + 1 , n_lines_used)
 
     # Duplicate the single parameters of each trail for all pixels
     n_e_all = np.repeat(n_e_each, ut.trail_length)
     n_bg_all = np.repeat(n_bg_each, ut.trail_length)
     row_all = np.repeat(row_each, ut.trail_length)
 
+  
     # Run the fitting
-    rho_q, rho_q_std = fit_total_trap_density(
+    rho_q, rho_q_std, y_fit = fit_total_trap_density(
         x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date
     )
+    print(rho_q, rho_q_std)
+     
+    return rho_q, rho_q_std, y_fit
 
-    return rho_q, rho_q_std
+
+def fit_dataset_arctic_trap_model(
+        dataset, quadrants, use_corrected=False, 
+        row_bins=None, flux_bins=None, background_bins=None
+    ):
+    """Fit a set of warm pixel trails using arCTIc
+    
+    Parameters
+    ----------
+    dataset : Dataset
+        The dataset object with a list of image file paths and metadata.
+
+    quadrants : [str]
+        The list of quadrants (A, B, C, D) of the images to load, combined
+        together if more than one provided.
+
+    use_corrected : bool (opt.)
+        If True, then use the corrected images with CTI removed instead.
+
+    Returns
+    -------
+    rho_q : float
+        The best-fit total number density of traps per pixel.
+
+    rho_q_std : float
+        The standard error on the total trap density.
+    """
+    # Load
+    stacked_lines = PixelLineCollection()
+    stacked_lines.load(dataset.saved_stacked_lines(quadrants, use_corrected))
+    npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
+    n_row_bins, n_flux_bins, n_date_bins, n_background_bins = [
+        (len(npzfile[var]) - 1) for var in npzfile.files
+    ]
+    
+    # Decide which bin to fit
+    if row_bins is None: row_bins = range(n_row_bins)
+    if flux_bins is None: flux_bins = range(n_flux_bins)
+    if background_bins is None: background_bins = range(n_background_bins)
+
+    # Compile the data from all stacked lines
+    n_lines_used = 0
+    model_untrailed = []
+    model_untrailed = []
+    model_noise = []
+    row_each = []
+
+    # ========
+    # Concatenate each stacked trail
+    # ========
+    # Skip the lowest-row bins
+    for i_row in row_bins:
+        for i_flux in flux_bins:
+            for i_background in background_bins:
+                bin_index = PixelLineCollection.stacked_bin_index(
+                    i_row=i_row,
+                    n_row_bins=n_row_bins,
+                    i_flux=i_flux,
+                    n_flux_bins=n_flux_bins,
+                    i_background=i_background,
+                    n_background_bins=n_background_bins,
+                )
+
+                line = stacked_lines.lines[bin_index]
+                
+                if line.n_stacked >= 3:
+                        
+                    #
+                    # Compile data into easy form to fit
+                    #
+                    #line.remove_symmetry()
+                    print(line.model_untrailed[-12:])
+                    print(line.model_trailed[-12:])
+                    print()
+                    model_untrailed = [model_untrailed, line.model_untrailed]
+                    model_trailed = [model_trailed, line.model_trailed]
+                    model_noise = [model_noise, line.model_noise]
+                    row_each = [line.mean_row]
+                    n_lines_used += 1
+                       
+    if n_lines_used == 0: return None   
+    
+    # Duplicate the x arrays for all trails
+    print()
+#    print(model_untrailed[0],-12:])
+    print(model_trailed[-12:])
+    print()
+    
+    x_all = np.tile(np.arange(ut.trail_length) + 1 , n_lines_used)
+
+    # Duplicate the single parameters of each trail for all pixels
+    n_e_all = np.repeat(n_e_each, ut.trail_length)
+    n_bg_all = np.repeat(n_bg_each, ut.trail_length)
+    row_all = np.repeat(row_each, ut.trail_length)
+
+    print(x_all.shape, y_all.shape, n_e_all.shape)
+  
+    # Run the fitting
+    rho_q, rho_q_std, y_fit = fit_total_trap_density(
+        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date
+    )
+    print(rho_q, rho_q_std)   
+  
+    return rho_q, rho_q_std, y_fit
 
 
 def fit_total_trap_densities(dataset_list, list_name, quadrants, use_corrected=False):
@@ -714,7 +704,7 @@ def fit_total_trap_densities(dataset_list, list_name, quadrants, use_corrected=F
         )
 
         # Fit the density
-        rho_q, rho_q_std = fit_dataset_total_trap_density(
+        rho_q, rho_q_std, y_fit = fit_dataset_total_trap_density(
             dataset, quadrants, use_corrected
         )
 
@@ -1096,7 +1086,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     if use_corrected:
         # For symlog scale
         # Assume ymin < 0
-        y_min = 4 * np.amin(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        y_min = 0.1 # 4 * np.amin(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
         y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
         log10_y_min = np.ceil(np.log10(abs(y_min)))
         log10_y_max = np.floor(np.log10(y_max))
@@ -1111,6 +1101,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
         y_min = np.partition(
             abs(np.ravel(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])), 2
         )[1]
+        y_min = 0.1
         y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
         log10_y_min = np.ceil(np.log10(y_min))
         log10_y_max = np.floor(np.log10(y_max))
@@ -1126,11 +1117,19 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     fontsize = 14
 
     # Fit the total trap density to the full dataset
-    rho_q_set, rho_q_std_set = fit_dataset_total_trap_density(
+    print("Performing global fit")
+    rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
         dataset, quadrants, use_corrected=use_corrected
     )
 
-    # Plot each stack
+    # Fit the total trap density to the full dataset
+    print("Performing global fit using arCTIc")
+    rho_q_set, rho_q_std_set, y_fit = fit_dataset_arctic_trap_model(
+        dataset, quadrants, use_corrected=use_corrected
+    )
+
+    # Fit to each trail individually, and plot as we go along
+    print("Performing individual fits:")
     for i_row in range(n_row_bins):
         for i_flux in range(n_flux_bins):
             # Furthest row bin at the top
@@ -1138,6 +1137,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
 
             # Plot each background bin's stack
             for i_background, c in enumerate(colours):
+                
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
                     n_row_bins=n_row_bins,
@@ -1146,20 +1146,21 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     i_background=i_background,
                     n_background_bins=n_background_bins,
                 )
-
-                line = stacked_lines.lines[bin_index]
-
+                
+                line = (stacked_lines.lines[bin_index])
                 # Skip empty and single-entry bins
                 if line.n_stacked <= 1:
                     continue
-
+                
                 # Don't plot the warm pixel itself
-                trail = line.data[-ut.trail_length :]
-                noise = line.noise[-ut.trail_length :]
-
+                line.remove_symmetry()
+                trail = line.data 
+                noise = line.noise
+                
                 # Check for negative values
                 where_pos = np.where(trail > 0)[0]
                 where_neg = np.where(trail < 0)[0]
+                
 
                 # ========
                 # Plot data
@@ -1201,36 +1202,23 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                 # ========
                 # Plot fitted trail
                 # ========
-                # Fit the total trap density to this single stacked trail
-                rho_q, rho_q_std = fit_total_trap_density(
-                    x_all=pixels,
-                    y_all=trail,
-                    noise_all=noise,
-                    n_e_all=line.mean_flux,
-                    n_bg_all=line.mean_background,
-                    row_all=line.mean_row,
-                    date=dataset.date,
+                # Fit the total trap density to this single stacked trail (dotted line, which has swapped since Jacob's version)
+                rho_q_indiv, rho_q_std_indiv, y_fit_indiv = fit_dataset_total_trap_density(
+                    dataset, quadrants, use_corrected=use_corrected,
+                    row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )
-                model_pixels = np.linspace(1, ut.trail_length, 20)
+                ax.plot(pixels, y_fit_indiv, color=c, ls=ls_dot, alpha=0.7)
+                
+                # Also reconstruct then plot the simultaneous fit to all trails (dashed line)
                 model_trail = trail_model_hst(
-                    x=model_pixels,
-                    rho_q=rho_q,
-                    n_e=line.mean_flux,
-                    n_bg=line.mean_background,
-                    row=line.mean_row,
-                    date=dataset.date,
-                )
-                ax.plot(model_pixels, model_trail, color=c, ls=ls_dash, alpha=0.7)
-                # Also plot the full-set fit
-                model_trail = trail_model_hst(
-                    x=model_pixels,
+                    x=pixels,
                     rho_q=rho_q_set,
                     n_e=line.mean_flux,
                     n_bg=line.mean_background,
                     row=line.mean_row,
                     date=dataset.date,
                 )
-                ax.plot(model_pixels, model_trail, color=c, ls=ls_dot, alpha=0.7)
+                ax.plot(pixels, model_trail, color=c, ls=ls_dash, alpha=0.7)
 
                 # Annotate
                 if i_background == 0:
@@ -1266,7 +1254,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
             if i_flux != 0:
                 ax.set_yticklabels([])
             elif i_row in [1, n_row_bins - 2]:
-                ax.set_ylabel("Charge above background (e$^-$)")
+                ax.set_ylabel("Number of electrons (e$^-$)")
 
             # Bin edge labels
             if i_flux == n_flux_bins - 1:
@@ -1295,7 +1283,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     ax.text(
                         0.5,
                         1.01,
-                        r"Flux (e$^-$):",
+                        r"Hotness of pixel (e$^-$):",
                         transform=ax.transAxes,
                         ha="center",
                         va="bottom",
