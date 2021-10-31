@@ -10,8 +10,7 @@ from astropy.time import Time
 path = os.path.dirname(os.path.realpath(__file__))
 
 dataset_root = os.path.join(path, "../hst_acs_datasets/")
-print("utilities ")
-print(dataset_root)
+print("Looking for data in",dataset_root)
 
 
 # ========

@@ -1,7 +1,6 @@
 import numpy as np
 import pickle
 
-
 class PixelLine(object):
     def __init__(
         self,
@@ -71,72 +70,107 @@ class PixelLine(object):
 
     @property
     def length(self):
+        """Number of pixels in the data array"""
         if self.data is not None:
             return len(self.data)
         else:
             return None
 
-    def remove_symmetry(self, n_pixels_used_for_background=5):
+    @property
+    def trail_length(self):
+        """Number of pixels in only the trailed section of the data array
+        (which is assumed to be N preceding pixels, 1 warm pixel, N trailed pixels)"""
+        assert (self.length % 2) == 1
+        return (self.length - 1) // 2
+
+    @property
+    def model_background(self, n_pixels_used_for_background=5):
+        """Re-estimate the background, locally"""
+        if self.data is None: return None
+        n_pixels_used_for_background = min(n_pixels_used_for_background, self.trail_length)
+        return np.mean(self.data[: n_pixels_used_for_background])
+
+    @property
+    def model_flux(self):
+        """Extract just the number of electrons in the warm pixel, locally
+        add_trail = True will push any trailed electrons back into the warm pixel"""
+        if self.data is None: return None
+        return self.data[-self.trail_length - 1]
+
+    @property
+    def model_trail(self):
         """Convert a line with a warm pixel in the middle to just the trail (without background),
         suitable for modelling as sums of exponentials.
         """
-        
-        #assert self.format == None
-        assert (len(self.data) % 2) == 1 
-        trail_length = ( len(self.data) - 1 ) // 2
-        n_pixels_used_for_background = min(n_pixels_used_for_background, trail_length)
-        
-        self.flux_noise = self.noise[trail_length]
-        self.noise = np.sqrt( self.noise[-trail_length :] ** 2 + np.flip(self.noise[: trail_length]) ** 2 )
-        new_line = self.data[-trail_length :] - np.flip(self.data[: trail_length])
-        self.background = np.mean( self.data[: n_pixels_used_for_background] )
-        #self.flux = self.data[trail_length] + max(sum(new_line),0)
-        self.flux = self.data[trail_length] #+ sum(new_line)
-        self.data = new_line # + self.background
-        self.format = "trail"
-        # RJM: do we also need to shift the location by length pixels?
-        
-        return 
+        # Subtract preceding pixels, as a way of removing spurious sources (and the constant background)
+        return self.data[-self.trail_length:] - np.flip(self.data[: self.trail_length])
 
-    @property 
-    def model_untrailed(self):
-        """Convert a line with a warm pixel in the middle to an entire column (with background),
-        suitable for passing to arCTIc.
+    @property
+    def model_trail_noise(self):
+        """Convert a line with a warm pixel in the middle to just the trail (without background),
+        suitable for modelling as sums of exponentials.
         """
-        #assert self.format == "trail"
-        copy = self
-        copy.remove_symmetry()
-        model = np.ones(np.int(np.floor(copy.mean_row) + 1 + len(copy.data))) * copy.background
-        model[-len(copy.data)-1] = copy.flux + sum(copy.data)
-        return model
- 
-    @property 
-    def model_trailed(self):
-        """Convert a line with a warm pixel in the middle to an entire column (with background),
-        suitable for passing to arCTIc.
+        # Add noise from preceding and trailed pixels in quadrature
+        return np.sqrt(self.noise[-self.trail_length:] ** 2 + np.flip(self.noise[:self.trail_length]) ** 2)
+
+    @property
+    def model_full_trail_length(self):
+        """Determine the length of array needed to model the trail as enough of a full column to
+        conveniently pass to arCTIc, and not then need to use windows.
         """
-        #assert self.format == "trail"
-        copy = self
-        copy.remove_symmetry()
-        model = np.ones(np.int(np.floor(copy.mean_row) + 1 + len(copy.data))) * copy.background
-        model[-len(copy.data)-1] = copy.flux
-        model[-len(copy.data):] += copy.data
-        return model
- 
-    @property 
-    def model_noise(self):
-        """Convert a line with a warm pixel in the middle to an entire column (with background),
-        suitable for passing to arCTIc.
+        # RJM: do we also need to shift the location by length pixels?
+        return np.int(np.floor(self.mean_row) + 1 + self.trail_length)
+
+    @property
+    def model_full_trail(self):
+        """Convert a line with a warm pixel in the middle to the entire relevant part of a column
+        (with background), suitable for passing to arCTIc.
         """
-        #assert self.format == "trail"
-        copy = self
-        copy.remove_symmetry()
-        model = np.ones(np.int(np.floor(copy.mean_row) + 1 + len(copy.data))) * np.sqrt(copy.background) # Could set to infinity, to downweight in fit
-        model[-len(copy.data)-1] = copy.flux_noise
-        model[-len(copy.data):] = copy.noise
-        return model
- 
-       
+
+        # Constant background level
+        full_trail = np.full(self.model_full_trail_length, self.model_background)
+        # Add warm pixel itself
+        full_trail[-self.trail_length - 1] = self.model_flux
+        # Add trail
+        full_trail[-self.trail_length:] += self.model_trail
+
+        return full_trail
+
+    @property
+    def model_full_trail_untrailed(self):
+        """Convert a line with a warm pixel in the middle to the entire relevant part of a column
+        (with background), suitable for passing to arCTIc.
+        Ideally wouldn't ever use this, but would iterate to find this during fitting. This is
+        because the pushing back of trailed electrons into the warm pixel is noisy and truncated
+        (any trailed electrons past the original line.data have been lost, creating a biased
+        underestimate).
+        """
+
+        # Constant background level
+        full_trail_untrailed = np.full(self.model_full_trail_length, self.model_background)
+        # Add warm pixel itself
+        full_trail_untrailed[-self.trail_length - 1] = self.model_flux + sum(self.model_trail)
+
+        return full_trail_untrailed
+
+    @property
+    def model_full_trail_noise(self):
+        """Noise model for the entire relevant part of a column, suitable for passing to arCTIc.
+        """
+
+        # Constant background level
+        #full_trail_noise = np.full(self.model_full_trail_length, np.sqrt(self.model_background))
+        full_trail_noise = np.full(self.model_full_trail_length, np.inf)  # downweight in fit
+        # Add warm pixel itself
+        full_trail_noise[-self.trail_length - 1] = self.noise[self.trail_length]
+        # Add trail
+        full_trail_noise[-self.trail_length:] = self.model_trail_noise
+
+        return full_trail_noise
+
+
+
+
 
 
 class PixelLineCollection(object):
@@ -261,21 +295,21 @@ class PixelLineCollection(object):
         """Convert a line with a warm pixel in the middle to an entire column (with background),
         suitable for passing to arCTIc.
         """
-        return np.array([line.model_untrailed() for line in self.lines])
+        return [line.model_untrailed() for line in self.lines]
+            
+    @property 
+    def model_trailed(self):
+        """Convert a line with a warm pixel in the middle to an entire column (with background),
+        suitable for passing to arCTIc.
+        """
+        return [line.model_trailed() for line in self.lines]
     
     @property 
     def model_trailed(self):
         """Convert a line with a warm pixel in the middle to an entire column (with background),
         suitable for passing to arCTIc.
         """
-        return np.array([line.model_trailed() for line in self.lines])
-    
-    @property 
-    def model_trailed(self):
-        """Convert a line with a warm pixel in the middle to an entire column (with background),
-        suitable for passing to arCTIc.
-        """
-        return np.array([line.model_noise() for line in self.lines])
+        return [line.model_noise() for line in self.lines]
 
     def find_consistent_lines(self, fraction_present=2 / 3):
         """Identify lines that are consistently present across several images.
@@ -398,7 +432,7 @@ class PixelLineCollection(object):
             The maximum value for the row bins, if row_bins is not provided.
 
         row_scale : str
-            The spacing (linear of logarithmic) for the row bins, if row_bins is
+            The spacing (linear or logarithmic) for the row bins, if row_bins is
             not provided.
 
         flux_bins, n_flux_bins, flux_min, flux_max, flux_scale : [float], int,
