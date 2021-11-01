@@ -1,8 +1,18 @@
 from pixel_lines import PixelLine, PixelLineCollection
-from hst_data import *
+from hst_data import * # Would be nice not to have to do this
 import arcticpy
 import autofit as af
 import numpy as np
+
+"""
+Fit warm pixel data sets using arCTIc. Can be called from standard hst_warm_pixels.py,
+but also works as a minimal standalone I/O and fitter. For that, run from a python console:
+>>> import fit_with_arctic as ff
+>>> ff.fit_warm_pixels_with_arctic()
+This requires the following files to exist, which were created by hst_warm_pixels.py
+../hst_acs_datasets/07_2020/saved_stacked_info_ABCD.npz
+../hst_acs_datasets/07_2020/saved_stacked_lines_ABCD.pickle
+"""
 
 def fit_warm_pixels_with_arctic(
         dataset=None, quadrants="ABCD", use_corrected=False,
@@ -150,8 +160,10 @@ class CTImodel:
         # number of CCD columns to model
         for eper in xvalues:
             # xvalues are [length_of_trail,background,hot_pixel_number]
-            model_before_trail = np.full(eper[0], eper[1])
-            model_before_trail[eper[2]] = self.warm_pixel_flux
+            model_before_trail = np.full((1,eper[0]), eper[1])
+            print(model_before_trail)
+            print(self.warm_pixel_flux)
+            model_before_trail[(0,eper[2])] = self.warm_pixel_flux
             print("model before trail",model_before_trail[-15:])
 
             # Run arCTIc to produce a model of the trailed CCD column
@@ -163,7 +175,7 @@ class CTImodel:
                     parallel_traps=traps,
                     parallel_express=5,
                     verbosity=1
-                )
+                ).reshape(eper[0])
             )
 
         return model_after_trail
@@ -207,8 +219,8 @@ class Analysis(af.Analysis):
         model_data = instance.trail_from_xvalues(xvalues=xvalues)
 
         chi_squareds = []
-        for eper in self.data:
-            chi_squareds.append( np.sum( model_data[0] / self.noise_map ) )
+        for i in len(self.data):
+            chi_squareds.append( np.sum( ( ( model_data[i] - self.data[i] ) / self.noise_map[i] ) ** 2 ) )
         #chi_squared = sum(chi_squareds)
         #residual_map = self.data - model_data
         #chi_squared_map = (residual_map / self.noise_map) ** 2.0
