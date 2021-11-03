@@ -162,7 +162,7 @@ class PixelLine(object):
         #full_trail_noise = np.full(self.model_full_trail_length, np.sqrt(self.model_background))
         full_trail_noise = np.full(self.model_full_trail_length, np.inf)  # downweight in fit
         # Add warm pixel itself
-        full_trail_noise[-self.trail_length - 1] = self.noise[self.trail_length]
+        #full_trail_noise[-self.trail_length - 1] = self.noise[self.trail_length]
         # Add trail
         full_trail_noise[-self.trail_length:] = self.model_trail_noise
 

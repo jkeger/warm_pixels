@@ -1,5 +1,6 @@
 from pixel_lines import PixelLine, PixelLineCollection
 from hst_data import * # Would be nice not to have to do this
+import copy
 import arcticpy
 import autofit as af
 import numpy as np
@@ -20,30 +21,38 @@ def fit_warm_pixels_with_arctic(
 ):
     # Read in trail data
     if dataset is None: dataset = Dataset("07_2020")
-    model_trail, model_noise, model_untrailed = load_trails(dataset, quadrants,
+    eper_trail, eper_noise, eper_untrailed = load_trails(dataset, quadrants,
                                                             use_corrected=use_corrected,
                                                             row_bins=row_bins, flux_bins=flux_bins,
                                                             background_bins=background_bins
                                                             )
-
     # Define priors
-    print("Hello world 1")
-    print(len(model_trail))
-    print(model_trail[0].shape)
     model = af.Model(CTImodel)
-    model.trap_density_A = af.UniformPrior(lower_limit=0.0, upper_limit=10.0)
-    model.trap_release_time_A = af.GaussianPrior(mean=10.0, sigma=5.0) # Want this to be >0. Possibly lognormal
-    model.warm_pixel_flux = af.LogUniformPrior(lower_limit=1.0, upper_limit=1.0e7) # Want this to be lognormal
+    model.trap_density_A = af.UniformPrior(lower_limit=0.0, upper_limit=5.0)
+    #model.trap_density_A = af.GaussianPrior(mean=0.6, sigma=0.1)
+    model.trap_release_time_A = af.GaussianPrior(mean=0.74, sigma=0.1) # Want this to be >0. Possibly lognormal
+    model.add_assertion(model.trap_release_time_A > 0.0)
+    #model.trap_density_B = af.UniformPrior(lower_limit=0.5, upper_limit=5.0)
+    #model.trap_release_time_B = af.GaussianPrior(mean=7.7, sigma=0.5) # Want this to be >0. Possibly lognormal
+    #model.add_assertion(model.trap_release_time_B > model.trap_release_time_A)
+    #model.warm_pixel_flux = af.LogUniformPrior(lower_limit=1.0, upper_limit=1.0e7) # Want this to be lognormal
+    #model.add_assertion(model.trap_density_A > 0.0)
 
-    # How to initialise search at a good guess (particularly for warm_pixel_flux)?
 
-    # Fit trail data
-    print("Hello world 2")
-    analysis = Analysis(data=model_trail, noise_map=model_noise)
-    emcee = af.Emcee(nwalkers=50, nsteps=2000)
-    result = emcee.fit(model=model, analysis=analysis)
+    # How do I initialise search at a good guess (particularly for warm_pixel_flux)?
 
-    print("Hello world 3")
+    # Fit trail data (no longer need to pass model_untrailed into this)
+    analysis = Analysis(data_trailed=eper_trail, noise=eper_noise, data_untrailed=eper_untrailed)
+    #emcee = af.Emcee(nwalkers=50, nsteps=2000)
+    #result = emcee.fit(model=model, analysis=analysis)
+    dynesty = af.DynestyStatic(
+        #name="cti_test_dynesty2",
+        nlive=50,
+        sample="rwalk",
+        iterations_per_update=2500,
+        #number_of_cores=6
+    )
+    result = dynesty.fit(model=model, analysis=analysis)
     print(result)
 
     return result
@@ -111,119 +120,101 @@ def load_trails(
                 line = stacked_lines.lines[bin_index]
 
                 if line.n_stacked >= 3:
-                    model_trail.append(line.model_full_trail_untrailed)
+                    model_trail.append(line.model_full_trail)
                     model_noise.append(line.model_full_trail_noise)
-                    model_untrailed.append(line.model_full_trail)
+                    model_untrailed.append(line.model_full_trail_untrailed)
                     n_lines_used += 1
 
     if n_lines_used == 0: return None, None, None
-    print("n_lines_used",n_lines_used)
-    print(len(model_trail))
-
-    # Duplicate the x arrays for all trails
-    # x_all = [np.arange(ut.trail_length) + 1] * n_lines_used
 
     return model_trail, model_noise, model_untrailed
 
 
 class CTImodel:
-
     def __init__(
             self,
             trap_density_A=1.0,
-            trap_release_time_A=0.0,
-            warm_pixel_flux=1.0,
+            trap_release_time_A=1.0,
+            #trap_density_B=1.0,
+            #trap_release_time_B=1.0,
+            #warm_pixel_flux=1.0,
     ):
         self.trap_density_A = trap_density_A
         self.trap_release_time_A = trap_release_time_A
-        self.warm_pixel_flux = warm_pixel_flux
+        #self.trap_density_B = trap_density_B
+        #self.trap_release_time_B = trap_release_time_B
+        #self.warm_pixel_flux = warm_pixel_flux
 
     """
+    A function to turn input values into an EPER trail.
     An instance of this class will be available during model fitting.
     This method will be used to fit the model to data and compute a likelihood.
     """
 
-    def trail_from_xvalues(self, xvalues):
+    def add_trail_to_ccd_columns(self, data_untrailed):
 
+        # Set up classes required to run arCTIc
         # date = 2400000.5 + image_A.header.modified_julian_date
         # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
+        # Or manual CTI model  (see class docstrings in src/<traps,roe,ccd>.cpp)
         traps = [
-            arcticpy.TrapInstantCapture(
-                density=self.trap_density_A,
-                release_timescale=self.trap_release_time_A
-            )
+            #arcticpy.TrapInstantCapture(density=self.trap_density_A, release_timescale=self.trap_release_time_A),
+            #arcticpy.TrapInstantCapture(density=self.trap_density_B, release_timescale=self.trap_release_time_B),
+            #arcticpy.TrapInstantCapture(density=self.trap_density_C, release_timescale=self.trap_release_time_C),
+            arcticpy.TrapInstantCapture(density=self.trap_density_A*0.6/3.6, release_timescale=self.trap_release_time_A),
+            arcticpy.TrapInstantCapture(density=self.trap_density_A*1.6/3.6, release_timescale=self.trap_release_time_A*7.7/0.74),
+            arcticpy.TrapInstantCapture(density=self.trap_density_A*1.4/3.6, release_timescale=self.trap_release_time_A*37.0/0.74),
         ]
         roe = arcticpy.ROE()
         ccd = arcticpy.CCD(full_well_depth=84700, well_fill_power=0.478)
+
+        # Run arCTIc to produce the output image with EPER trails
         model_after_trail = []
-
-        # number of CCD columns to model
-        for eper in xvalues:
-            # xvalues are [length_of_trail,background,hot_pixel_number]
-            model_before_trail = np.full((1,eper[0]), eper[1])
-            print(model_before_trail)
-            print(self.warm_pixel_flux)
-            model_before_trail[(0,eper[2])] = self.warm_pixel_flux
-            print("model before trail",model_before_trail[-15:])
-
-            # Run arCTIc to produce a model of the trailed CCD column
+        for model_before_trail in data_untrailed:
             model_after_trail.append(
                 arcticpy.add_cti(
-                    model_before_trail,
+                    model_before_trail.reshape(-1,1), # pass 2D image to arCTIc
                     parallel_roe=roe,
                     parallel_ccd=ccd,
                     parallel_traps=traps,
                     parallel_express=5,
-                    verbosity=1
-                ).reshape(eper[0])
+                    verbosity=0
+                ).flatten() # convert back to a 1D array
             )
 
-        return model_after_trail
+        return model_after_trail # convert arCTIc output to a 1D row
 
 class Analysis(af.Analysis):
 
-    def __init__(self, data, noise_map):
-        self.data = data
-        self.noise_map = noise_map
+    def __init__(self, data_trailed, noise, data_untrailed):
+        self.data_trailed = data_trailed
+        self.noise = noise
+        self.data_untrailed = data_untrailed
 
     def log_likelihood_function(self, instance):
         """
         The 'instance' that comes into this method is an instance of the Gaussian class
         above, with the parameters set to values chosen by the non-linear search.
         """
+        #if instance.trap_density_A < 0: return -np.inf
+        #if instance.trap_release_time_A < 0: return -np.inf
+        #if instance.warm_pixel_flux < 0: return -np.inf
 
-        print("CTImodel Instance:")
-        print("trap_density_A = ", instance.trap_density_A)
-        print("trap_release_time_A = ", instance.trap_release_time_A)
-        print("warm_pixel_flux = ", instance.warm_pixel_flux)
-
-        if instance.trap_density_A < 0: return -np.inf
-        if instance.trap_release_time_A < 0: return -np.inf
-        if instance.warm_pixel_flux < 0: return -np.inf
-
-        """
-        We fit the ``data`` with the Gaussian instance, using its
-        "profile_from_xvalues" function to create the model data.
-        """
-        #print(self.data)
-        print(len(self.data))
-        #print(self.data[0])
-        xvalues = []
-        for eper in self.data:
-            print('len(eper)',len(eper),np.argmax(eper),len(eper)-np.argmax(eper),eper.shape)
-            xvalues.append( [ len(eper), eper[0], np.argmax(eper) ] )
+        model_data_trailed = instance.add_trail_to_ccd_columns(data_untrailed=self.data_untrailed)
 
 
-        print(len(xvalues))
+        #chi_squareds = []
+        #for i in np.arange(len(self.data_trailed)):
+        #    chi_squared = ( ( model_data_trailed[i] - self.data_trailed[i] ) / self.noise[i] ) ** 2
+        #    chi_squareds.append( np.sum( chi_squared ) )
+        #log_likelihood = -0.5 * sum(chi_squareds)
 
-        model_data = instance.trail_from_xvalues(xvalues=xvalues)
+        chi_squareds = 0.
+        for i in np.arange(len(self.data_trailed)):
+            chi_squared = ( ( model_data_trailed[i] - self.data_trailed[i] ) / self.noise[i] ) ** 2
+            chi_squareds += np.sum( chi_squared )
+        log_likelihood = -0.5 * chi_squareds
 
-        chi_squareds = []
-        for i in len(self.data):
-            chi_squareds.append( np.sum( ( ( model_data[i] - self.data[i] ) / self.noise_map[i] ) ** 2 ) )
-        #chi_squared = sum(chi_squareds)
-        #residual_map = self.data - model_data
-        #chi_squared_map = (residual_map / self.noise_map) ** 2.0
-        log_likelihood = -0.5 * sum(chi_squareds)
+        print("trap A: ", instance.trap_density_A, instance.trap_release_time_A, chi_squareds)
 
         return log_likelihood

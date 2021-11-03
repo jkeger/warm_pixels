@@ -6,6 +6,7 @@ import numpy as np
 import os
 import sys
 import lmfit
+import arcticpy
 from scipy.optimize import curve_fit
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -334,7 +335,7 @@ def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
         The model charge values at each pixel in the trail (e-).
     """
     #print(n_bg,n_e)
-    notch = 0 
+    notch = 0
     return (
         rho_q
         * ( ((n_e - notch) / (w - notch)) ** beta - ((n_bg - notch) / (w - notch)) ** beta )
@@ -346,6 +347,88 @@ def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
         )
         #+ n_bg
     )
+
+def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
+    """Calculate the model shape of a CTI trail.
+
+    Parameters
+    ----------
+    x : [float]
+        The pixel positions away from the trailed pixel.
+
+    rho_q : float
+        The total trap number density per pixel.
+
+    n_e : float
+        The number of electrons in the trailed pixel's charge cloud (e-).
+
+    n_bg : float
+        The background number of electrons (e-).
+
+    row : float
+        The distance in pixels of the trailed pixel from the readout register.
+
+    beta : float
+        The CCD well fill power.
+
+    w : float
+        The CCD full well depth (e-).
+
+    A, B, C : float
+        The relative density of each trap species.
+
+    tau_a, tau_b, tau_c : float
+        The release timescale of each trap species (s).
+
+    Returns
+    -------
+    trail : [float]
+        The model charge values at each pixel in the trail (e-).
+    """
+    # Set up classes required to run arCTIc
+    # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
+    traps = [
+         arcticpy.TrapInstantCapture(density=A*rho_q, release_timescale=tau_a),
+         arcticpy.TrapInstantCapture(density=B*rho_q, release_timescale=tau_b),
+         arcticpy.TrapInstantCapture(density=C*rho_q, release_timescale=tau_c),
+    ]
+    roe = arcticpy.ROE()
+    ccd = arcticpy.CCD(full_well_depth=w, well_fill_power=beta)
+
+    # Work out how many trails are concatenated within the inputs
+    trail_length = np.int(np.max(x))
+    n_trails = x.size // trail_length
+
+    # Loop over all those trails, to calculate the corresponding model
+    output_model = np.zeros(n_trails * trail_length)
+    for i in np.arange(n_trails):
+        # Define input trail model, in format that can be passed to arCTIc
+        warm_pixel_position = np.int( np.floor( row[i * trail_length] ) )
+        warm_pixel_flux = n_e[i * trail_length]
+        background_flux = n_bg[i * trail_length]
+        model_before_trail = np.full(warm_pixel_position + 1 + trail_length, background_flux)
+        model_before_trail[warm_pixel_position] = warm_pixel_flux
+
+        # Run arCTIc to produce the output image with EPER trails
+        model_after_trail = arcticpy.add_cti(
+            model_before_trail.reshape(-1, 1),  # pass 2D image to arCTIc
+            parallel_roe=roe,
+            parallel_ccd=ccd,
+            parallel_traps=traps,
+            parallel_express=5,
+            verbosity=0
+        ).flatten()  # convert back to a 1D array
+        # print(model_after_trail[-15:])
+        eper = model_after_trail[-trail_length:] - background_flux
+        output_model[i * trail_length:(i+1) * trail_length] = eper
+
+    exponential_model = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    #print(output_model[-24:])
+    #print(exponential_model[-24:])
+    #print((output_model-exponential_model)[-24:])
+    #print()
+
+    return output_model
 
 
 def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
@@ -380,8 +463,47 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
 
     return trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
 
+def trail_model_hst_arctic(x, rho_q, n_e, n_bg, row, date):
+    """Wrapper for trail_model() for HST ACS.
 
-def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date):
+    Parameters (where different to trail_model())
+    ----------
+    date : float
+        The Julian date of the images, used to set the trap model.
+
+    Returns
+    -------
+    trail : [float]
+        The model charge values at each pixel in the trail (e-).
+    """
+    # CCD
+    beta = 0.478
+    w = 84700.0
+    # Trap species
+    A = 0.17
+    B = 0.45
+    C = 0.38
+    # Trap lifetimes before or after the temperature change
+    if date < ut.date_T_change:
+        tau_a = 0.48
+        tau_b = 4.86
+        tau_c = 20.6
+    else:
+        tau_a = 0.74
+        tau_b = 7.70
+        tau_c = 37.0
+
+    #model_arctic = trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    #model_exponentials = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    #print(model_arctic[-24:])
+    #print(model_exponentials[-24:])
+    #print((model_arctic-model_exponentials)[-24:])
+    #print()
+
+    return trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+
+
+def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date, use_arctic=False):
     """Fit the total trap density for a trail or a concatenated set of trails.
 
     Other than the x, y, and noise values, which should cover all pixels in the
@@ -426,9 +548,14 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     """
 
     # Initialise the fitting model
-    model = lmfit.models.Model(
-        func=trail_model_hst, independent_vars=["x", "n_e", "n_bg", "row", "date"]
-    )
+    if use_arctic:
+        model = lmfit.models.Model(
+            func=trail_model_hst_arctic, independent_vars=["x", "n_e", "n_bg", "row", "date"]
+        )
+    else:
+        model = lmfit.models.Model(
+            func=trail_model_hst, independent_vars=["x", "n_e", "n_bg", "row", "date"]
+        )
     params = model.make_params()
 
     # Initialise the fit
@@ -455,13 +582,10 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
 
 def fit_dataset_total_trap_density(
-        dataset, quadrants, use_corrected=False, 
+        dataset, quadrants, use_corrected=False, use_arctic=False,
         row_bins=None, flux_bins=None, background_bins=None
     ):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
-    
-    RJM: It would be nice to save the best fit so it can be plotted later, 
-         rather than having to repeat the fit!
 
     Parameters
     ----------
@@ -526,21 +650,14 @@ def fit_dataset_total_trap_density(
                     #
                     # Compile data into easy form to fit
                     #
-                    #line.remove_symmetry()
-                    #y_all = np.append(y_all, line.data)
-                    #noise_all = np.append(noise_all, line.noise)
-                    #n_e_each = np.append(n_e_each, line.flux)
-                    #n_bg_each = np.append(n_bg_each, line.background)
                     y_all = np.append(y_all, line.model_trail)
                     noise_all = np.append(noise_all, line.model_trail_noise)
-                    #n_e_each = np.append(n_e_each, line.model_flux + np.sum(line.model_trail)) # Putting back flux in line Consider max(sum(y_all),0)
                     n_e_each = np.append(n_e_each, line.model_flux)
                     n_bg_each = np.append(n_bg_each, line.model_background)
                     row_each = np.append(row_each, line.mean_row)
                     n_lines_used += 1
 
 
-     
     if n_lines_used == 0: return None, None, np.zeros(ut.trail_length)
     
     # Duplicate the x arrays for all trails
@@ -551,10 +668,9 @@ def fit_dataset_total_trap_density(
     n_bg_all = np.repeat(n_bg_each, ut.trail_length)
     row_all = np.repeat(row_each, ut.trail_length)
 
-  
     # Run the fitting
     rho_q, rho_q_std, y_fit = fit_total_trap_density(
-        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date
+        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date, use_arctic=use_arctic
     )
 
     return rho_q, rho_q_std, y_fit
@@ -1019,15 +1135,22 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     # Fit the total trap density to the full dataset
     print("Performing global fit")
     rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
-        dataset, quadrants, use_corrected=use_corrected
+        dataset, quadrants, use_corrected=use_corrected, use_arctic=False
     )
-    print(rho_q_set, rho_q_std_set)
+    print(rho_q_set, rho_q_std_set, "exponentials")
 
-    # Fit the total trap density to the full dataset
-    print("Performing global fit using arCTIc")
-    result = fit_warm_pixels_with_arctic(
-        dataset, quadrants, use_corrected=use_corrected
+    # Fit the total trap density to the full dataset using arCTIc
+    print("Performing global fit")
+    rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
+        dataset, quadrants, use_corrected=use_corrected, use_arctic=True
     )
+    print(rho_q_set, rho_q_std_set, "ArCTIc")
+
+    # Fit the total trap density to the full dataset using arCTIc and MCMC
+    #print("Performing global fit using arCTIc")
+    #result = fit_warm_pixels_with_arctic(
+    #    dataset, quadrants, use_corrected=use_corrected
+    #)
 
     # Fit to each trail individually, and plot as we go along
     print("Performing individual fits:")
@@ -1104,7 +1227,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                 # ========
                 # Fit the total trap density to this single stacked trail (dotted line, which has swapped since Jacob's version)
                 rho_q_indiv, rho_q_std_indiv, y_fit_indiv = fit_dataset_total_trap_density(
-                    dataset, quadrants, use_corrected=use_corrected,
+                    dataset, quadrants, use_corrected=use_corrected, use_arctic=True,
                     row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )
                 ax.plot(pixels, y_fit_indiv, color=c, ls=ls_dot, alpha=0.7)

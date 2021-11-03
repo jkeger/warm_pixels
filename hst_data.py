@@ -39,19 +39,30 @@ class Dataset(object):
         self.path = ut.dataset_root + self.name + "/"
 
         # Image file paths
-        files = os.listdir(ut.dataset_root + self.name)
-        self.image_names = [f[:-5] for f in files if f[-9:] == "_raw.fits"]
-        self.image_paths = [self.path + name + ".fits" for name in self.image_names]
-        self.cor_paths = [self.path + name + "_cor.fits" for name in self.image_names]
-        self.n_images = len(self.image_names)
+        try:
+            files = os.listdir(ut.dataset_root + self.name)
+            self.image_names = [f[:-5] for f in files if f[-9:] == "_raw.fits"]
+            self.image_paths = [self.path + name + ".fits" for name in self.image_names]
+            self.cor_paths = [self.path + name + "_cor.fits" for name in self.image_names]
+            self.n_images = len(self.image_names)
+        except:
+            self.image_names = [""]*10
+            self.image_paths = [""]*10
+            self.cor_paths = [""]*10
+            self.n_images = 0
 
     @property
     def date(self):
         """Return the Julian date of the set, taken from the first image."""
-        image = aa.acs.ImageACS.from_fits(
-            file_path=self.image_paths[0], quadrant_letter="A"
-        )
-        return 2400000.5 + image.header.modified_julian_date
+
+        try:
+            image = aa.acs.ImageACS.from_fits(
+                file_path=self.image_paths[0], quadrant_letter="A"
+            )
+            date = 2400000.5 + image.header.modified_julian_date
+        except:
+            date = 0
+        return date
 
     # ========
     # File paths for saved data, including the quadrant(s)

@@ -97,11 +97,6 @@ from hst_data import *
 import hst_utilities as ut
 import hst_functions as fu
 
-#sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
-#import autoarray as aa
-
-
-
 
 # ========
 # Main
