@@ -28,8 +28,8 @@ import autoarray as aa
 sys.path.append(os.path.join(ut.path, "../PyAutoFit/"))
 import autofit as af
 
-sys.path.append(os.path.join(ut.path, "../PyAutoCTI/"))
-import autocti as ac
+#sys.path.append(os.path.join(ut.path, "../PyAutoCTI/"))
+#import autocti as ac
 
 
 # ========
