@@ -415,8 +415,7 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
             parallel_roe=roe,
             parallel_ccd=ccd,
             parallel_traps=traps,
-            parallel_express=5,
-            verbosity=0
+            parallel_express=5
         ).flatten()  # convert back to a 1D array
         # print(model_after_trail[-15:])
         eper = model_after_trail[-trail_length:] - background_flux
@@ -861,21 +860,20 @@ def remove_cti_dataset(dataset):
         date = 2400000.5 + image_A.header.modified_julian_date
         roe, ccd, traps = cti_model_hst(date)
 
-        def remove_cti(image, verbosity=0):
+        def remove_cti(image):
             return cti.remove_cti(
                 image=image,
                 n_iterations=5,
                 parallel_roe=roe,
                 parallel_ccd=ccd,
                 parallel_traps=traps,
-                parallel_express=5,
-                verbosity=verbosity,
+                parallel_express=5
             )
 
         # Remove CTI (only print first time)
         if i_image == 0:
             print("")
-            image_out_A = remove_cti(image_A, verbosity=1)
+            image_out_A = remove_cti(image_A)
             image_out_B, image_out_C, image_out_D = [
                 remove_cti(image) for image in [image_B, image_C, image_D]
             ]

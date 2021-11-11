@@ -45,8 +45,7 @@ def single_pixel_fit_trap_density_and_time():
         parallel_roe=roe_in,
         parallel_ccd=ccd_in,
         parallel_traps=traps_in,
-        parallel_express=express,
-        verbosity=0,
+        parallel_express=express
     )
 
     # 1D lines for fitting
@@ -115,8 +114,7 @@ def single_pixel_fit_trap_density_and_time():
         parallel_traps=[
             cti.TrapInstantCapture(density=density, release_timescale=release_timescale)
         ],
-        parallel_express=express,
-        verbosity=0,
+        parallel_express=express
     )
 
     print("Data:", post_cti.T)
@@ -156,8 +154,7 @@ def single_pixel_fit_3_traps_only_densities():
         parallel_roe=roe_in,
         parallel_ccd=ccd_in,
         parallel_traps=traps_in,
-        parallel_express=express,
-        verbosity=0,
+        parallel_express=express
     )
 
     # 1D lines for fitting
@@ -239,8 +236,7 @@ def single_pixel_fit_3_traps_only_densities():
                 density=density_c, release_timescale=release_times[2]
             ),
         ],
-        parallel_express=express,
-        verbosity=0,
+        parallel_express=express
     )
 
     print("\nTrail in:", post_cti.T[row - 1 :])

@@ -177,8 +177,7 @@ class CTImodel:
                     parallel_roe=roe,
                     parallel_ccd=ccd,
                     parallel_traps=traps,
-                    parallel_express=5,
-                    verbosity=0
+                    parallel_express=5
                 ).flatten() # convert back to a 1D array
             )
 

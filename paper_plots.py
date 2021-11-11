@@ -231,7 +231,7 @@ def example_image_corrected(image_path, cor_path, quadrant, n_iterations, do_pdf
 
 
         # Remove CTI
-        def remove_cti(image, verbosity=0):
+        def remove_cti(image):
             
             print("fff")
             print(traps)
@@ -242,12 +242,11 @@ def example_image_corrected(image_path, cor_path, quadrant, n_iterations, do_pdf
                 parallel_ccd=ccd,
                 parallel_traps=traps,
                 parallel_express=10,
-                verbosity=verbosity,
             )
 
         print("hw2")
 
-        image_out_A = remove_cti(image_A, verbosity=1)
+        image_out_A = remove_cti(image_A)
         print("hw3")
         image_out_B, image_out_C, image_out_D = [
             remove_cti(image) for image in [image_B, image_C, image_D]
