@@ -27,7 +27,7 @@ params = {
     "legend.fontsize": font_size - 4,
     "xtick.labelsize": font_size,
     "ytick.labelsize": font_size,
-    "text.usetex": True,
+    "text.usetex": False,
     "figure.figsize": [9, 9],
     "font.family": "serif",
     "savefig.dpi": 100,
