@@ -10,35 +10,27 @@ run : [str]
     Save as pdf not png.
 """
 
+import argparse
+
+import arcticpy as cti
+import matplotlib.patheffects as path_effects
+from matplotlib.patches import ConnectionPatch
+
 from hst_warm_pixels import *
 from misc import *
-
-import numpy as np
-import os
-import argparse
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-from matplotlib.patches import ConnectionPatch
-import matplotlib.patheffects as path_effects
-
 from pixel_lines import PixelLineCollection
-from warm_pixels import find_warm_pixels
-
-sys.path.append(os.path.join(ut.path, "../arctic/"))
-import arcticpy as cti
 
 
 #
 # RJM: Jacob set up variables here, thinking they had global scope. They don't.
 #
 # Example dataset and image   
-#dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
-#image_name = "jdrwc3fcq_raw"
-#image_path = dataset.path + image_name + ".fits"
-#quadrant = "D"
-#n_iterations = 1
-#cor_path = dataset.path + image_name + "_cor_iter%d.fits" % n_iterations
+# dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
+# image_name = "jdrwc3fcq_raw"
+# image_path = dataset.path + image_name + ".fits"
+# quadrant = "D"
+# n_iterations = 1
+# cor_path = dataset.path + image_name + "_cor_iter%d.fits" % n_iterations
 
 
 # ========
@@ -75,7 +67,8 @@ def run(name):
 def save_fig(Fp_save, do_pdf=False):
     """Save a figure and print the file path"""
     Fp_path = "paper_plots/"
-    if not os.path.exists(Fp_path): os.mkdir(Fp_path)
+    if not os.path.exists(Fp_path):
+        os.mkdir(Fp_path)
     if do_pdf:
         Fp_save = Fp_path + Fp_save + ".pdf"
     else:
@@ -226,13 +219,12 @@ def example_image_corrected(image_path, cor_path, quadrant, n_iterations, do_pdf
         ]
         roe = cti.ROE()
         ccd = cti.CCD(full_well_depth=84700, well_fill_power=0.478)
-        
-        print(traps)
 
+        print(traps)
 
         # Remove CTI
         def remove_cti(image):
-            
+
             print("fff")
             print(traps)
             return cti.remove_cti(
@@ -544,8 +536,8 @@ def example_single_stack(dataset, do_pdf=False):
 
     # Don't plot the warm pixel itself
     pixels = np.arange(1, ut.trail_length + 1)
-    trail = line.data  #[-ut.trail_length :]
-    noise = line.noise #[-ut.trail_length :]
+    trail = line.data  # [-ut.trail_length :]
+    noise = line.noise  # [-ut.trail_length :]
 
     # Check for negative values
     where_pos = np.where(trail > 0)[0]
@@ -708,7 +700,7 @@ def example_single_stack(dataset, do_pdf=False):
     #        alpha=0.7,
     #        label=r"$\rho_{\rm q} = %.2f \pm %.2f$" % (rho_q, rho_q_std),
     #    )
-    
+
     #
     # RJM: temporarily commenting out overlay of results after correction, to avoid having to run the (slow) CTI correction
     #
@@ -813,35 +805,33 @@ if __name__ == "__main__":
     # Parse arguments
     parser = prep_parser()
     args = parser.parse_args()
-    
-    
+
     # Example dataset and image
     dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
     image_name = "jdrwc3fcq_raw"
     quadrant = "D"
     n_iterations = 1
-    use_corrected=False
-   
+    use_corrected = False
+
     # Where to find the example data (dataset.path is defined in hst_utilities.py)
     image_path = dataset.path + image_name + ".fits"
     cor_path = dataset.path + image_name + "_cor_iter%d.fits" % n_iterations
 
-
     # Run functions
-    #if run("example_image_zooms"):
+    # if run("example_image_zooms"):
     #    example_image_zooms( image_path, cor_path, quadrant, args.pdf, use_corrected )
-    #if run("example_image_corrected"):
+    # if run("example_image_corrected"):
     #    example_image_corrected(image_path, cor_path, quadrant, n_iterations, args.pdf )
-    #if run("found_warm_pixels"):
+    # if run("found_warm_pixels"):
     #    found_warm_pixels( image_path, quadrant, args.pdf )
     if run("example_single_stack"):
-        example_single_stack( dataset, args.pdf )
+        example_single_stack(dataset, args.pdf)
     if run("example_stacked_trails"):
-        example_stacked_trails( dataset, args.pdf )
+        example_stacked_trails(dataset, args.pdf)
     if run("example_stacked_trails"):
-        example_stacked_trails( dataset, args.pdf )
-    #if run("density_evol"):
+        example_stacked_trails(dataset, args.pdf)
+    # if run("density_evol"):
     #    density_evol(args.pdf)
-    #print("done6")
-    #if run("test_autofit_model"):
+    # print("done6")
+    # if run("test_autofit_model"):
     #    test_autofit_model(args.pdf)

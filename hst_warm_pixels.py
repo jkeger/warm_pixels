@@ -89,14 +89,8 @@ dataset_list : str (opt.)
     Test loading the image and corresponding bias files in the list of datasets.
 """
 
-import numpy as np
-import os
-import sys
-
-from hst_data import *
-import hst_utilities as ut
 import hst_functions as fu
-
+from hst_data import *
 
 # ========
 # Main
@@ -200,7 +194,7 @@ if __name__ == "__main__":
         for quadrant in all_quadrants:
             # Find possible warm pixels in each image
             if ut.need_to_make_file(
-                dataset.saved_lines(quadrant), mdate_old=args.mdate_find
+                    dataset.saved_lines(quadrant), mdate_old=args.mdate_find
             ):
                 print(
                     "  Find possible warm pixels (%s)..." % quadrant,
@@ -213,16 +207,16 @@ if __name__ == "__main__":
             if args.use_corrected:
                 # Extract from corrected images with CTI removed
                 if ut.need_to_make_file(
-                    dataset.saved_consistent_lines(quadrant, use_corrected=True),
-                    mdate_old=args.mdate_consistent,
+                        dataset.saved_consistent_lines(quadrant, use_corrected=True),
+                        mdate_old=args.mdate_consistent,
                 ):
                     print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
                     fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
             else:
                 # Find consistent warm pixels in the set
                 if ut.need_to_make_file(
-                    dataset.saved_consistent_lines(quadrant),
-                    mdate_old=args.mdate_consistent,
+                        dataset.saved_consistent_lines(quadrant),
+                        mdate_old=args.mdate_consistent,
                 ):
                     print(
                         "  Consistent warm pixels (%s)..." % quadrant,
@@ -238,8 +232,8 @@ if __name__ == "__main__":
 
         # Plot distributions of warm pixels in the set
         if ut.need_to_make_file(
-            dataset.plotted_distributions(all_quadrants),
-            mdate_old=args.mdate_plot_consistent,
+                dataset.plotted_distributions(all_quadrants),
+                mdate_old=args.mdate_plot_consistent,
         ):
             print("  Distributions of warm pixels...", end=" ", flush=True)
             fu.plot_warm_pixel_distributions(
@@ -251,11 +245,11 @@ if __name__ == "__main__":
         # Stack warm pixels in each image quadrant or combined quadrants
         for quadrants in quadrant_sets:
             # Stack in bins
-            #RJM
-            #if True:
+            # RJM
+            # if True:
             if ut.need_to_make_file(
-                dataset.saved_stacked_lines(quadrants, args.use_corrected),
-                mdate_old=args.mdate_stack,
+                    dataset.saved_stacked_lines(quadrants, args.use_corrected),
+                    mdate_old=args.mdate_stack,
             ):
                 print(
                     "  Stack warm pixel trails (%s)..." % "".join(quadrants),
@@ -265,11 +259,11 @@ if __name__ == "__main__":
                 fu.stack_dataset_warm_pixels(dataset, quadrants, args.use_corrected)
 
             # Plot stacked lines
-            #RJM
-            #if True:
+            # RJM
+            # if True:
             if ut.need_to_make_file(
-                dataset.plotted_stacked_trails(quadrants, args.use_corrected),
-                mdate_old=args.mdate_plot_stack,
+                    dataset.plotted_stacked_trails(quadrants, args.use_corrected),
+                    mdate_old=args.mdate_plot_stack,
             ):
                 print(
                     "  Plot stacked trails (%s)..." % "".join(quadrants),

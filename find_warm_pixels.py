@@ -14,8 +14,7 @@ import matplotlib.pyplot as plt
 from pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels import find_warm_pixels
 
-path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(path, "../PyAutoArray/"))
+
 import autoarray as aa
 
 # Load the HST ACS image

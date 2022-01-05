@@ -1,23 +1,23 @@
 """Utility functions etc. for hst_warm_pixels.py"""
 
-import numpy as np
-import os
 import argparse
-import time
 import datetime
+import os
+import time
+
+import numpy as np
 from astropy.time import Time
 
 path = os.path.dirname(os.path.realpath(__file__))
 
 dataset_root = os.path.join(path, "../hst_acs_datasets/")
-print("Looking for data in",dataset_root)
-
+print("Looking for data in", dataset_root)
 
 # ========
 # Input parameters
 # ========
 # Number of pixels for each trail, not including the warm pixel itself
-trail_length = 12#9
+trail_length = 12  # 9
 # The minimum fraction of images in which a warm pixel must be present.
 # fraction_present = 0.9
 fraction_present = 2 / 3

@@ -1,2 +1,5 @@
 autoarray==2021.10.14.1
 pytest==6.2.5
+arcticpy==1.0
+autofit==2021.10.14.1
+lmfit==1.0.3

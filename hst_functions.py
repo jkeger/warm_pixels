@@ -1,35 +1,16 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
 
-from misc import *  # Plotting defaults etc
-
-import numpy as np
-import os
-import sys
-import lmfit
 import arcticpy
-from scipy.optimize import curve_fit
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+import arcticpy as cti
+import autoarray as aa
+import lmfit
 from matplotlib.gridspec import GridSpec
-import warnings
-
-from pixel_lines import PixelLine, PixelLineCollection
-from warm_pixels import find_warm_pixels
-from fit_with_arctic import fit_warm_pixels_with_arctic
+from scipy.optimize import curve_fit
 
 import hst_utilities as ut
-
-sys.path.append(os.path.join(ut.path, "../arctic/"))
-import arcticpy as cti
-
-sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
-import autoarray as aa
-
-sys.path.append(os.path.join(ut.path, "../PyAutoFit/"))
-import autofit as af
-
-#sys.path.append(os.path.join(ut.path, "../PyAutoCTI/"))
-#import autocti as ac
+from misc import *  # Plotting defaults etc
+from pixel_lines import PixelLine, PixelLineCollection
+from warm_pixels import find_warm_pixels
 
 
 # ========
@@ -214,8 +195,8 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
             warm_pixels_cor.append(
                 PixelLine(
                     data=image[
-                        row - ut.trail_length : row + ut.trail_length + 1, column
-                    ],
+                         row - ut.trail_length: row + ut.trail_length + 1, column
+                         ],
                     origin=line.origin,
                     location=line.location,
                     date=line.date,
@@ -263,7 +244,7 @@ def stack_dataset_warm_pixels(dataset, quadrants, use_corrected=False):
     # RJM - global background estimates may not be accurate, so keeping this information at this stage.
     #       It is always possible to do this subtraction after stacking.
     #
-    #for i in range(warm_pixels.n_lines):
+    # for i in range(warm_pixels.n_lines):
     #    warm_pixels.lines[i].data[ut.trail_length + 1 :] -= warm_pixels.lines[i].data[
     #        : ut.trail_length
     #    ][::-1]
@@ -334,19 +315,20 @@ def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
     trail : [float]
         The model charge values at each pixel in the trail (e-).
     """
-    #print(n_bg,n_e)
+    # print(n_bg,n_e)
     notch = 0
     return (
-        rho_q
-        * ( ((n_e - notch) / (w - notch)) ** beta - ((n_bg - notch) / (w - notch)) ** beta )
-        * row
-        * (
-            A * np.exp((1 - x) / tau_a) * (1 - np.exp(-1 / tau_a))
-            + B * np.exp((1 - x) / tau_b) * (1 - np.exp(-1 / tau_b))
-            + C * np.exp((1 - x) / tau_c) * (1 - np.exp(-1 / tau_c))
-        )
-        #+ n_bg
+            rho_q
+            * (((n_e - notch) / (w - notch)) ** beta - ((n_bg - notch) / (w - notch)) ** beta)
+            * row
+            * (
+                    A * np.exp((1 - x) / tau_a) * (1 - np.exp(-1 / tau_a))
+                    + B * np.exp((1 - x) / tau_b) * (1 - np.exp(-1 / tau_b))
+                    + C * np.exp((1 - x) / tau_c) * (1 - np.exp(-1 / tau_c))
+            )
+        # + n_bg
     )
+
 
 def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
     """Calculate the model shape of a CTI trail.
@@ -388,9 +370,9 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
     # Set up classes required to run arCTIc
     # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
     traps = [
-         arcticpy.TrapInstantCapture(density=A*rho_q, release_timescale=tau_a),
-         arcticpy.TrapInstantCapture(density=B*rho_q, release_timescale=tau_b),
-         arcticpy.TrapInstantCapture(density=C*rho_q, release_timescale=tau_c),
+        arcticpy.TrapInstantCapture(density=A * rho_q, release_timescale=tau_a),
+        arcticpy.TrapInstantCapture(density=B * rho_q, release_timescale=tau_b),
+        arcticpy.TrapInstantCapture(density=C * rho_q, release_timescale=tau_c),
     ]
     roe = arcticpy.ROE()
     ccd = arcticpy.CCD(full_well_depth=w, well_fill_power=beta)
@@ -403,7 +385,7 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
     output_model = np.zeros(n_trails * trail_length)
     for i in np.arange(n_trails):
         # Define input trail model, in format that can be passed to arCTIc
-        warm_pixel_position = np.int( np.floor( row[i * trail_length] ) )
+        warm_pixel_position = np.int(np.floor(row[i * trail_length]))
         warm_pixel_flux = n_e[i * trail_length]
         background_flux = n_bg[i * trail_length]
         model_before_trail = np.full(warm_pixel_position + 1 + trail_length, background_flux)
@@ -419,13 +401,13 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
         ).flatten()  # convert back to a 1D array
         # print(model_after_trail[-15:])
         eper = model_after_trail[-trail_length:] - background_flux
-        output_model[i * trail_length:(i+1) * trail_length] = eper
+        output_model[i * trail_length:(i + 1) * trail_length] = eper
 
     exponential_model = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
-    #print(output_model[-24:])
-    #print(exponential_model[-24:])
-    #print((output_model-exponential_model)[-24:])
-    #print()
+    # print(output_model[-24:])
+    # print(exponential_model[-24:])
+    # print((output_model-exponential_model)[-24:])
+    # print()
 
     return output_model
 
@@ -462,6 +444,7 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
 
     return trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
 
+
 def trail_model_hst_arctic(x, rho_q, n_e, n_bg, row, date):
     """Wrapper for trail_model() for HST ACS.
 
@@ -492,12 +475,12 @@ def trail_model_hst_arctic(x, rho_q, n_e, n_bg, row, date):
         tau_b = 7.70
         tau_c = 37.0
 
-    #model_arctic = trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
-    #model_exponentials = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
-    #print(model_arctic[-24:])
-    #print(model_exponentials[-24:])
-    #print((model_arctic-model_exponentials)[-24:])
-    #print()
+    # model_arctic = trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    # model_exponentials = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    # print(model_arctic[-24:])
+    # print(model_exponentials[-24:])
+    # print((model_arctic-model_exponentials)[-24:])
+    # print()
 
     return trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
 
@@ -575,7 +558,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
         row=row_all,
         date=date,
     )
-    #print(result.fit_report())  ##
+    # print(result.fit_report())  ##
 
     return result.params.get("rho_q").value, result.params.get("rho_q").stderr, result.eval()
 
@@ -583,7 +566,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 def fit_dataset_total_trap_density(
         dataset, quadrants, use_corrected=False, use_arctic=False,
         row_bins=None, flux_bins=None, background_bins=None
-    ):
+):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
 
     Parameters
@@ -613,11 +596,14 @@ def fit_dataset_total_trap_density(
     n_row_bins, n_flux_bins, n_date_bins, n_background_bins = [
         (len(npzfile[var]) - 1) for var in npzfile.files
     ]
-    
+
     # Decide which bin to fit
-    if row_bins is None: row_bins = range(n_row_bins)
-    if flux_bins is None: flux_bins = range(n_flux_bins)
-    if background_bins is None: background_bins = range(n_background_bins)
+    if row_bins is None:
+        row_bins = range(n_row_bins)
+    if flux_bins is None:
+        flux_bins = range(n_flux_bins)
+    if background_bins is None:
+        background_bins = range(n_background_bins)
 
     # Compile the data from all stacked lines
     n_lines_used = 0
@@ -643,9 +629,9 @@ def fit_dataset_total_trap_density(
                 )
 
                 line = stacked_lines.lines[bin_index]
-                
+
                 if line.n_stacked >= 3:
-                        
+
                     #
                     # Compile data into easy form to fit
                     #
@@ -656,11 +642,11 @@ def fit_dataset_total_trap_density(
                     row_each = np.append(row_each, line.mean_row)
                     n_lines_used += 1
 
+    if n_lines_used == 0:
+        return None, None, np.zeros(ut.trail_length)
 
-    if n_lines_used == 0: return None, None, np.zeros(ut.trail_length)
-    
     # Duplicate the x arrays for all trails
-    x_all = np.tile(np.arange(ut.trail_length) + 1 , n_lines_used)
+    x_all = np.tile(np.arange(ut.trail_length) + 1, n_lines_used)
 
     # Duplicate the single parameters of each trail for all pixels
     n_e_all = np.repeat(n_e_each, ut.trail_length)
@@ -792,7 +778,7 @@ def cti_model_hst(date):
         initial_total_trap_density = -0.261
         trap_growth_rate = 5.55e-4
     total_trap_density = initial_total_trap_density + trap_growth_rate * (
-        date - ut.date_acs_launch
+            date - ut.date_acs_launch
     )
     trap_densities = relative_densities * total_trap_density
 
@@ -1095,13 +1081,13 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
 
     # Don't plot the warm pixel itself
     pixels = np.arange(1, ut.trail_length + 1)
-    sel_non_zero = np.where(stacked_lines.data[:, -ut.trail_length :] != 0)
+    sel_non_zero = np.where(stacked_lines.data[:, -ut.trail_length:] != 0)
     # Set y limits
     if use_corrected:
         # For symlog scale
         # Assume ymin < 0
-        y_min = 0.1 # 4 * np.amin(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
-        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        y_min = 0.1  # 4 * np.amin(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length:][sel_non_zero])
         log10_y_min = np.ceil(np.log10(abs(y_min)))
         log10_y_max = np.floor(np.log10(y_max))
         y_min = min(y_min, -10 ** (log10_y_min + 0.6))
@@ -1113,10 +1099,10 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     else:
         # For log scale
         y_min = np.partition(
-            abs(np.ravel(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])), 2
+            abs(np.ravel(stacked_lines.data[:, -ut.trail_length:][sel_non_zero])), 2
         )[1]
         y_min = 0.1
-        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length:][sel_non_zero])
         log10_y_min = np.ceil(np.log10(y_min))
         log10_y_max = np.floor(np.log10(y_max))
         y_min = min(y_min, 10 ** (log10_y_min - 0.4))
@@ -1145,10 +1131,10 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     print(rho_q_set, rho_q_std_set, "ArCTIc")
 
     # Fit the total trap density to the full dataset using arCTIc and MCMC
-    #print("Performing global fit using arCTIc")
-    #result = fit_warm_pixels_with_arctic(
+    # print("Performing global fit using arCTIc")
+    # result = fit_warm_pixels_with_arctic(
     #    dataset, quadrants, use_corrected=use_corrected
-    #)
+    # )
 
     # Fit to each trail individually, and plot as we go along
     print("Performing individual fits:")
@@ -1159,7 +1145,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
 
             # Plot each background bin's stack
             for i_background, c in enumerate(colours):
-                
+
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
                     n_row_bins=n_row_bins,
@@ -1168,20 +1154,19 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     i_background=i_background,
                     n_background_bins=n_background_bins,
                 )
-                
+
                 line = (stacked_lines.lines[bin_index])
                 # Skip empty and single-entry bins
                 if line.n_stacked <= 1:
                     continue
-                
+
                 # Don't plot the warm pixel itself
-                trail = line.model_trail #+ line.model_background
-                noise = line.model_trail_noise #+ line.model_background
-                
+                trail = line.model_trail  # + line.model_background
+                noise = line.model_trail_noise  # + line.model_background
+
                 # Check for negative values
                 where_pos = np.where(trail > 0)[0]
                 where_neg = np.where(trail < 0)[0]
-                
 
                 # ========
                 # Plot data
@@ -1229,7 +1214,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )
                 ax.plot(pixels, y_fit_indiv, color=c, ls=ls_dot, alpha=0.7)
-                
+
                 # Also reconstruct then plot the simultaneous fit to all trails (dashed line)
                 model_trail = trail_model_hst(
                     x=pixels,
@@ -1375,7 +1360,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
 
 
 def plot_trap_density_evol(
-    list_name, quadrant_sets, do_sunspots=True, use_corrected=False, do_pdf=False
+        list_name, quadrant_sets, do_sunspots=True, use_corrected=False, do_pdf=False
 ):
     """Plot the evolution of the total trap density.
 
@@ -1436,7 +1421,7 @@ def plot_trap_density_evol(
             # Ignore astropy.time's "dubious year" warnings
             warnings.simplefilter("ignore")
             sunspot_days = (
-                ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
+                    ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
             )
 
         # Restrict to the relevant dates

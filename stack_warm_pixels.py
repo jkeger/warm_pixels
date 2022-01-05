@@ -30,8 +30,7 @@ from urllib.request import urlretrieve
 from pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels import find_warm_pixels
 
-path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(path, "../PyAutoArray/"))
+
 import autoarray as aa
 
 # Download the image files

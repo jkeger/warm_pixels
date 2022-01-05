@@ -1,13 +1,12 @@
 """Defines where the HST data is located on disc, and a class to read it in/contain it"""
 
 import os
-import numpy as np
-import hst_utilities as ut
+
 import autoarray as aa
+import numpy as np
 
+import hst_utilities as ut
 
-#sys.path.append(os.path.join(ut.path, "../PyAutoArray/"))
-#import autoarray as aa
 
 # ========
 # Image datasets
@@ -46,9 +45,9 @@ class Dataset(object):
             self.cor_paths = [self.path + name + "_cor.fits" for name in self.image_names]
             self.n_images = len(self.image_names)
         except:
-            self.image_names = [""]*10
-            self.image_paths = [""]*10
-            self.cor_paths = [""]*10
+            self.image_names = [""] * 10
+            self.image_paths = [""] * 10
+            self.cor_paths = [""] * 10
             self.n_images = 0
 
     @property
@@ -104,6 +103,7 @@ class Dataset(object):
             self.name,
             "".join(quadrants),
         )
+
 
 datasets_pre_T_change = [
     # Aidan
@@ -268,7 +268,7 @@ datasets_test_3 = [
 
 # Dictionary of choosable list names
 dataset_lists = {
-    #"all": datasets_all,
+    # "all": datasets_all,
     "sample": datasets_sample,
     "test": datasets_test,
     "test_2": datasets_test_2,
