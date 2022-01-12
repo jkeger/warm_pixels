@@ -1,18 +1,20 @@
-import numpy as np
 import pickle
+
+import numpy as np
+
 
 class PixelLine(object):
     def __init__(
-        self,
-        data=None,
-        noise=None,
-        origin=None,
-        location=None,
-        date=None,
-        background=None,
-        flux=None,
-        n_stacked=None,
-        format=None
+            self,
+            data=None,
+            noise=None,
+            origin=None,
+            location=None,
+            date=None,
+            background=None,
+            flux=None,
+            n_stacked=None,
+            format=None
     ):
         """A 1D line of pixels (e.g. a single CTI trail) with metadata.
 
@@ -86,7 +88,8 @@ class PixelLine(object):
     @property
     def model_background(self, n_pixels_used_for_background=5):
         """Re-estimate the background, locally"""
-        if self.data is None: return None
+        if self.data is None:
+            return None
         n_pixels_used_for_background = min(n_pixels_used_for_background, self.trail_length)
         return np.mean(self.data[: n_pixels_used_for_background])
 
@@ -94,7 +97,8 @@ class PixelLine(object):
     def model_flux(self):
         """Extract just the number of electrons in the warm pixel, locally
         add_trail = True will push any trailed electrons back into the warm pixel"""
-        if self.data is None: return None
+        if self.data is None:
+            return None
         return self.data[-self.trail_length - 1]
 
     @property
@@ -159,18 +163,14 @@ class PixelLine(object):
         """
 
         # Constant background level
-        #full_trail_noise = np.full(self.model_full_trail_length, np.sqrt(self.model_background))
+        # full_trail_noise = np.full(self.model_full_trail_length, np.sqrt(self.model_background))
         full_trail_noise = np.full(self.model_full_trail_length, np.inf)  # downweight in fit
         # Add warm pixel itself
-        #full_trail_noise[-self.trail_length - 1] = self.noise[self.trail_length]
+        # full_trail_noise[-self.trail_length - 1] = self.noise[self.trail_length]
         # Add trail
         full_trail_noise[-self.trail_length:] = self.model_trail_noise
 
         return full_trail_noise
-
-
-
-
 
 
 class PixelLineCollection(object):
@@ -218,8 +218,8 @@ class PixelLineCollection(object):
         if lines is None:
             self.lines = None
         else:
-            self.lines = np.array(lines) # RJM: Can you have an array of lines, rather than a list?
-            #self.lines = [lines] # RJM: I would have thought it would be better to do this.
+            self.lines = np.array(lines)  # RJM: Can you have an array of lines, rather than a list?
+            # self.lines = [lines] # RJM: I would have thought it would be better to do this.
 
     @property
     def data(self):
@@ -289,22 +289,22 @@ class PixelLineCollection(object):
         to just the trail (without background)."""
         self = np.array([line.remove_symmetry(n_pixels_used_for_background) for line in self.lines])
         return
-    
-    @property 
+
+    @property
     def model_untrailed(self):
         """Convert a line with a warm pixel in the middle to an entire column (with background),
         suitable for passing to arCTIc.
         """
         return [line.model_untrailed() for line in self.lines]
-            
-    @property 
+
+    @property
     def model_trailed(self):
         """Convert a line with a warm pixel in the middle to an entire column (with background),
         suitable for passing to arCTIc.
         """
         return [line.model_trailed() for line in self.lines]
-    
-    @property 
+
+    @property
     def model_trailed(self):
         """Convert a line with a warm pixel in the middle to an entire column (with background),
         suitable for passing to arCTIc.
@@ -352,14 +352,14 @@ class PixelLineCollection(object):
 
     @staticmethod
     def stacked_bin_index(
-        i_row=0,
-        n_row_bins=1,
-        i_flux=0,
-        n_flux_bins=1,
-        i_date=0,
-        n_date_bins=1,
-        i_background=0,
-        n_background_bins=1,
+            i_row=0,
+            n_row_bins=1,
+            i_flux=0,
+            n_flux_bins=1,
+            i_date=0,
+            n_date_bins=1,
+            i_background=0,
+            n_background_bins=1,
     ):
         """
         Return the index for the 1D ordering of stacked lines in bins, given the
@@ -375,28 +375,28 @@ class PixelLineCollection(object):
         )
 
     def generate_stacked_lines_from_bins(
-        self,
-        n_row_bins=1,
-        row_min=None,
-        row_max=None,
-        row_scale="linear",
-        row_bins=None,
-        n_flux_bins=1,
-        flux_min=None,
-        flux_max=None,
-        flux_scale="log",
-        flux_bins=None,
-        n_date_bins=1,
-        date_min=None,
-        date_max=None,
-        date_scale="linear",
-        date_bins=None,
-        n_background_bins=1,
-        background_min=None,
-        background_max=None,
-        background_scale="linear",
-        background_bins=None,
-        return_bin_info=False,
+            self,
+            n_row_bins=1,
+            row_min=None,
+            row_max=None,
+            row_scale="linear",
+            row_bins=None,
+            n_flux_bins=1,
+            flux_min=None,
+            flux_max=None,
+            flux_scale="log",
+            flux_bins=None,
+            n_date_bins=1,
+            date_min=None,
+            date_max=None,
+            date_scale="linear",
+            date_bins=None,
+            n_background_bins=1,
+            background_min=None,
+            background_max=None,
+            background_scale="linear",
+            background_bins=None,
+            return_bin_info=False,
     ):
         """Create a collection of stacked lines by averaging within bins.
 
@@ -599,10 +599,10 @@ class PixelLineCollection(object):
         # RJM: Does this loop over each line too many times? Should only need to look at each line once
         #
         for i_row, i_flux, i_date, i_background, line in zip(
-            row_indices, flux_indices, date_indices, background_indices, self.lines
+                row_indices, flux_indices, date_indices, background_indices, self.lines
         ):
             # Discard lines with values outside of the bins
-            #print(i_row, i_flux, i_date, i_background)
+            # print(i_row, i_flux, i_date, i_background)
             if -1 in [i_row, i_flux, i_date, i_background]:
                 continue
 
@@ -666,7 +666,7 @@ class PixelLineCollection(object):
                 line.rms_flux = None
 
             line.data = np.mean(line.data, axis=0)
-        
+
         if return_bin_info:
             return (
                 PixelLineCollection(lines=stacked_lines),
