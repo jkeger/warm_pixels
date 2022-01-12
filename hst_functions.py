@@ -1,4 +1,5 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
+from autoarray.instruments.acs import ImageACS
 
 import arcticpy
 import arcticpy as cti
@@ -48,7 +49,7 @@ def find_dataset_warm_pixels(dataset, quadrant):
         )
 
         # Load the image
-        image = aa.acs.ImageACS.from_fits(
+        image = ImageACS.from_fits(
             file_path=image_path,
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,

@@ -1,5 +1,9 @@
 autoarray==2021.10.14.1
-pytest==6.2.5
-arcticpy==1.0
+autoconf==2021.10.14.1
 autofit==2021.10.14.1
+pytest==6.2.5
 lmfit==1.0.3
+colorcet>=2.0.2
+numpy>=1.18.0
+scipy>=1.5.1
+astropy>=3.0.0
