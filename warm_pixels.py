@@ -31,7 +31,7 @@ def find_warm_pixels(
 
     trail_length : int
         The number of pixels in a trail, not including the warm pixel itself.
-        The warm pixel itself and the same number of preceeding pixels are also
+        The warm pixel itself and the same number of preceding pixels are also
         included in the saved line.
 
     n_parallel_overscan : int
