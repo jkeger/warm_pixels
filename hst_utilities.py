@@ -25,7 +25,7 @@ fraction_present = 2 / 3
 n_row_bins = 5
 n_flux_bins = 10
 n_background_bins = 1
-flux_bins = None
+
 #   Richard bins
 flux_bins = np.array(
     [
