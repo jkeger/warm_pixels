@@ -310,13 +310,6 @@ class PixelLineCollection(object):
         """Convert a line with a warm pixel in the middle to an entire column (with background),
         suitable for passing to arCTIc.
         """
-        return [line.model_trailed() for line in self.lines]
-
-    @property
-    def model_trailed(self):
-        """Convert a line with a warm pixel in the middle to an entire column (with background),
-        suitable for passing to arCTIc.
-        """
         return [line.model_noise() for line in self.lines]
 
     def find_consistent_lines(self, fraction_present=2 / 3):
