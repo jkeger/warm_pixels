@@ -1,21 +1,22 @@
 import numpy as np
 from scipy.ndimage import uniform_filter
-from pixel_lines import PixelLine
+
+from warm_pixels.pixel_lines import PixelLine
 
 
 def find_warm_pixels(
-    image,
-    trail_length=9,
-    n_parallel_overscan=0,
-    n_serial_prescan=0,
-    ignore_bad_columns=True,
-    bad_column_factor=3.5,
-    bad_column_loops=5,
-    smooth_width=3,
-    unsharp_masking_factor=6,
-    flux_min=None,
-    origin=None,
-    date=None,
+        image,
+        trail_length=9,
+        n_parallel_overscan=0,
+        n_serial_prescan=0,
+        ignore_bad_columns=True,
+        bad_column_factor=3.5,
+        bad_column_loops=5,
+        smooth_width=3,
+        unsharp_masking_factor=6,
+        flux_min=None,
+        origin=None,
+        date=None,
 ):
     """Find warm (and hot) pixels in an image.
 
@@ -105,7 +106,7 @@ def find_warm_pixels(
             # Keep columns with means close to the median
             good_columns = good_columns[
                 abs(column_means[good_columns] - median) < bad_column_factor * stddev
-            ]
+                ]
 
         # Don't ignore the good columns
         where_not_ignored[:, good_columns] = 1
@@ -126,7 +127,7 @@ def find_warm_pixels(
     # Ignore the very top of the CCD since we can't get full trails
     where_not_ignored[: trail_length + 1, :] = 0
     # Ignore parallel overscan
-    where_not_ignored[-(n_parallel_overscan + trail_length + 1) :, :] = 0
+    where_not_ignored[-(n_parallel_overscan + trail_length + 1):, :] = 0
     # Ignore serial prescan
     where_not_ignored[:, :n_serial_prescan] = 0
 
@@ -165,7 +166,7 @@ def find_warm_pixels(
 
         warm_pixels.append(
             PixelLine(
-                data=image[row - trail_length : row + trail_length + 1, column],
+                data=image[row - trail_length: row + trail_length + 1, column],
                 origin=origin,
                 location=[row, column],
                 date=date,

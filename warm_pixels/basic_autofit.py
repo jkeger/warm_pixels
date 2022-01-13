@@ -1,12 +1,11 @@
 """Test using autofit etc to fit a very simple model to warm pixel-like data."""
 
-import numpy as np
-import sys
 import os
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+import sys
 
-import hst_utilities as ut
+import numpy as np
+
+from warm_pixels import hst_utilities as ut
 
 path = os.path.dirname(os.path.realpath(__file__))
 
@@ -14,7 +13,6 @@ sys.path.append(os.path.join(path, "../arctic/"))
 import arcticpy as cti
 
 sys.path.append(os.path.join(path, "../PyAutoArray/"))
-import autoarray as aa
 
 sys.path.append(os.path.join(path, "../PyAutoFit/"))
 import autofit as af
@@ -239,8 +237,8 @@ def single_pixel_fit_3_traps_only_densities():
         parallel_express=express
     )
 
-    print("\nTrail in:", post_cti.T[row - 1 :])
-    print("Trail fit:", post_cti_fit.T[0][row - 1 :])
+    print("\nTrail in:", post_cti.T[row - 1:])
+    print("Trail fit:", post_cti_fit.T[0][row - 1:])
 
 
 if __name__ == "__main__":

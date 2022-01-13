@@ -5,17 +5,13 @@ Advanced Camera for Surveys (ACS) instrument.
 A small patch of the image is plotted with the warm pixels marked with red Xs.
 """
 
-import numpy as np
-import pytest
 import os
-import sys
-import matplotlib.pyplot as plt
-
-from pixel_lines import PixelLine, PixelLineCollection
-from warm_pixels import find_warm_pixels
-
 
 import autoarray as aa
+import matplotlib.pyplot as plt
+
+from warm_pixels.pixel_lines import PixelLineCollection
+from warm_pixels.warm_pixels import find_warm_pixels
 
 # Load the HST ACS image
 dataset_path = os.path.join(path, "data/")

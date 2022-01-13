@@ -12,13 +12,13 @@ run : [str]
 
 import argparse
 
-import arcticpy as cti
 import matplotlib.patheffects as path_effects
 from matplotlib.patches import ConnectionPatch
 
-from hst_warm_pixels import *
-from misc import *
-from pixel_lines import PixelLineCollection
+import arcticpy as cti
+from warm_pixels.hst_warm_pixels import *
+from warm_pixels.misc import *
+from warm_pixels.pixel_lines import PixelLineCollection
 
 
 #

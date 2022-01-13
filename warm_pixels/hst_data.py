@@ -5,7 +5,7 @@ import os
 import autoarray as aa
 import numpy as np
 
-import hst_utilities as ut
+from warm_pixels import hst_utilities as ut
 
 
 # ========

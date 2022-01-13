@@ -1,17 +1,16 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
-from autoarray.instruments.acs import ImageACS
-
-import arcticpy
-import arcticpy as cti
 import autoarray as aa
 import lmfit
+from autoarray.instruments.acs import ImageACS
 from matplotlib.gridspec import GridSpec
 from scipy.optimize import curve_fit
 
-import hst_utilities as ut
-from misc import *  # Plotting defaults etc
-from pixel_lines import PixelLine, PixelLineCollection
-from warm_pixels import find_warm_pixels
+import arcticpy
+import arcticpy as cti
+from warm_pixels import hst_utilities as ut
+from warm_pixels.misc import *  # Plotting defaults etc
+from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
+from warm_pixels.warm_pixels import find_warm_pixels
 
 
 # ========

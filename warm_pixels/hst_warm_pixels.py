@@ -89,8 +89,8 @@ dataset_list : str (opt.)
     Test loading the image and corresponding bias files in the list of datasets.
 """
 
-import hst_functions as fu
-from hst_data import *
+from warm_pixels import hst_functions as fu
+from warm_pixels.hst_data import *
 
 # ========
 # Main

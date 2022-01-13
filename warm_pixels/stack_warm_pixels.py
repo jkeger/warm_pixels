@@ -20,18 +20,15 @@ find_consistent_lines() and generate_stacked_lines_from_bins() in
 PixelLineCollection in pixel_lines.py for full details.
 """
 
-import numpy as np
 import os
-import sys
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-from urllib.request import urlretrieve
-
-from pixel_lines import PixelLine, PixelLineCollection
-from warm_pixels import find_warm_pixels
-
 
 import autoarray as aa
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.gridspec import GridSpec
+
+from warm_pixels.pixel_lines import PixelLineCollection
+from warm_pixels.warm_pixels import find_warm_pixels
 
 # Download the image files
 dataset_path = os.path.join(path, "data/")
@@ -64,7 +61,6 @@ image_names = [
 # Initialise the collection of warm pixel trails
 warm_pixels = PixelLineCollection()
 
-
 print("1. Find possible warm pixels")
 # Find the warm pixels in each image
 for name in image_names:
@@ -96,7 +92,6 @@ if True:
     warm_pixels = PixelLineCollection()
     warm_pixels.load(dataset_path + "warm_pixel_lines")
 
-
 print("2. Find consistent warm pixels")
 # Find the warm pixels present in at least 2/3 of the images
 consistent_lines = warm_pixels.find_consistent_lines(fraction_present=2 / 3)
@@ -116,7 +111,6 @@ if True:
     # Load
     warm_pixels = PixelLineCollection()
     warm_pixels.load(dataset_path + "consistent_pixel_lines")
-
 
 print("3. Stack warm pixel trails")
 # Stack the lines in bins by distance from readout and total flux
