@@ -75,8 +75,7 @@ class PixelLine(object):
         """Number of pixels in the data array"""
         if self.data is not None:
             return len(self.data)
-        else:
-            return None
+        return None
 
     @property
     def trail_length(self):
@@ -173,7 +172,7 @@ class PixelLine(object):
         return full_trail_noise
 
 
-class PixelLineCollection(object):
+class PixelLineCollection:
     def __init__(self, lines=None):
         """A collection of 1D lines of pixels with metadata.
 
@@ -202,14 +201,6 @@ class PixelLineCollection(object):
         The pixel counts of each line, in units of electrons.
         """
         return np.array([line.data for line in self.lines])
-
-    @property
-    def noises(self):
-        """
-        The noise errors on the pixel counts of each line, in units of
-            electrons.
-        """
-        return np.array([line.noise for line in self.lines])
 
     @property
     def origins(self):
