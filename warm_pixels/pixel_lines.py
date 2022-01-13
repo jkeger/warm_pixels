@@ -183,37 +183,6 @@ class PixelLineCollection(object):
         ----------
         lines : [PixelLine]
             A list of the PixelLine objects.
-
-        Attributes
-        ----------
-        data : [[float]]
-            The pixel counts of each line, in units of electrons.
-
-        noises : [[float]]
-            The noise errors on the pixel counts of each line, in units of
-            electrons.
-
-        origins : [str]
-            The identifiers for the origins (e.g. image name) of each line.
-
-        locations : [[int, int]]
-            The row and column indices of the first pixel in the line in the
-            image, for each line.
-
-        dates : [float]
-            The Julian date of each line.
-
-        backgrounds : [float]
-            The background charge count of each line, in units of electrons.
-
-        fluxes : [float]
-            The maximum charge in each line, in units of electrons.
-
-        lengths : [int]
-            The number of pixels in the data array of each line.
-
-        n_lines : int
-            The number of lines in the collection.
         """
         if lines is None:
             self.lines = None
@@ -228,39 +197,68 @@ class PixelLineCollection(object):
         return iter(self.lines)
 
     @property
-    def data(self):
+    def data(self) -> np.ndarray:
+        """
+        The pixel counts of each line, in units of electrons.
+        """
         return np.array([line.data for line in self.lines])
 
     @property
     def noises(self):
+        """
+        The noise errors on the pixel counts of each line, in units of
+            electrons.
+        """
         return np.array([line.noise for line in self.lines])
 
     @property
     def origins(self):
+        """
+        The identifiers for the origins (e.g. image name) of each line.
+        """
         return np.array([line.origin for line in self.lines])
 
     @property
     def locations(self):
+        """
+        The row and column indices of the first pixel in the line in the
+            image, for each line.
+        """
         return np.array([line.location for line in self.lines])
 
     @property
     def dates(self):
+        """
+        The Julian date of each line.
+        """
         return np.array([line.date for line in self.lines])
 
     @property
     def backgrounds(self):
+        """
+        The background charge count of each line, in units of electrons.
+        """
         return np.array([line.background for line in self.lines])
 
     @property
     def fluxes(self):
+        """
+        The maximum charge in each line, in units of electrons.
+        """
         return np.array([line.flux for line in self.lines])
 
     @property
     def lengths(self):
+        """
+        The number of pixels in the data array of each line.
+        """
         return np.array([line.length for line in self.lines])
 
     @property
     def n_lines(self):
+        """
+        The number of lines in the collection.
+        """
         return len(self.lines)
 
     def append(self, new_lines):
