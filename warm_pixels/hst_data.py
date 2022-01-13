@@ -5,6 +5,7 @@ from pathlib import Path
 
 import autoarray as aa
 import numpy as np
+from autoarray.instruments.acs import ImageACS
 
 from warm_pixels import hst_utilities as ut
 
@@ -29,6 +30,14 @@ class Image:
             file_path=str(self.path),
             quadrant_letter="A"
         )
+
+    def load_quadrant(self, quadrant):
+        return ImageACS.from_fits(
+            file_path=str(self.path),
+            quadrant_letter=quadrant,
+            bias_subtract_via_bias_file=True,
+            bias_subtract_via_prescan=True,
+        ).native
 
     def date(self):
         return 2400000.5 + self.image().header.modified_julian_date
@@ -81,25 +90,24 @@ class Dataset:
     # ========
     def saved_lines(self, quadrant):
         """Return the file name including the path for saving derived data."""
-        return self.path + "saved_lines_%s.pickle" % quadrant
+        return self.path / f"saved_lines_{quadrant}.pickle"
 
     def saved_consistent_lines(self, quadrant, use_corrected=False):
         """Return the file name including the path for saving derived data."""
         suffix = "_cor" if use_corrected else ""
-        return self.path + "saved_consistent_lines_%s%s.pickle" % (quadrant, suffix)
+        return self.path / f"saved_consistent_lines_{quadrant}{suffix}.pickle"
 
     def saved_stacked_lines(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
         suffix = "_cor" if use_corrected else ""
-        return self.path + "saved_stacked_lines_%s%s.pickle" % (
-            "".join(quadrants),
-            suffix,
-        )
+        quadrant_string = "".join(quadrants)
+        return self.path / f"saved_stacked_lines_{quadrant_string}{suffix}.pickle"
 
     def saved_stacked_info(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
         suffix = "_cor" if use_corrected else ""
-        return self.path + "saved_stacked_info_%s%s.npz" % ("".join(quadrants), suffix)
+        quadrant_string = "".join(quadrants)
+        return self.path / f"saved_stacked_info_{quadrant_string}{suffix}.npz"
 
     def plotted_stacked_trails(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
@@ -280,13 +288,27 @@ datasets_test_3 = [
 ]
 
 # Dictionary of choosable list names
-dataset_lists = {
+dataset_options = {
     # "all": datasets_all,
     "sample": datasets_sample,
     "test": datasets_test,
     "test_2": datasets_test_2,
     "test_3": datasets_test_3,
 }
+
+dataset_path = Path(
+    __file__
+).parent.parent.parent / "hst_acs_datasets"
+
 # Convert all to Dataset objects
-for key in dataset_lists.keys():
-    dataset_lists[key] = [Dataset(dataset) for dataset in dataset_lists[key]]
+
+dataset_lists = {
+    key: [
+        Dataset(
+            dataset_path / dataset
+        ) for dataset
+        in dataset_options[key]
+    ]
+    for key
+    in dataset_options.keys()
+}

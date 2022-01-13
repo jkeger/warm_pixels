@@ -267,6 +267,7 @@ class PixelLineCollection(object):
     def save(self, filename):
         """ Save the lines data. """
         # Check the file extension
+        filename = str(filename)
         if filename[-7:] != ".pickle":
             filename += ".pickle"
 
@@ -277,6 +278,7 @@ class PixelLineCollection(object):
     def load(self, filename):
         """ Load and append lines that were previously saved. """
         # Check the file extension
+        filename = str(filename)
         if filename[-7:] != ".pickle":
             filename += ".pickle"
 

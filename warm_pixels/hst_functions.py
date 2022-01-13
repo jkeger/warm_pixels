@@ -1,7 +1,6 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
 import autoarray as aa
 import lmfit
-from autoarray.instruments.acs import ImageACS
 from matplotlib.gridspec import GridSpec
 from scipy.optimize import curve_fit
 
@@ -37,31 +36,27 @@ def find_dataset_warm_pixels(dataset, quadrant):
     print("")
 
     # Find the warm pixels in each image
-    for i_image in range(dataset.n_images):
-        image_path = dataset.image_paths[i_image]
-        image_name = dataset.image_names[i_image]
+    for i, image in enumerate(dataset.images):
+        image_name = image.name
         print(
             "    %s_%s (%d of %d): "
-            % (image_name, quadrant, i_image + 1, dataset.n_images),
+            % (image_name, quadrant, i + 1, len(dataset)),
             end="",
             flush=True,
         )
 
         # Load the image
-        image = ImageACS.from_fits(
-            file_path=image_path,
-            quadrant_letter=quadrant,
-            bias_subtract_via_bias_file=True,
-            bias_subtract_via_prescan=True,
-        ).native
+        array = image.load_quadrant(
+            quadrant
+        )
 
-        date = 2400000.5 + image.header.modified_julian_date
+        date = 2400000.5 + array.header.modified_julian_date
 
         image_name_q = image_name + "_%s" % quadrant
 
         # Find the warm pixel trails
         new_warm_pixels = find_warm_pixels(
-            image=image,
+            image=array,
             trail_length=ut.trail_length,
             n_parallel_overscan=20,
             n_serial_prescan=24,
@@ -78,9 +73,9 @@ def find_dataset_warm_pixels(dataset, quadrant):
 
         # Plot
         plot_warm_pixels(
-            image,
+            array,
             PixelLineCollection(new_warm_pixels),
-            save_path=dataset.path + image_name_q,
+            save_path=dataset.path / image_name_q,
         )
 
         # Add them to the collection
@@ -820,13 +815,13 @@ def remove_cti_dataset(dataset):
         originals.
     """
     # Remove CTI from each image
-    for i_image in range(dataset.n_images):
-        image_path = dataset.image_paths[i_image]
-        image_name = dataset.image_names[i_image]
-        cor_path = dataset.cor_paths[i_image]
+    for i, image in enumerate(dataset.images):
+        image_path = image.path
+        image_name = image.name
+        cor_path = image.cor_path
         print(
             "  Correcting %s (%d of %d)... "
-            % (image_name, i_image + 1, dataset.n_images),
+            % (image_name, i + 1, len(dataset)),
             end="",
             flush=True,
         )
@@ -857,7 +852,7 @@ def remove_cti_dataset(dataset):
             )
 
         # Remove CTI (only print first time)
-        if i_image == 0:
+        if i == 0:
             print("")
             image_out_A = remove_cti(image_A)
             image_out_B, image_out_C, image_out_D = [

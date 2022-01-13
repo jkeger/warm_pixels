@@ -90,9 +90,15 @@ dataset_list : str (opt.)
 --test_image_and_bias_files, -t
     Test loading the image and corresponding bias files in the list of datasets.
 """
+import os
+from pathlib import Path
 
+from warm_pixels import hst_data
 from warm_pixels import hst_functions as fu
-from warm_pixels.hst_data import *
+from warm_pixels import hst_utilities as ut
+
+
+output_path = Path(__file__).parent / "output"
 
 # ========
 # Main
@@ -106,11 +112,11 @@ if __name__ == "__main__":
 
     # Datasets
     list_name = args.dataset_list
-    if list_name not in dataset_lists.keys():
+    if list_name not in hst_data.dataset_lists.keys():
         print("Error: Invalid dataset_list", list_name)
-        print("  Choose from:", list(dataset_lists.keys()))
+        print("  Choose from:", list(hst_data.dataset_lists.keys()))
         raise ValueError
-    dataset_list = dataset_lists[list_name]
+    dataset_list = hst_data.dataset_lists[list_name]
 
     # Split quadrants into separate or combined subsets
     # e.g. "AB_CD" --> [["A", "B"], ["C", "D"]]
@@ -183,13 +189,16 @@ if __name__ == "__main__":
                 len(dataset_list),
                 list_name,
                 downsample_print,
-                dataset.n_images,
+                len(dataset),
                 args.quadrants,
             )
         )
 
         # Remove CTI
-        if ut.need_to_make_file(dataset.cor_paths[-1], mdate_old=args.mdate_remove_cti):
+        if ut.need_to_make_file(
+                dataset.images[-1].cor_path,
+                mdate_old=args.mdate_remove_cti
+        ):
             fu.remove_cti_dataset(dataset)
 
         # Find warm pixels in each image quadrant
