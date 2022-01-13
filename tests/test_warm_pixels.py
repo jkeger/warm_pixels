@@ -1,8 +1,9 @@
 import numpy as np
+import pytest
 from autoarray.instruments.acs import ImageACS, HeaderACS
 
 from warm_pixels.hst_data import Dataset
-from warm_pixels.hst_functions import find_dataset_warm_pixels
+from warm_pixels.warm_pixels import find_warm_pixels, find_dataset_warm_pixels
 
 
 class MockImage:
@@ -29,15 +30,41 @@ class MockDataset(Dataset):
         self.path = path
 
 
+@pytest.fixture(
+    name="image"
+)
+def make_image():
+    image = np.zeros((10, 10))
+
+    image[3, 3] = 10
+    image[4, 3] = 20
+    image[4, 4] = 30
+    image[4, 8] = 40
+
+    return image
+
+
+def test_warm_pixels(
+        image
+):
+    result = find_warm_pixels(
+        image=image,
+        trail_length=2,
+        ignore_bad_columns=False,
+    )
+    assert len(result) == 1
+
+
 def test_dataset_warm_pixels(
-        dataset_path
+        dataset_path,
+        image
 ):
     result = find_dataset_warm_pixels(
         MockDataset(
             images=[MockImage(
                 ImageACS(
-                    np.zeros((100, 100)),
-                    np.zeros((100, 100)),
+                    image,
+                    np.zeros(image.shape),
                     header=HeaderACS(
                         header_sci_obj={
                             "DATE-OBS": "2020-01-01",
