@@ -1,6 +1,8 @@
 """Defines where the HST data is located on disc, and a class to read it in/contain it"""
 
 import os
+from glob import glob
+from pathlib import Path
 
 import autoarray as aa
 import numpy as np
@@ -8,18 +10,29 @@ import numpy as np
 from warm_pixels import hst_utilities as ut
 
 
-# ========
-# Image datasets
-# ========
-class Dataset(object):
-    def __init__(self, name):
+class Image:
+    def __init__(
+            self,
+            path: Path
+    ):
+        self.path = path
+
+    @property
+    def name(self):
+        return self.path.name.split("_")[0]
+
+
+class Dataset:
+    def __init__(
+            self,
+            path: Path
+    ):
         """Simple class to store a list of image file paths and mild metadata.
 
         Parameters
         ----------
-        name : str
-            The name of the dataset, i.e. the name of the directory containing the
-            image files, assumed to be in dataset_root.
+        path
+            The path to a directory containing fits files
 
         Attributes
         ----------
@@ -34,8 +47,7 @@ class Dataset(object):
         cor_paths : [str]
             The list of image files names for corrected images with removed CTI.
         """
-        self.name = name
-        self.path = ut.dataset_root + self.name + "/"
+        self.path = path
 
         # Image file paths
         try:
@@ -49,6 +61,24 @@ class Dataset(object):
             self.image_paths = [""] * 10
             self.cor_paths = [""] * 10
             self.n_images = 0
+
+    def __len__(self):
+        return len(self.images)
+
+    @property
+    def images(self):
+        return [
+            Image(
+                self.path / name,
+            )
+            for name in glob(
+                f"{self.path}/*_raw.fits"
+            )
+        ]
+
+    @property
+    def name(self):
+        return self.path.name
 
     @property
     def date(self):
