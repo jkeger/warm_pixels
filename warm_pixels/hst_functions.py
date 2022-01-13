@@ -1,15 +1,19 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
 import logging
+import warnings
 
 import autoarray as aa
 import lmfit
+import numpy as np
+from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 from scipy.optimize import curve_fit
 
 import arcticpy
 import arcticpy as cti
 from warm_pixels import hst_utilities as ut
-from warm_pixels.misc import *  # Plotting defaults etc
+from warm_pixels import misc
+from warm_pixels.misc import plot_hist
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 
 logger = logging.getLogger(
@@ -892,7 +896,7 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
     ax4 = plt.subplot(gs[1, 1])
 
     if len(quadrants) > 1:
-        colours = A1_c[: len(quadrants)]
+        colours = misc.A1_c[: len(quadrants)]
     else:
         colours = ["k"]
 
@@ -963,10 +967,10 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
     ax3.ticklabel_format(useOffset=False, axis="x")
     ax4.ticklabel_format(useOffset=False, axis="x")
 
-    nice_plot(ax1)
-    nice_plot(ax2)
-    nice_plot(ax3)
-    nice_plot(ax4)
+    misc.nice_plot(ax1)
+    misc.nice_plot(ax2)
+    misc.nice_plot(ax3)
+    misc.nice_plot(ax4)
 
     if save_path is None:
         plt.show()
@@ -1151,7 +1155,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     dataset, quadrants, use_corrected=use_corrected, use_arctic=True,
                     row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )
-                ax.plot(pixels, y_fit_indiv, color=c, ls=ls_dot, alpha=0.7)
+                ax.plot(pixels, y_fit_indiv, color=c, ls=misc.ls_dot, alpha=0.7)
 
                 # Also reconstruct then plot the simultaneous fit to all trails (dashed line)
                 model_trail = trail_model_hst(
@@ -1162,7 +1166,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     row=line.mean_row,
                     date=dataset.date,
                 )
-                ax.plot(pixels, model_trail, color=c, ls=ls_dash, alpha=0.7)
+                ax.plot(pixels, model_trail, color=c, ls=misc.ls_dash, alpha=0.7)
 
                 # Annotate
                 if i_background == 0:
@@ -1278,12 +1282,12 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
 
             # Tidy
             if i_row == 0 and i_flux == 0:
-                set_large_ticks(ax)
+                misc.set_large_ticks(ax)
             elif i_row == 0:
-                set_large_ticks(ax, do_y=False)
+                misc.set_large_ticks(ax, do_y=False)
             elif i_flux == 0:
-                set_large_ticks(ax, do_x=False)
-            set_font_size(ax)
+                misc.set_large_ticks(ax, do_x=False)
+            misc.set_font_size(ax)
 
     plt.tight_layout()
 
@@ -1330,8 +1334,8 @@ def plot_trap_density_evol(
         colours = ["k"]
         colours_cor = ["0.35"]
     else:
-        colours = A1_c[: len(quadrant_sets)]
-        colours_cor = A1_c[: len(quadrant_sets)]
+        colours = misc.A1_c[: len(quadrant_sets)]
+        colours_cor = misc.A1_c[: len(quadrant_sets)]
 
     # Set date limits
     npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrant_sets[0]))
