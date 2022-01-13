@@ -270,14 +270,14 @@ if __name__ == "__main__":
                     end=" ",
                     flush=True,
                 )
-                fu.plot_stacked_trails(
-                    dataset,
-                    quadrants,
-                    use_corrected=args.use_corrected,
-                    save_path=dataset.plotted_stacked_trails(
-                        quadrants, args.use_corrected
-                    ),
-                )
+                # fu.plot_stacked_trails(
+                #     dataset,
+                #     quadrants,
+                #     use_corrected=args.use_corrected,
+                #     save_path=dataset.plotted_stacked_trails(
+                #         quadrants, args.use_corrected
+                #     ),
+                # )
 
     # ========
     # Compiled results from all datasets
