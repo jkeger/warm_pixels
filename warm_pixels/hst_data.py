@@ -21,6 +21,10 @@ class Image:
     def name(self):
         return self.path.name.split("_")[0]
 
+    @property
+    def cor_path(self):
+        return self.path.parent / f"{self.name}_raw_cor.fits"
+
 
 class Dataset:
     def __init__(
