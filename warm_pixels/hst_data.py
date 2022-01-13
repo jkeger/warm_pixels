@@ -61,13 +61,7 @@ class Dataset:
             File path to the dataset directory.
         """
         self.path = path
-
-    def __len__(self):
-        return len(self.images)
-
-    @property
-    def images(self):
-        return [
+        self.images = [
             Image(
                 self.path / name,
             )
@@ -75,6 +69,9 @@ class Dataset:
                 f"{self.path}/*_raw.fits"
             )
         ]
+
+    def __len__(self):
+        return len(self.images)
 
     @property
     def name(self):

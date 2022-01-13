@@ -1,15 +1,6 @@
-from pathlib import Path
-
 import pytest
 
 from warm_pixels.hst_data import Dataset
-
-
-@pytest.fixture(
-    name="dataset_path"
-)
-def make_dataset_path():
-    return Path(__file__).parent / "dataset"
 
 
 @pytest.fixture(

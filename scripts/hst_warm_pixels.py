@@ -96,7 +96,8 @@ from pathlib import Path
 from warm_pixels import hst_data
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
-
+from warm_pixels.hst_functions import plot_warm_pixels
+from warm_pixels.pixel_lines import PixelLineCollection
 
 output_path = Path(__file__).parent / "output"
 
@@ -212,7 +213,7 @@ if __name__ == "__main__":
                     end=" ",
                     flush=True,
                 )
-                fu.find_dataset_warm_pixels(dataset, quadrant)
+                warm_pixels = fu.find_dataset_warm_pixels(dataset, quadrant)
 
             # Consistent warm pixels
             if args.use_corrected:

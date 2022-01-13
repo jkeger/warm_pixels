@@ -221,6 +221,12 @@ class PixelLineCollection(object):
             self.lines = np.array(lines)  # RJM: Can you have an array of lines, rather than a list?
             # self.lines = [lines] # RJM: I would have thought it would be better to do this.
 
+    def __len__(self):
+        return len(self.lines)
+
+    def __iter__(self):
+        return iter(self.lines)
+
     @property
     def data(self):
         return np.array([line.data for line in self.lines])

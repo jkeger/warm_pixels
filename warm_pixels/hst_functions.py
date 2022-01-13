@@ -1,4 +1,6 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
+import logging
+
 import autoarray as aa
 import lmfit
 from matplotlib.gridspec import GridSpec
@@ -10,6 +12,10 @@ from warm_pixels import hst_utilities as ut
 from warm_pixels.misc import *  # Plotting defaults etc
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.warm_pixels import find_warm_pixels
+
+logger = logging.getLogger(
+    __name__
+)
 
 
 # ========
@@ -83,6 +89,7 @@ def find_dataset_warm_pixels(dataset, quadrant):
 
     # Save
     warm_pixels.save(dataset.saved_lines(quadrant))
+    return warm_pixels
 
 
 def find_consistent_warm_pixels(dataset, quadrant, flux_min=None, flux_max=None):
@@ -902,16 +909,24 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
     # Plot the image and the found warm pixels
     plt.figure()
 
-    im = plt.imshow(X=image, aspect="equal", vmin=0, vmax=500)
-    plt.scatter(
-        warm_pixels.locations[:, 1] + 0.5,
-        warm_pixels.locations[:, 0] + 0.5,
-        marker=".",
-        c="r",
-        edgecolor="none",
-        s=0.1,
-        alpha=0.7,
+    im = plt.imshow(
+        X=image,
+        aspect="equal",
+        vmin=0,
+        vmax=500
     )
+    try:
+        plt.scatter(
+            warm_pixels.locations[:, 1] + 0.5,
+            warm_pixels.locations[:, 0] + 0.5,
+            marker=".",
+            c="r",
+            edgecolor="none",
+            s=0.1,
+            alpha=0.7,
+        )
+    except Exception as e:
+        logger.exception(e)
 
     plt.colorbar(im)
     plt.axis("off")
