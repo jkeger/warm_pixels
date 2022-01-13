@@ -1,6 +1,5 @@
 """Defines where the HST data is located on disc, and a class to read it in/contain it"""
 
-import os
 from glob import glob
 from pathlib import Path
 
@@ -25,6 +24,15 @@ class Image:
     def cor_path(self):
         return self.path.parent / f"{self.name}_raw_cor.fits"
 
+    def image(self):
+        return aa.acs.ImageACS.from_fits(
+            file_path=str(self.path),
+            quadrant_letter="A"
+        )
+
+    def date(self):
+        return 2400000.5 + self.image().header.modified_julian_date
+
 
 class Dataset:
     def __init__(
@@ -42,29 +50,8 @@ class Dataset:
         ----------
         path : str
             File path to the dataset directory.
-
-        image_names : [str]
-        image_paths : [str]
-            The list of image file names, excluding and including the full path
-            and extension, respectively.
-
-        cor_paths : [str]
-            The list of image files names for corrected images with removed CTI.
         """
         self.path = path
-
-        # Image file paths
-        try:
-            files = os.listdir(ut.dataset_root + self.name)
-            self.image_names = [f[:-5] for f in files if f[-9:] == "_raw.fits"]
-            self.image_paths = [self.path + name + ".fits" for name in self.image_names]
-            self.cor_paths = [self.path + name + "_cor.fits" for name in self.image_names]
-            self.n_images = len(self.image_names)
-        except:
-            self.image_names = [""] * 10
-            self.image_paths = [""] * 10
-            self.cor_paths = [""] * 10
-            self.n_images = 0
 
     def __len__(self):
         return len(self.images)
@@ -87,15 +74,7 @@ class Dataset:
     @property
     def date(self):
         """Return the Julian date of the set, taken from the first image."""
-
-        try:
-            image = aa.acs.ImageACS.from_fits(
-                file_path=self.image_paths[0], quadrant_letter="A"
-            )
-            date = 2400000.5 + image.header.modified_julian_date
-        except:
-            date = 0
-        return date
+        return self.images[0].date()
 
     # ========
     # File paths for saved data, including the quadrant(s)
