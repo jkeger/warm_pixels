@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Paper and test plots etc in addition to hst_warm_pixels.py
 
 Parameters
@@ -12,11 +14,14 @@ run : [str]
 
 import argparse
 
+import autoarray as aa
 import matplotlib.patheffects as path_effects
 from matplotlib.patches import ConnectionPatch
 
 import arcticpy as cti
-from warm_pixels.hst_warm_pixels import *
+from warm_pixels import hst_functions as fu
+from warm_pixels import hst_utilities as ut
+from warm_pixels.hst_data import Dataset
 from warm_pixels.misc import *
 from warm_pixels.pixel_lines import PixelLineCollection
 
