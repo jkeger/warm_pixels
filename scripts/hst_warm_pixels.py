@@ -73,85 +73,48 @@ from warm_pixels.hst_data import Dataset
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
-# ========
-# Main
-# ========
-if __name__ == "__main__":
-    # ========
-    # Parse arguments
-    # ========
-    parser = ut.prep_parser()
-    args = parser.parse_args()
 
+class WarmPixels:
+    def __init__(
+            self,
+            directory,
+            quadrant_sets,
+            overwrite=False,
+            downsample=None,
+    ):
+        self.quadrant_sets = quadrant_sets
+        self.overwrite = overwrite
+        # TODO: list name was originally the input...
+        self.list_name = "TODO"
 
-    def need_to_make_file(filename):
-        if args.overwrite:
+        self.dataset_list = [
+            Dataset(
+                Path(directory),
+                output_path=output_path
+            )
+        ]
+
+        # Downsample the dataset list
+        if downsample is not None:
+            N = int(downsample[0])
+            i = int(downsample[1])
+            self.dataset_list = self.dataset_list[i::N]
+            self.downsample_print = "[%d::%d]" % (i, N)
+        else:
+            self.downsample_print = ""
+
+    def need_to_make_file(self, filename):
+        if self.overwrite:
             return True
         return not os.path.exists(filename)
 
-
-    # TODO: list name was originally the input...
-    list_name = "TODO"
-
-    dataset_list = [
-        Dataset(
-            Path(args.directory),
-            output_path=output_path
-        )
-    ]
-
-    # Split quadrants into separate or combined subsets
-    # e.g. "AB_CD" --> [["A", "B"], ["C", "D"]]
-    quadrant_sets = [[q for q in qs] for qs in args.quadrants.split("_")]
-    # All quadrants, ignoring subsets
-    all_quadrants = [q for qs in quadrant_sets for q in qs]
-
-    # Modified defaults
-    # TODO: does this functionality still work now that mdate_plot_stack is removed?
-    if args.use_corrected:
-        # Don't automatically plot stacked plots of the corrected images
-        if args.mdate_plot_stack is None:
-            args.mdate_plot_stack = "0"
-
-    # Downsample the dataset list
-    if args.downsample is not None:
-        N = int(args.downsample[0])
-        i = int(args.downsample[1])
-        dataset_list = dataset_list[i::N]
-        downsample_print = "[%d::%d]" % (i, N)
-    else:
-        downsample_print = ""
-
-    # Test loading the image and corresponding bias files
-    if args.test_image_and_bias_files:
-        print("# Testing image and bias files...")
-        all_okay = True
-
-        for dataset in dataset_list:
-            if not ut.test_image_and_bias_files(dataset):
-                all_okay = False
-        print("")
-
-        if not all_okay:
-            exit()
-
-    # Use the corrected images with CTI removed instead
-    if args.use_corrected:
-        print("# Using the corrected images with CTI removed. \n")
-
     # ========
-    # Create directories to contain output plots
+    # Main
     # ========
-    os.makedirs(ut.output_path / "stacked_trail_plots", exist_ok=True)
-    os.makedirs(ut.output_path / "plotted_distributions", exist_ok=True)
-
-    # ========
-    # Find and stack warm pixels in each dataset
-    # ========
-    for i_dataset, dataset in enumerate(dataset_list):
+    def process_dataset(self, i_dataset, dataset):
         print(
             f'Dataset "{dataset.name}" '
-            f'({i_dataset + 1} of {len(dataset_list)} in {downsample_print}, '
+            f'({i_dataset + 1} of {len(self.dataset_list)} in {self.downsample_print}, '
             f'{len(dataset)} images, "{args.quadrants}")'
         )
 
@@ -163,9 +126,9 @@ if __name__ == "__main__":
         #     fu.remove_cti_dataset(dataset)
 
         # Find warm pixels in each image quadrant
-        for quadrant in all_quadrants:
+        for quadrant in self.all_quadrants:
             # Find possible warm pixels in each image
-            if need_to_make_file(
+            if self.need_to_make_file(
                     dataset.saved_lines(quadrant),
             ):
                 print(
@@ -173,19 +136,19 @@ if __name__ == "__main__":
                     end=" ",
                     flush=True,
                 )
-                warm_pixels = find_dataset_warm_pixels(dataset, quadrant)
+                find_dataset_warm_pixels(dataset, quadrant)
 
             # Consistent warm pixels
             if args.use_corrected:
                 # Extract from corrected images with CTI removed
-                if need_to_make_file(
+                if self.need_to_make_file(
                         dataset.saved_consistent_lines(quadrant, use_corrected=True),
                 ):
                     print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
                     fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
             else:
                 # Find consistent warm pixels in the set
-                if need_to_make_file(
+                if self.need_to_make_file(
                         dataset.saved_consistent_lines(quadrant),
                 ):
                     print(
@@ -201,22 +164,22 @@ if __name__ == "__main__":
                     )
 
         # Plot distributions of warm pixels in the set
-        if need_to_make_file(
-                dataset.plotted_distributions(all_quadrants),
+        if self.need_to_make_file(
+                dataset.plotted_distributions(self.all_quadrants),
         ):
             print("  Distributions of warm pixels...", end=" ", flush=True)
             fu.plot_warm_pixel_distributions(
                 dataset,
-                all_quadrants,
-                save_path=dataset.plotted_distributions(all_quadrants),
+                self.all_quadrants,
+                save_path=dataset.plotted_distributions(self.all_quadrants),
             )
 
         # Stack warm pixels in each image quadrant or combined quadrants
-        for quadrants in quadrant_sets:
+        for quadrants in self.quadrant_sets:
             # Stack in bins
             # RJM
             # if True:
-            if need_to_make_file(
+            if self.need_to_make_file(
                     dataset.saved_stacked_lines(quadrants, args.use_corrected),
             ):
                 print(
@@ -245,25 +208,82 @@ if __name__ == "__main__":
             #         ),
             #     )
 
-    # ========
-    # Compiled results from all datasets
-    # ========
-    # Fit and save the total trap densities
-    if args.prep_density:
-        # In each image quadrant or combined quadrants
-        for quadrants in quadrant_sets:
-            print(
-                "Fit total trap densities (%s)..." % "".join(quadrants),
-                end=" ",
-                flush=True,
-            )
-            fu.fit_total_trap_densities(
-                dataset_list, list_name, quadrants, args.use_corrected
+    @property
+    def all_quadrants(self):
+        # All quadrants, ignoring subsets
+        return [q for qs in self.quadrant_sets for q in qs]
+
+    def main(self):
+        # ========
+        # Parse arguments
+        # ========
+        # Modified defaults
+        # TODO: does this functionality still work now that mdate_plot_stack is removed?
+        if args.use_corrected:
+            # Don't automatically plot stacked plots of the corrected images
+            if args.mdate_plot_stack is None:
+                args.mdate_plot_stack = "0"
+
+        # Test loading the image and corresponding bias files
+        if args.test_image_and_bias_files:
+            print("# Testing image and bias files...")
+            all_okay = True
+
+            for dataset in self.dataset_list:
+                if not ut.test_image_and_bias_files(dataset):
+                    all_okay = False
+            print("")
+
+            if not all_okay:
+                exit()
+
+        # Use the corrected images with CTI removed instead
+        if args.use_corrected:
+            print("# Using the corrected images with CTI removed. \n")
+
+        # ========
+        # Create directories to contain output plots
+        # ========
+        os.makedirs(ut.output_path / "stacked_trail_plots", exist_ok=True)
+        os.makedirs(ut.output_path / "plotted_distributions", exist_ok=True)
+
+        # ========
+        # Find and stack warm pixels in each dataset
+        # ========
+        for i_dataset, dataset in enumerate(self.dataset_list):
+            self.process_dataset(i_dataset, dataset)
+
+        # ========
+        # Compiled results from all datasets
+        # ========
+        # Fit and save the total trap densities
+        if args.prep_density:
+            # In each image quadrant or combined quadrants
+            for quadrants in self.quadrant_sets:
+                print(
+                    "Fit total trap densities (%s)..." % "".join(quadrants),
+                    end=" ",
+                    flush=True,
+                )
+                fu.fit_total_trap_densities(
+                    self.dataset_list, self.list_name, quadrants, args.use_corrected
+                )
+
+        # Plot the trap density evolution
+        if args.plot_density:
+            print("Plot trap density evolution...", end=" ", flush=True)
+            fu.plot_trap_density_evol(
+                self.list_name, self.quadrant_sets, do_sunspots=True, use_corrected=args.use_corrected
             )
 
-    # Plot the trap density evolution
-    if args.plot_density:
-        print("Plot trap density evolution...", end=" ", flush=True)
-        fu.plot_trap_density_evol(
-            list_name, quadrant_sets, do_sunspots=True, use_corrected=args.use_corrected
-        )
+
+if __name__ == "__main__":
+    parser = ut.prep_parser()
+    args = parser.parse_args()
+
+    WarmPixels(
+        directory=args.directory,
+        quadrant_sets=[[q for q in qs] for qs in args.quadrants.split("_")],
+        overwrite=args.overwrite,
+        downsample=args.downsample
+    ).main()
