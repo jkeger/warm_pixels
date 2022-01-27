@@ -62,7 +62,7 @@ def find_dataset_warm_pixels(dataset, quadrant):
         plot_warm_pixels(
             array,
             PixelLineCollection(new_warm_pixels),
-            save_path=dataset.path / image_name_q,
+            save_path=dataset.output_path / image_name_q,
         )
 
         # Add them to the collection
