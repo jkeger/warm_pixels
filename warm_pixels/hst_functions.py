@@ -757,7 +757,6 @@ def remove_cti_dataset(dataset):
     for i, image in enumerate(dataset.images):
         image_path = image.path
         image_name = image.name
-        cor_path = image.cor_path
         print(
             "  Correcting %s (%d of %d)... "
             % (image_name, i + 1, len(dataset)),
@@ -804,7 +803,7 @@ def remove_cti_dataset(dataset):
 
         # Save the corrected image
         aa.acs.output_quadrants_to_fits(
-            file_path=cor_path,
+            file_path=image.cor_path,
             quadrant_a=image_out_A,
             quadrant_b=image_out_B,
             quadrant_c=image_out_C,
@@ -816,7 +815,7 @@ def remove_cti_dataset(dataset):
             overwrite=True,
         )
 
-        print("Saved %s" % cor_path[-30:])
+        print(f"Saved {image.core_path.stem}")
 
 
 # ========
@@ -977,7 +976,7 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
     else:
         plt.savefig(save_path)
         plt.close()
-        print("Saved", save_path[-36:])
+        print("Saved", save_path.stem)
 
 
 def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None):

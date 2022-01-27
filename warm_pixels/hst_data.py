@@ -1,5 +1,5 @@
 """Defines where the HST data is located on disc, and a class to read it in/contain it"""
-
+import os
 from glob import glob
 from pathlib import Path
 
@@ -13,13 +13,24 @@ from warm_pixels import hst_utilities as ut
 class Image:
     def __init__(
             self,
-            path: Path
+            path: Path,
+            output_path: Path
     ):
         self.path = path
+        self._output_path = output_path
 
     @property
     def name(self):
         return self.path.name.split("_")[0]
+
+    @property
+    def output_path(self):
+        output_path = self._output_path / self.name
+        os.makedirs(
+            output_path,
+            exist_ok=True
+        )
+        return output_path
 
     @property
     def cor_path(self):
@@ -46,7 +57,8 @@ class Image:
 class Dataset:
     def __init__(
             self,
-            path: Path
+            path: Path,
+            output_path: Path
     ):
         """Simple class to store a list of image file paths and mild metadata.
 
@@ -61,9 +73,11 @@ class Dataset:
             File path to the dataset directory.
         """
         self.path = path
+        self._output_path = output_path
         self.images = [
             Image(
                 Path(image_path),
+                output_path=self.output_path,
             )
             for image_path in glob(
                 f"{self.path}/*_raw.fits"
@@ -78,6 +92,15 @@ class Dataset:
         return self.path.name
 
     @property
+    def output_path(self):
+        output_path = self._output_path / self.name
+        os.makedirs(
+            output_path,
+            exist_ok=True,
+        )
+        return output_path
+
+    @property
     def date(self):
         """Return the Julian date of the set, taken from the first image."""
         return self.images[0].date()
@@ -87,40 +110,33 @@ class Dataset:
     # ========
     def saved_lines(self, quadrant):
         """Return the file name including the path for saving derived data."""
-        return self.path / f"saved_lines_{quadrant}.pickle"
+        return self.output_path / f"saved_lines_{quadrant}.pickle"
 
     def saved_consistent_lines(self, quadrant, use_corrected=False):
         """Return the file name including the path for saving derived data."""
         suffix = "_cor" if use_corrected else ""
-        return self.path / f"saved_consistent_lines_{quadrant}{suffix}.pickle"
+        return self.output_path / f"saved_consistent_lines_{quadrant}{suffix}.pickle"
 
     def saved_stacked_lines(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
         suffix = "_cor" if use_corrected else ""
         quadrant_string = "".join(quadrants)
-        return self.path / f"saved_stacked_lines_{quadrant_string}{suffix}.pickle"
+        return self.output_path / f"saved_stacked_lines_{quadrant_string}{suffix}.pickle"
 
     def saved_stacked_info(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
         suffix = "_cor" if use_corrected else ""
         quadrant_string = "".join(quadrants)
-        return self.path / f"saved_stacked_info_{quadrant_string}{suffix}.npz"
+        return self.output_path / f"saved_stacked_info_{quadrant_string}{suffix}.npz"
 
     def plotted_stacked_trails(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
         suffix = "_cor" if use_corrected else ""
-        return ut.path + "/stacked_trail_plots/%s_plotted_stacked_trails_%s%s.png" % (
-            self.name,
-            "".join(quadrants),
-            suffix,
-        )
+        return ut.output_path / f"stacked_trail_plots/{self.name}_plotted_stacked_trails_{''.join(quadrants)}{suffix}.png"
 
     def plotted_distributions(self, quadrants):
         """Return the file name including the path for saving derived data."""
-        return ut.path + "/plotted_distributions/%s_plotted_distributions_%s.png" % (
-            self.name,
-            "".join(quadrants),
-        )
+        return ut.output_path / f"plotted_distributions/{self.name}_plotted_distributions_{''.join(quadrants)}.png"
 
 
 datasets_pre_T_change = [

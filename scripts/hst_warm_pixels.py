@@ -70,9 +70,8 @@ from pathlib import Path
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_data import Dataset
+from warm_pixels.hst_utilities import output_path
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
-
-output_path = Path(__file__).parent / "output"
 
 # ========
 # Main
@@ -96,7 +95,8 @@ if __name__ == "__main__":
 
     dataset_list = [
         Dataset(
-            Path(args.directory)
+            Path(args.directory),
+            output_path=output_path
         )
     ]
 
@@ -141,10 +141,8 @@ if __name__ == "__main__":
     # ========
     # Create directories to contain output plots
     # ========
-    if not os.path.exists(ut.path + "/stacked_trail_plots"):
-        os.mkdir(ut.path + "/stacked_trail_plots")
-    if not os.path.exists(ut.path + "/plotted_distributions"):
-        os.mkdir(ut.path + "/plotted_distributions")
+    os.makedirs(ut.output_path / "stacked_trail_plots", exist_ok=True)
+    os.makedirs(ut.output_path / "plotted_distributions", exist_ok=True)
 
     # ========
     # Find and stack warm pixels in each dataset

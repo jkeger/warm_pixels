@@ -1,17 +1,12 @@
 """Utility functions etc. for hst_warm_pixels.py"""
 
 import argparse
-import datetime
-import os
-import time
+from pathlib import Path
 
 import numpy as np
 from astropy.time import Time
 
-path = os.path.dirname(os.path.realpath(__file__))
-
-dataset_root = os.path.join(path, "../../hst_acs_datasets/")
-print("Looking for data in", dataset_root)
+output_path = Path("output")
 
 # ========
 # Input parameters
@@ -193,11 +188,7 @@ def dataset_list_saved_density_evol(list_name, quadrants, use_corrected=False):
         suffix = "_cor"
     else:
         suffix = ""
-    return dataset_root + "density_evol_%s_%s%s.npz" % (
-        list_name,
-        "".join(quadrants),
-        suffix,
-    )
+    return output_path / f"density_evol_{list_name}_{''.join(quadrants)}{suffix}.npz"
 
 
 def dataset_list_plotted_density_evol(list_name, quadrant_sets, do_pdf=False):
@@ -209,4 +200,4 @@ def dataset_list_plotted_density_evol(list_name, quadrant_sets, do_pdf=False):
         ext = "pdf"
     else:
         ext = "png"
-    return path + "/density_evol_%s%s.%s" % (list_name, quadrant_label, ext)
+    return output_path / f"density_evol_{list_name}{quadrant_label}.{ext}"
