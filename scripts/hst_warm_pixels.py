@@ -162,6 +162,7 @@ if __name__ == "__main__":
             return not os.path.exists(filename)
 
 
+        # TODO: Commented just to arctic crashing
         # # Remove CTI
         # if need_to_make_file(
         #         dataset.images[-1].cor_path,
