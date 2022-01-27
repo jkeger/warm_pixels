@@ -3,6 +3,7 @@
 import argparse
 from pathlib import Path
 
+import autoarray as aa
 import numpy as np
 from astropy.time import Time
 

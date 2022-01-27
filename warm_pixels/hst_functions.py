@@ -7,13 +7,14 @@ import lmfit
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import MultipleLocator
 from scipy.optimize import curve_fit
 
 import arcticpy
 import arcticpy as cti
 from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
-from warm_pixels.misc import plot_hist
+from warm_pixels.misc import plot_hist, nice_plot
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 
 logger = logging.getLogger(
@@ -1548,43 +1549,43 @@ def plot_trap_density_evol(
     # ========
     # HST CTI measurements using Richard's IDL code
     # ========
-    if not True:  ##
-        # date, density, density_err
-        data = np.array(
-            [
-                [431.303, 0.179387, 0.0682717],  # shortSNe2
-                [804.024, 0.325217, 0.0512948],  # 05_2004
-                [1131.27, 0.456763, 0.762311],  # 04_2005
-                [1519.10, 0.627182, 0.0732714],  # 04_2006
-                [1599.39, 0.611703, 0.0760443],  # richmassey60490
-                [1613.18, 0.560601, 0.0496126],  # richmassey61093
-                [1629.13, 0.632204, 0.0515503],  # richmassey60491
-                [1655.14, 0.657068, 0.0503882],  # richmassey61092
-                [2803.10, 1.34501, 0.0720851],  # sm43
-                [3007.13, 1.45635, 0.0732634],  # 05_2010
-                [3321.37, 1.65278, 0.0453292],  # 04_2011
-                [3799.49, 1.89259, 0.0684670],  # huff_spt814b
-                [4050.26, 2.01314, 0.0802822],  # 04_2013
-                [4377.37, 2.07898, 0.0479423],  # 02_2014
-                [4709.00, 2.29900, 0.238915],  # 01_2015
-                [5058.00, 2.48080, 0.297159],  # 01_2016
-                [5514.32, 2.69825, 0.0761266],  # 04_2017
-                [5695.42, 2.58939, 0.0724275],  # 10_2017
-                [6008.27, 2.84505, 0.351008],  # 08_2018
-                [6240.09, 3.01478, 0.0649324],  # 04_2019
-                [6595.34, 3.16847, 0.606145],  # 03_2020
-                [6852.48, 3.26501, 0.209639],  # 12_2020
-            ]
-        )
-        ax.errorbar(
-            data[:, 0],
-            data[:, 1],
-            yerr=data[:, 2],
-            ls="none",
-            marker="+",
-            capsize=3,
-            elinewidth=1,
-        )
+    # if not True:  ##
+    #     # date, density, density_err
+    #     data = np.array(
+    #         [
+    #             [431.303, 0.179387, 0.0682717],  # shortSNe2
+    #             [804.024, 0.325217, 0.0512948],  # 05_2004
+    #             [1131.27, 0.456763, 0.762311],  # 04_2005
+    #             [1519.10, 0.627182, 0.0732714],  # 04_2006
+    #             [1599.39, 0.611703, 0.0760443],  # richmassey60490
+    #             [1613.18, 0.560601, 0.0496126],  # richmassey61093
+    #             [1629.13, 0.632204, 0.0515503],  # richmassey60491
+    #             [1655.14, 0.657068, 0.0503882],  # richmassey61092
+    #             [2803.10, 1.34501, 0.0720851],  # sm43
+    #             [3007.13, 1.45635, 0.0732634],  # 05_2010
+    #             [3321.37, 1.65278, 0.0453292],  # 04_2011
+    #             [3799.49, 1.89259, 0.0684670],  # huff_spt814b
+    #             [4050.26, 2.01314, 0.0802822],  # 04_2013
+    #             [4377.37, 2.07898, 0.0479423],  # 02_2014
+    #             [4709.00, 2.29900, 0.238915],  # 01_2015
+    #             [5058.00, 2.48080, 0.297159],  # 01_2016
+    #             [5514.32, 2.69825, 0.0761266],  # 04_2017
+    #             [5695.42, 2.58939, 0.0724275],  # 10_2017
+    #             [6008.27, 2.84505, 0.351008],  # 08_2018
+    #             [6240.09, 3.01478, 0.0649324],  # 04_2019
+    #             [6595.34, 3.16847, 0.606145],  # 03_2020
+    #             [6852.48, 3.26501, 0.209639],  # 12_2020
+    #         ]
+    #     )
+    #     ax.errorbar(
+    #         data[:, 0],
+    #         data[:, 1],
+    #         yerr=data[:, 2],
+    #         ls="none",
+    #         marker="+",
+    #         capsize=3,
+    #         elinewidth=1,
+    #     )
 
     # Axes etc
     ax.set_xlabel("Days Since ACS Launch")
