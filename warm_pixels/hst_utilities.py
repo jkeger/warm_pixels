@@ -69,11 +69,10 @@ def prep_parser():
 
     # Positional arguments
     parser.add_argument(
-        "dataset_list",
+        "directory",
         nargs="?",
-        default="test",
         type=str,
-        help="The list of image datasets to run.",
+        help="The path to the directory containing data.",
     )
 
     # Optional arguments

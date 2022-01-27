@@ -63,9 +63,9 @@ class Dataset:
         self.path = path
         self.images = [
             Image(
-                self.path / name,
+                Path(image_path),
             )
-            for name in glob(
+            for image_path in glob(
                 f"{self.path}/*_raw.fits"
             )
         ]
@@ -291,21 +291,4 @@ dataset_options = {
     "test": datasets_test,
     "test_2": datasets_test_2,
     "test_3": datasets_test_3,
-}
-
-dataset_path = Path(
-    __file__
-).parent.parent.parent / "hst_acs_datasets"
-
-# Convert all to Dataset objects
-
-dataset_lists = {
-    key: [
-        Dataset(
-            dataset_path / dataset
-        ) for dataset
-        in dataset_options[key]
-    ]
-    for key
-    in dataset_options.keys()
 }

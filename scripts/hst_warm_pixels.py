@@ -67,9 +67,9 @@ dataset_list : str (opt.)
 import os
 from pathlib import Path
 
-from warm_pixels import hst_data
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
+from warm_pixels.hst_data import Dataset
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
 output_path = Path(__file__).parent / "output"
@@ -84,13 +84,21 @@ if __name__ == "__main__":
     parser = ut.prep_parser()
     args = parser.parse_args()
 
-    # Datasets
-    list_name = args.dataset_list
-    if list_name not in hst_data.dataset_lists.keys():
-        print("Error: Invalid dataset_list", list_name)
-        print("  Choose from:", list(hst_data.dataset_lists.keys()))
-        raise ValueError
-    dataset_list = hst_data.dataset_lists[list_name]
+
+    def need_to_make_file(filename):
+        if args.overwrite:
+            return True
+        return not os.path.exists(filename)
+
+
+    # TODO: list name was originally the input...
+    list_name = "TODO"
+
+    dataset_list = [
+        Dataset(
+            Path(args.directory)
+        )
+    ]
 
     # Split quadrants into separate or combined subsets
     # e.g. "AB_CD" --> [["A", "B"], ["C", "D"]]
@@ -143,26 +151,12 @@ if __name__ == "__main__":
     # ========
     for i_dataset, dataset in enumerate(dataset_list):
         print(
-            'Dataset "%s" (%d of %d in "%s"%s, %d images, "%s")'
-            % (
-                dataset.name,
-                i_dataset + 1,
-                len(dataset_list),
-                list_name,
-                downsample_print,
-                len(dataset),
-                args.quadrants,
-            )
+            f'Dataset "{dataset.name}" '
+            f'({i_dataset + 1} of {len(dataset_list)} in {downsample_print}, '
+            f'{len(dataset)} images, "{args.quadrants}")'
         )
 
-
-        def need_to_make_file(filename):
-            if args.overwrite:
-                return True
-            return not os.path.exists(filename)
-
-
-        # TODO: Commented just to arctic crashing
+        # TODO: Commented because arctic crashes
         # # Remove CTI
         # if need_to_make_file(
         #         dataset.images[-1].cor_path,
@@ -233,7 +227,7 @@ if __name__ == "__main__":
                 )
                 fu.stack_dataset_warm_pixels(dataset, quadrants, args.use_corrected)
 
-            # TODO: commented because
+            # TODO: commented because Arctic crashes
             # Plot stacked lines
             # if need_to_make_file(
             #         dataset.plotted_stacked_trails(quadrants, args.use_corrected),
