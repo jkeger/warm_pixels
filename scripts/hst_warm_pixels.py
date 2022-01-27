@@ -107,6 +107,7 @@ if __name__ == "__main__":
     all_quadrants = [q for qs in quadrant_sets for q in qs]
 
     # Modified defaults
+    # TODO: does this functionality still work now that mdate_plot_stack is removed?
     if args.use_corrected:
         # Don't automatically plot stacked plots of the corrected images
         if args.mdate_plot_stack is None:

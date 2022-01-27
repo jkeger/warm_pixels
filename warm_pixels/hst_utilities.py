@@ -77,7 +77,6 @@ def prep_parser():
         "--quadrants",
         default="ABCD",
         type=str,
-        required=False,
         help="The image quadrants to use.",
     )
     parser.add_argument(
@@ -91,32 +90,24 @@ def prep_parser():
         "-d",
         "--prep_density",
         action="store_true",
-        default=False,
-        required=False,
         help="Fit the total trap density for all datasets.",
     )
     parser.add_argument(
         "-D",
         "--plot_density",
         action="store_true",
-        default=False,
-        required=False,
         help="Plot the evolution of the total trap density.",
     )
     parser.add_argument(
         "-u",
         "--use_corrected",
         action="store_true",
-        default=False,
-        required=False,
         help="Use the corrected images with CTI removed instead of the originals.",
     )
     parser.add_argument(
         "-t",
         "--test_image_and_bias_files",
         action="store_true",
-        default=False,
-        required=False,
         help="Test loading the image and corresponding bias files.",
     )
     parser.add_argument(
@@ -125,7 +116,6 @@ def prep_parser():
         nargs=2,
         default=None,
         metavar=("downsample_N", "downsample_i"),
-        required=False,
         help="Downsample to run 1/N of the datasets, starting with set i.",
     )
 
