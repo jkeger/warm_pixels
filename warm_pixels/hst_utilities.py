@@ -85,63 +85,10 @@ def prep_parser():
         required=False,
         help="The image quadrants to use.",
     )
-
-    # Date requirements for re-making files
     parser.add_argument(
-        "-a",
-        "--mdate_all",
-        default=None,
-        type=str,
-        required=False,
-        help="Oldest valid date for all saved files.",
-    )
-    parser.add_argument(
-        "-f",
-        "--mdate_find",
-        default=None,
-        type=str,
-        required=False,
-        help="Oldest valid date for found warm pixels.",
-    )
-    parser.add_argument(
-        "-c",
-        "--mdate_consistent",
-        default=None,
-        type=str,
-        required=False,
-        help="Oldest valid date for consistent warm pixels.",
-    )
-    parser.add_argument(
-        "-C",
-        "--mdate_plot_consistent",
-        default=None,
-        type=str,
-        required=False,
-        help="Plot distributions of consistent warm pixels.",
-    )
-    parser.add_argument(
-        "-s",
-        "--mdate_stack",
-        default=None,
-        type=str,
-        required=False,
-        help="Oldest valid date for stacked warm pixels.",
-    )
-    parser.add_argument(
-        "-S",
-        "--mdate_plot_stack",
-        default=None,
-        type=str,
-        required=False,
-        help="Oldest valid date for plot stacked trails.",
-    )
-    parser.add_argument(
-        "-r",
-        "--mdate_remove_cti",
-        default="0",
-        type=str,
-        required=False,
-        help="Oldest valid date for removing CTI.",
+        "--overwrite",
+        action="store_true",
+        help="If --overwrite is passed then overwrite existing files"
     )
 
     # Other functions
@@ -188,42 +135,6 @@ def prep_parser():
     )
 
     return parser
-
-
-def need_to_make_file(filepath, mdate_old=None):
-    """Return True if a file needs to be (re)made.
-
-    Parameters
-    ----------
-    filepath : str
-        The file that might need to be remade.
-
-    mdate_old : str (opt.)
-        A "year/month/day"-format date requirement to remake files saved before
-        this date. Default None or "." to only check whether a file already
-        exists. Alternatively, set "1" to force remaking or "0" to force not.
-    """
-    # Overrides
-    if mdate_old == "1":
-        return True
-    elif mdate_old == "0":
-        return False
-
-    # If the file doesn't exist
-    if not os.path.isfile(filepath):
-        return True
-
-    # If the file was saved too long ago
-    if mdate_old is not None and mdate_old != ".":
-        # Compare with modified date
-        time_mod = os.path.getmtime(filepath)
-        time_old = time.mktime(
-            datetime.datetime.strptime(mdate_old, "%Y/%m/%d").timetuple()
-        )
-        if time_mod < time_old:
-            return True
-
-    return False
 
 
 def dec_yr_to_jd(dates):

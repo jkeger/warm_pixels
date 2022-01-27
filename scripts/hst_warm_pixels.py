@@ -45,32 +45,6 @@ dataset_list : str (opt.)
     use e.g. "A_B_C_D", or e.g. "AB_CD" for combined A & B kept separate from
     combined C & D.
 
---mdate_old_*, -* <DATE> : str (opt.)
-    A DATE="year/month/day" requirement to remake files saved/modified before
-    this date. Default None or "." to only check whether a file already exists.
-    Alternatively, set "1" to force remaking or "0" to force not.
-
-    --mdate_all, -a
-        Sets the default for all others, can be overridden individually.
-
-    --mdate_find, -f
-        Find warm pixels.
-
-    --mdate_consistent, -c
-        Consistent warm pixels.
-
-    --mdate_plot_consistent, -C
-        Plot distributions of consistent warm pixels.
-
-    --mdate_stack, -s
-        Stacked warm pixels.
-
-    --mdate_plot_stack, -S
-        Plot stacked trails.
-
-    --mdate_remove_cti, -r
-        Remove CTI from the images in each dataset, default "0".
-
 --prep_density, -d
     Fit the total trap density across all datasets.
 
@@ -123,19 +97,6 @@ if __name__ == "__main__":
     quadrant_sets = [[q for q in qs] for qs in args.quadrants.split("_")]
     # All quadrants, ignoring subsets
     all_quadrants = [q for qs in quadrant_sets for q in qs]
-
-    # Override unset modified-date requirements
-    if args.mdate_all is not None:
-        if args.mdate_find is None:
-            args.mdate_find = args.mdate_all
-        if args.mdate_consistent is None:
-            args.mdate_consistent = args.mdate_all
-        if args.mdate_plot_consistent is None:
-            args.mdate_plot_consistent = args.mdate_all
-        if args.mdate_stack is None:
-            args.mdate_stack = args.mdate_all
-        if args.mdate_plot_stack is None:
-            args.mdate_plot_stack = args.mdate_all
 
     # Modified defaults
     if args.use_corrected:
@@ -194,18 +155,24 @@ if __name__ == "__main__":
             )
         )
 
-        # Remove CTI
-        if ut.need_to_make_file(
-                dataset.images[-1].cor_path,
-                mdate_old=args.mdate_remove_cti
-        ):
-            fu.remove_cti_dataset(dataset)
+
+        def need_to_make_file(filename):
+            if args.overwrite:
+                return True
+            return not os.path.exists(filename)
+
+
+        # # Remove CTI
+        # if need_to_make_file(
+        #         dataset.images[-1].cor_path,
+        # ):
+        #     fu.remove_cti_dataset(dataset)
 
         # Find warm pixels in each image quadrant
         for quadrant in all_quadrants:
             # Find possible warm pixels in each image
-            if ut.need_to_make_file(
-                    dataset.saved_lines(quadrant), mdate_old=args.mdate_find
+            if need_to_make_file(
+                    dataset.saved_lines(quadrant),
             ):
                 print(
                     "  Find possible warm pixels (%s)..." % quadrant,
@@ -217,17 +184,15 @@ if __name__ == "__main__":
             # Consistent warm pixels
             if args.use_corrected:
                 # Extract from corrected images with CTI removed
-                if ut.need_to_make_file(
+                if need_to_make_file(
                         dataset.saved_consistent_lines(quadrant, use_corrected=True),
-                        mdate_old=args.mdate_consistent,
                 ):
                     print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
                     fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
             else:
                 # Find consistent warm pixels in the set
-                if ut.need_to_make_file(
+                if need_to_make_file(
                         dataset.saved_consistent_lines(quadrant),
-                        mdate_old=args.mdate_consistent,
                 ):
                     print(
                         "  Consistent warm pixels (%s)..." % quadrant,
@@ -242,9 +207,8 @@ if __name__ == "__main__":
                     )
 
         # Plot distributions of warm pixels in the set
-        if ut.need_to_make_file(
+        if need_to_make_file(
                 dataset.plotted_distributions(all_quadrants),
-                mdate_old=args.mdate_plot_consistent,
         ):
             print("  Distributions of warm pixels...", end=" ", flush=True)
             fu.plot_warm_pixel_distributions(
@@ -258,9 +222,8 @@ if __name__ == "__main__":
             # Stack in bins
             # RJM
             # if True:
-            if ut.need_to_make_file(
+            if need_to_make_file(
                     dataset.saved_stacked_lines(quadrants, args.use_corrected),
-                    mdate_old=args.mdate_stack,
             ):
                 print(
                     "  Stack warm pixel trails (%s)..." % "".join(quadrants),
@@ -269,26 +232,24 @@ if __name__ == "__main__":
                 )
                 fu.stack_dataset_warm_pixels(dataset, quadrants, args.use_corrected)
 
+            # TODO: commented because
             # Plot stacked lines
-            # RJM
-            # if True:
-            if ut.need_to_make_file(
-                    dataset.plotted_stacked_trails(quadrants, args.use_corrected),
-                    mdate_old=args.mdate_plot_stack,
-            ):
-                print(
-                    "  Plot stacked trails (%s)..." % "".join(quadrants),
-                    end=" ",
-                    flush=True,
-                )
-                # fu.plot_stacked_trails(
-                #     dataset,
-                #     quadrants,
-                #     use_corrected=args.use_corrected,
-                #     save_path=dataset.plotted_stacked_trails(
-                #         quadrants, args.use_corrected
-                #     ),
-                # )
+            # if need_to_make_file(
+            #         dataset.plotted_stacked_trails(quadrants, args.use_corrected),
+            # ):
+            #     print(
+            #         "  Plot stacked trails (%s)..." % "".join(quadrants),
+            #         end=" ",
+            #         flush=True,
+            #     )
+            #     fu.plot_stacked_trails(
+            #         dataset,
+            #         quadrants,
+            #         use_corrected=args.use_corrected,
+            #         save_path=dataset.plotted_stacked_trails(
+            #             quadrants, args.use_corrected
+            #         ),
+            #     )
 
     # ========
     # Compiled results from all datasets
