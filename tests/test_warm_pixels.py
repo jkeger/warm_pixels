@@ -29,6 +29,10 @@ class MockDataset(Dataset):
         self.images = images
         self.path = path
 
+    @property
+    def _output_path(self):
+        return self.path
+
 
 @pytest.fixture(
     name="image"

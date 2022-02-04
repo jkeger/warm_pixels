@@ -10,6 +10,7 @@ def make_dataset(
         dataset_path
 ):
     return Dataset(
+        dataset_path,
         dataset_path
     )
 
