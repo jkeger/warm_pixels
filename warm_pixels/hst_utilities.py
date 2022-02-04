@@ -3,7 +3,6 @@
 import argparse
 from pathlib import Path
 
-import autoarray as aa
 import numpy as np
 from astropy.time import Time
 
@@ -105,12 +104,6 @@ def prep_parser():
         help="Use the corrected images with CTI removed instead of the originals.",
     )
     parser.add_argument(
-        "-t",
-        "--test_image_and_bias_files",
-        action="store_true",
-        help="Test loading the image and corresponding bias files.",
-    )
-    parser.add_argument(
         "-w",
         "--downsample",
         nargs=2,
@@ -134,43 +127,6 @@ def jd_to_dec_yr(dates):
     time = Time(dates, format="jd")
     time.format = "decimalyear"
     return time.value
-
-
-def test_image_and_bias_files(dataset):
-    """Test loading the set of image and corresponding bias files.
-
-    Missing bias files can be downloaded from ssb.stsci.edu/cdbs_open/cdbs/jref.
-
-    Parameters
-    ----------
-    dataset : Dataset
-        The dataset object with a list of image file paths and metadata.
-
-    Returns
-    -------
-    all_okay : bool
-        True if no errors, False if any errors hit.
-    """
-    all_okay = True
-
-    for i_image in range(dataset.n_images):
-        image_path = dataset.image_paths[i_image]
-        image_name = dataset.image_names[i_image]
-        print("\r  %s " % image_name, end="", flush=True)
-
-        # Load the image
-        try:
-            image = aa.acs.ImageACS.from_fits(
-                file_path=image_path,
-                quadrant_letter="A",
-                bias_subtract_via_bias_file=True,
-                bias_subtract_via_prescan=True,
-            ).native
-        except FileNotFoundError as e:
-            all_okay = False
-            print(str(e))
-
-    return all_okay
 
 
 def dataset_list_saved_density_evol(list_name, quadrants, use_corrected=False):

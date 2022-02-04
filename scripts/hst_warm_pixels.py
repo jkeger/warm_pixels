@@ -81,9 +81,16 @@ class WarmPixels:
             quadrant_sets,
             overwrite=False,
             downsample=None,
+            prep_density=False,
+            use_corrected=False,
+            plot_density=False,
     ):
         self.quadrant_sets = quadrant_sets
         self.overwrite = overwrite
+        self.prep_density = prep_density
+        self.use_corrected = use_corrected
+        self.plot_density = plot_density
+
         # TODO: list name was originally the input...
         self.list_name = "TODO"
 
@@ -219,26 +226,13 @@ class WarmPixels:
         # ========
         # Modified defaults
         # TODO: does this functionality still work now that mdate_plot_stack is removed?
-        if args.use_corrected:
+        if self.use_corrected:
             # Don't automatically plot stacked plots of the corrected images
             if args.mdate_plot_stack is None:
                 args.mdate_plot_stack = "0"
 
-        # Test loading the image and corresponding bias files
-        if args.test_image_and_bias_files:
-            print("# Testing image and bias files...")
-            all_okay = True
-
-            for dataset in self.dataset_list:
-                if not ut.test_image_and_bias_files(dataset):
-                    all_okay = False
-            print("")
-
-            if not all_okay:
-                exit()
-
         # Use the corrected images with CTI removed instead
-        if args.use_corrected:
+        if self.use_corrected:
             print("# Using the corrected images with CTI removed. \n")
 
         # ========
@@ -257,7 +251,7 @@ class WarmPixels:
         # Compiled results from all datasets
         # ========
         # Fit and save the total trap densities
-        if args.prep_density:
+        if self.prep_density:
             # In each image quadrant or combined quadrants
             for quadrants in self.quadrant_sets:
                 print(
@@ -266,14 +260,14 @@ class WarmPixels:
                     flush=True,
                 )
                 fu.fit_total_trap_densities(
-                    self.dataset_list, self.list_name, quadrants, args.use_corrected
+                    self.dataset_list, self.list_name, quadrants, self.use_corrected
                 )
 
         # Plot the trap density evolution
-        if args.plot_density:
+        if self.plot_density:
             print("Plot trap density evolution...", end=" ", flush=True)
             fu.plot_trap_density_evol(
-                self.list_name, self.quadrant_sets, do_sunspots=True, use_corrected=args.use_corrected
+                self.list_name, self.quadrant_sets, do_sunspots=True, use_corrected=self.use_corrected
             )
 
 
@@ -285,5 +279,8 @@ if __name__ == "__main__":
         directory=args.directory,
         quadrant_sets=[[q for q in qs] for qs in args.quadrants.split("_")],
         overwrite=args.overwrite,
-        downsample=args.downsample
+        downsample=args.downsample,
+        prep_density=args.prep_density,
+        use_corrected=args.use_corrected,
+        plot_density=args.plot_density,
     ).main()
