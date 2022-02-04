@@ -86,6 +86,8 @@ class WarmPixels:
             use_corrected=False,
             plot_density=False,
     ):
+        self.directory = directory
+
         self.quadrants = quadrants
         self.overwrite = overwrite
         self.prep_density = prep_density
@@ -95,21 +97,22 @@ class WarmPixels:
         # TODO: list name was originally the input...
         self.list_name = "TODO"
 
-        self.dataset_list = [
+        self.datasets = self._load_datasets(downsample)
+
+    def _load_datasets(self, downsample=None):
+        datasets = [
             Dataset(
-                Path(directory),
+                Path(self.directory),
                 output_path=output_path
             )
         ]
-
         # Downsample the dataset list
         if downsample is not None:
             n = int(downsample[0])
             i = int(downsample[1])
-            self.dataset_list = self.dataset_list[i::n]
-            self.downsample_print = f"[{i}::{n}]"
-        else:
-            self.downsample_print = ""
+            datasets = datasets[i::n]
+            print(f"Down-sampling [{i}::{n}]")
+        return datasets
 
     @property
     def quadrant_sets(self):
@@ -123,13 +126,7 @@ class WarmPixels:
     # ========
     # Main
     # ========
-    def process_dataset(self, i_dataset, dataset):
-        print(
-            f'Dataset "{dataset.name}" '
-            f'({i_dataset + 1} of {len(self.dataset_list)} in {self.downsample_print}, '
-            f'{len(dataset)} images, "{self.quadrants}")'
-        )
-
+    def process_dataset(self, dataset):
         # # Remove CTI
         # if self.need_to_make_file(
         #         dataset.images[-1].cor_path,
@@ -239,8 +236,13 @@ class WarmPixels:
         # ========
         # Find and stack warm pixels in each dataset
         # ========
-        for i_dataset, dataset in enumerate(self.dataset_list):
-            self.process_dataset(i_dataset, dataset)
+        for i_dataset, dataset in enumerate(self.datasets):
+            print(
+                f'Dataset "{dataset.name}" '
+                f'({i_dataset + 1} of {len(self.datasets)}, '
+                f'{len(dataset)} images, "{self.quadrants}")'
+            )
+            self.process_dataset(dataset)
 
         # ========
         # Compiled results from all datasets
@@ -255,7 +257,7 @@ class WarmPixels:
                     flush=True,
                 )
                 fu.fit_total_trap_densities(
-                    self.dataset_list, self.list_name, quadrants, self.use_corrected
+                    self.datasets, self.list_name, quadrants, self.use_corrected
                 )
 
         # Plot the trap density evolution
