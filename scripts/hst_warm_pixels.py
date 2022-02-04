@@ -104,10 +104,10 @@ class WarmPixels:
 
         # Downsample the dataset list
         if downsample is not None:
-            N = int(downsample[0])
+            n = int(downsample[0])
             i = int(downsample[1])
-            self.dataset_list = self.dataset_list[i::N]
-            self.downsample_print = "[%d::%d]" % (i, N)
+            self.dataset_list = self.dataset_list[i::n]
+            self.downsample_print = f"[{i}::{n}]"
         else:
             self.downsample_print = ""
 
