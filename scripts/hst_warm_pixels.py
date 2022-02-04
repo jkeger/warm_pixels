@@ -75,6 +75,109 @@ from warm_pixels.hst_utilities import output_path
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
 
+class DatasetProcess:
+    def __init__(
+            self,
+            dataset,
+            warm_pixels
+    ):
+        self.dataset = dataset
+        self.warm_pixels = warm_pixels
+
+    def process_quadrant(self, quadrant):
+        # Find possible warm pixels in each image
+        if self.warm_pixels.need_to_make_file(
+                self.dataset.saved_lines(quadrant),
+        ):
+            print(
+                "  Find possible warm pixels (%s)..." % quadrant,
+                end=" ",
+                flush=True,
+            )
+            find_dataset_warm_pixels(self.dataset, quadrant)
+
+        # Consistent warm pixels
+        if self.warm_pixels.use_corrected:
+            # Extract from corrected images with CTI removed
+            if self.warm_pixels.need_to_make_file(
+                    self.dataset.saved_consistent_lines(quadrant, use_corrected=True),
+            ):
+                print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
+                fu.extract_consistent_warm_pixels_corrected(self.dataset, quadrant)
+        else:
+            # Find consistent warm pixels in the set
+            if self.warm_pixels.need_to_make_file(
+                    self.dataset.saved_consistent_lines(quadrant),
+            ):
+                print(
+                    "  Consistent warm pixels (%s)..." % quadrant,
+                    end=" ",
+                    flush=True,
+                )
+                fu.find_consistent_warm_pixels(
+                    self.dataset,
+                    quadrant,
+                    flux_min=ut.flux_bins[0],
+                    flux_max=ut.flux_bins[-1],
+                )
+
+    def run(self):
+        for quadrant in self.warm_pixels.all_quadrants:
+            self.process_quadrant(quadrant)
+
+        self.plot_distributions()
+
+        # Stack warm pixels in each image quadrant or combined quadrants
+        for quadrants in self.warm_pixels.quadrant_sets:
+            self.stack_warm_pixels(quadrants)
+
+    def plot_distributions(self):
+        # Plot distributions of warm pixels in the set
+        if self.warm_pixels.need_to_make_file(
+                self.dataset.plotted_distributions(self.warm_pixels.all_quadrants),
+        ):
+            print("  Distributions of warm pixels...", end=" ", flush=True)
+            fu.plot_warm_pixel_distributions(
+                self.dataset,
+                self.warm_pixels.all_quadrants,
+                save_path=self.dataset.plotted_distributions(self.warm_pixels.all_quadrants),
+            )
+
+    def stack_warm_pixels(self, quadrants):
+        # Stack in bins
+        if self.warm_pixels.need_to_make_file(
+                self.dataset.saved_stacked_lines(quadrants, self.warm_pixels.use_corrected),
+        ):
+            print(
+                f"  Stack warm pixel trails ({''.join(quadrants)})...",
+                end=" ",
+                flush=True,
+            )
+            fu.stack_dataset_warm_pixels(self.dataset, quadrants, self.warm_pixels.use_corrected)
+
+        # TODO: commented because Arctic crashes
+        # Plot stacked lines
+        # if not self.use_corrected and self.need_to_make_file(
+        #         dataset.plotted_stacked_trails(
+        #             quadrants,
+        #             self.use_corrected
+        #         ),
+        # ):
+        #     print(
+        #         f"  Plot stacked trails ({''.join(quadrants)})...",
+        #         end=" ",
+        #         flush=True,
+        #     )
+        #     fu.plot_stacked_trails(
+        #         dataset,
+        #         quadrants,
+        #         use_corrected=self.use_corrected,
+        #         save_path=dataset.plotted_stacked_trails(
+        #             quadrants, self.use_corrected
+        #         ),
+        #     )
+
+
 class WarmPixels:
     def __init__(
             self,
@@ -123,100 +226,6 @@ class WarmPixels:
             return True
         return not os.path.exists(filename)
 
-    # ========
-    # Main
-    # ========
-    def process_dataset(self, dataset):
-        # # Remove CTI
-        # if self.need_to_make_file(
-        #         dataset.images[-1].cor_path,
-        # ):
-        #     fu.remove_cti_dataset(dataset)
-
-        # Find warm pixels in each image quadrant
-        for quadrant in self.all_quadrants:
-            # Find possible warm pixels in each image
-            if self.need_to_make_file(
-                    dataset.saved_lines(quadrant),
-            ):
-                print(
-                    "  Find possible warm pixels (%s)..." % quadrant,
-                    end=" ",
-                    flush=True,
-                )
-                find_dataset_warm_pixels(dataset, quadrant)
-
-            # Consistent warm pixels
-            if self.use_corrected:
-                # Extract from corrected images with CTI removed
-                if self.need_to_make_file(
-                        dataset.saved_consistent_lines(quadrant, use_corrected=True),
-                ):
-                    print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
-                    fu.extract_consistent_warm_pixels_corrected(dataset, quadrant)
-            else:
-                # Find consistent warm pixels in the set
-                if self.need_to_make_file(
-                        dataset.saved_consistent_lines(quadrant),
-                ):
-                    print(
-                        "  Consistent warm pixels (%s)..." % quadrant,
-                        end=" ",
-                        flush=True,
-                    )
-                    fu.find_consistent_warm_pixels(
-                        dataset,
-                        quadrant,
-                        flux_min=ut.flux_bins[0],
-                        flux_max=ut.flux_bins[-1],
-                    )
-
-        # Plot distributions of warm pixels in the set
-        if self.need_to_make_file(
-                dataset.plotted_distributions(self.all_quadrants),
-        ):
-            print("  Distributions of warm pixels...", end=" ", flush=True)
-            fu.plot_warm_pixel_distributions(
-                dataset,
-                self.all_quadrants,
-                save_path=dataset.plotted_distributions(self.all_quadrants),
-            )
-
-        # Stack warm pixels in each image quadrant or combined quadrants
-        for quadrants in self.quadrant_sets:
-            # Stack in bins
-            if self.need_to_make_file(
-                    dataset.saved_stacked_lines(quadrants, self.use_corrected),
-            ):
-                print(
-                    f"  Stack warm pixel trails ({''.join(quadrants)})...",
-                    end=" ",
-                    flush=True,
-                )
-                fu.stack_dataset_warm_pixels(dataset, quadrants, self.use_corrected)
-
-            # TODO: commented because Arctic crashes
-            # Plot stacked lines
-            # if not self.use_corrected and self.need_to_make_file(
-            #         dataset.plotted_stacked_trails(
-            #             quadrants,
-            #             self.use_corrected
-            #         ),
-            # ):
-            #     print(
-            #         f"  Plot stacked trails ({''.join(quadrants)})...",
-            #         end=" ",
-            #         flush=True,
-            #     )
-            #     fu.plot_stacked_trails(
-            #         dataset,
-            #         quadrants,
-            #         use_corrected=self.use_corrected,
-            #         save_path=dataset.plotted_stacked_trails(
-            #             quadrants, self.use_corrected
-            #         ),
-            #     )
-
     @property
     def all_quadrants(self):
         # All quadrants, ignoring subsets
@@ -242,7 +251,7 @@ class WarmPixels:
                 f'({i_dataset + 1} of {len(self.datasets)}, '
                 f'{len(dataset)} images, "{self.quadrants}")'
             )
-            self.process_dataset(dataset)
+            DatasetProcess(dataset, self).run()
 
         # ========
         # Compiled results from all datasets
