@@ -131,10 +131,10 @@ class WarmPixels:
         )
 
         # # Remove CTI
-        if self.need_to_make_file(
-                dataset.images[-1].cor_path,
-        ):
-            fu.remove_cti_dataset(dataset)
+        # if self.need_to_make_file(
+        #         dataset.images[-1].cor_path,
+        # ):
+        #     fu.remove_cti_dataset(dataset)
 
         # Find warm pixels in each image quadrant
         for quadrant in self.all_quadrants:
@@ -200,25 +200,25 @@ class WarmPixels:
 
             # TODO: commented because Arctic crashes
             # Plot stacked lines
-            if not self.use_corrected and self.need_to_make_file(
-                    dataset.plotted_stacked_trails(
-                        quadrants,
-                        self.use_corrected
-                    ),
-            ):
-                print(
-                    f"  Plot stacked trails ({''.join(quadrants)})...",
-                    end=" ",
-                    flush=True,
-                )
-                fu.plot_stacked_trails(
-                    dataset,
-                    quadrants,
-                    use_corrected=self.use_corrected,
-                    save_path=dataset.plotted_stacked_trails(
-                        quadrants, self.use_corrected
-                    ),
-                )
+            # if not self.use_corrected and self.need_to_make_file(
+            #         dataset.plotted_stacked_trails(
+            #             quadrants,
+            #             self.use_corrected
+            #         ),
+            # ):
+            #     print(
+            #         f"  Plot stacked trails ({''.join(quadrants)})...",
+            #         end=" ",
+            #         flush=True,
+            #     )
+            #     fu.plot_stacked_trails(
+            #         dataset,
+            #         quadrants,
+            #         use_corrected=self.use_corrected,
+            #         save_path=dataset.plotted_stacked_trails(
+            #             quadrants, self.use_corrected
+            #         ),
+            #     )
 
     @property
     def all_quadrants(self):
