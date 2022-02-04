@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# noinspection PyUnresolvedReferences
 """
 Find, stack, and plot warm pixels in multiple datasets of HST ACS images.
 
@@ -78,14 +79,14 @@ class WarmPixels:
     def __init__(
             self,
             directory,
-            quadrant_sets,
+            quadrants,
             overwrite=False,
             downsample=None,
             prep_density=False,
             use_corrected=False,
             plot_density=False,
     ):
-        self.quadrant_sets = quadrant_sets
+        self.quadrants = quadrants
         self.overwrite = overwrite
         self.prep_density = prep_density
         self.use_corrected = use_corrected
@@ -110,6 +111,10 @@ class WarmPixels:
         else:
             self.downsample_print = ""
 
+    @property
+    def quadrant_sets(self):
+        return [[q for q in qs] for qs in args.quadrants.split("_")]
+
     def need_to_make_file(self, filename):
         if self.overwrite:
             return True
@@ -122,12 +127,12 @@ class WarmPixels:
         print(
             f'Dataset "{dataset.name}" '
             f'({i_dataset + 1} of {len(self.dataset_list)} in {self.downsample_print}, '
-            f'{len(dataset)} images, "{args.quadrants}")'
+            f'{len(dataset)} images, "{self.quadrants}")'
         )
 
         # TODO: Commented because arctic crashes
         # # Remove CTI
-        # if need_to_make_file(
+        # if self.need_to_make_file(
         #         dataset.images[-1].cor_path,
         # ):
         #     fu.remove_cti_dataset(dataset)
@@ -146,7 +151,7 @@ class WarmPixels:
                 find_dataset_warm_pixels(dataset, quadrant)
 
             # Consistent warm pixels
-            if args.use_corrected:
+            if self.use_corrected:
                 # Extract from corrected images with CTI removed
                 if self.need_to_make_file(
                         dataset.saved_consistent_lines(quadrant, use_corrected=True),
@@ -184,36 +189,34 @@ class WarmPixels:
         # Stack warm pixels in each image quadrant or combined quadrants
         for quadrants in self.quadrant_sets:
             # Stack in bins
-            # RJM
-            # if True:
             if self.need_to_make_file(
-                    dataset.saved_stacked_lines(quadrants, args.use_corrected),
+                    dataset.saved_stacked_lines(quadrants, self.use_corrected),
             ):
                 print(
-                    "  Stack warm pixel trails (%s)..." % "".join(quadrants),
+                    f"  Stack warm pixel trails ({''.join(quadrants)})...",
                     end=" ",
                     flush=True,
                 )
-                fu.stack_dataset_warm_pixels(dataset, quadrants, args.use_corrected)
+                fu.stack_dataset_warm_pixels(dataset, quadrants, self.use_corrected)
 
             # TODO: commented because Arctic crashes
             # Plot stacked lines
-            # if need_to_make_file(
-            #         dataset.plotted_stacked_trails(quadrants, args.use_corrected),
-            # ):
-            #     print(
-            #         "  Plot stacked trails (%s)..." % "".join(quadrants),
-            #         end=" ",
-            #         flush=True,
-            #     )
-            #     fu.plot_stacked_trails(
-            #         dataset,
-            #         quadrants,
-            #         use_corrected=args.use_corrected,
-            #         save_path=dataset.plotted_stacked_trails(
-            #             quadrants, args.use_corrected
-            #         ),
-            #     )
+            if self.need_to_make_file(
+                    dataset.plotted_stacked_trails(quadrants, self.use_corrected),
+            ):
+                print(
+                    f"  Plot stacked trails ({''.join(quadrants)})...",
+                    end=" ",
+                    flush=True,
+                )
+                fu.plot_stacked_trails(
+                    dataset,
+                    quadrants,
+                    use_corrected=self.use_corrected,
+                    save_path=dataset.plotted_stacked_trails(
+                        quadrants, self.use_corrected
+                    ),
+                )
 
     @property
     def all_quadrants(self):
@@ -255,7 +258,7 @@ class WarmPixels:
             # In each image quadrant or combined quadrants
             for quadrants in self.quadrant_sets:
                 print(
-                    "Fit total trap densities (%s)..." % "".join(quadrants),
+                    f"Fit total trap densities ({''.join(quadrants)})...",
                     end=" ",
                     flush=True,
                 )
@@ -277,7 +280,7 @@ if __name__ == "__main__":
 
     WarmPixels(
         directory=args.directory,
-        quadrant_sets=[[q for q in qs] for qs in args.quadrants.split("_")],
+        quadrants=args.quadrants,
         overwrite=args.overwrite,
         downsample=args.downsample,
         prep_density=args.prep_density,
