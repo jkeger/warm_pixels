@@ -130,12 +130,11 @@ class WarmPixels:
             f'{len(dataset)} images, "{self.quadrants}")'
         )
 
-        # TODO: Commented because arctic crashes
         # # Remove CTI
-        # if self.need_to_make_file(
-        #         dataset.images[-1].cor_path,
-        # ):
-        #     fu.remove_cti_dataset(dataset)
+        if self.need_to_make_file(
+                dataset.images[-1].cor_path,
+        ):
+            fu.remove_cti_dataset(dataset)
 
         # Find warm pixels in each image quadrant
         for quadrant in self.all_quadrants:
@@ -201,8 +200,11 @@ class WarmPixels:
 
             # TODO: commented because Arctic crashes
             # Plot stacked lines
-            if self.need_to_make_file(
-                    dataset.plotted_stacked_trails(quadrants, self.use_corrected),
+            if not self.use_corrected and self.need_to_make_file(
+                    dataset.plotted_stacked_trails(
+                        quadrants,
+                        self.use_corrected
+                    ),
             ):
                 print(
                     f"  Plot stacked trails ({''.join(quadrants)})...",
@@ -224,16 +226,6 @@ class WarmPixels:
         return [q for qs in self.quadrant_sets for q in qs]
 
     def main(self):
-        # ========
-        # Parse arguments
-        # ========
-        # Modified defaults
-        # TODO: does this functionality still work now that mdate_plot_stack is removed?
-        if self.use_corrected:
-            # Don't automatically plot stacked plots of the corrected images
-            if args.mdate_plot_stack is None:
-                args.mdate_plot_stack = "0"
-
         # Use the corrected images with CTI removed instead
         if self.use_corrected:
             print("# Using the corrected images with CTI removed. \n")
