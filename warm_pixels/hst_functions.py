@@ -1,10 +1,12 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
 import logging
+import os.path
 import warnings
 
 import autoarray as aa
 import lmfit
 import numpy as np
+import requests
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator
@@ -1358,6 +1360,15 @@ def plot_trap_density_evol(
         # Load
         # https://wwwbis.sidc.be/silso/datafiles#total monthly mean
         # Year | Month | Decimal year | N sunspots | Std dev | N obs | Provisional?
+        sunspot_path = "SN_m_tot_V2.0.txt"
+        if not os.path.exists(sunspot_path):
+            response = requests.get(
+                "https://wwwbis.sidc.be/silso/DATA/SN_ms_tot_V2.0.txt"
+            )
+            response.raise_for_status()
+            with open(sunspot_path, "w+b") as f:
+                f.write(response.content)
+
         sunspot_data = np.genfromtxt(
             "SN_m_tot_V2.0.txt",
             dtype=[("dcml_year", float), ("sunspots", float), ("sunspots_err", float)],
