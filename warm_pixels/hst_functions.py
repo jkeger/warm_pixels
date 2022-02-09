@@ -654,6 +654,11 @@ def fit_total_trap_densities(dataset_list, list_name, quadrants, use_corrected=F
         density_errors.append(rho_q_std)
     print("\rFit total trap densities (%s)... " % "".join(quadrants))
 
+    if len(days) == 0:
+        raise AssertionError(
+            "No successful fits"
+        )
+
     # Sort
     sort = np.argsort(days)
     days = np.array(days)[sort]
