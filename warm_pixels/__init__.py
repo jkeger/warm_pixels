@@ -92,25 +92,25 @@ class DatasetProcess:
 
         # TODO: commented because Arctic crashes
         # Plot stacked lines
-        # if not self.use_corrected and self.need_to_make_file(
-        #         dataset.plotted_stacked_trails(
-        #             quadrants,
-        #             self.use_corrected
-        #         ),
-        # ):
-        #     print(
-        #         f"  Plot stacked trails ({''.join(quadrants)})...",
-        #         end=" ",
-        #         flush=True,
-        #     )
-        #     fu.plot_stacked_trails(
-        #         dataset,
-        #         quadrants,
-        #         use_corrected=self.use_corrected,
-        #         save_path=dataset.plotted_stacked_trails(
-        #             quadrants, self.use_corrected
-        #         ),
-        #     )
+        if not self.warm_pixels.use_corrected and self.warm_pixels.need_to_make_file(
+                self.dataset.plotted_stacked_trails(
+                    quadrants,
+                    self.warm_pixels.use_corrected
+                ),
+        ):
+            print(
+                f"  Plot stacked trails ({''.join(quadrants)})...",
+                end=" ",
+                flush=True,
+            )
+            fu.plot_stacked_trails(
+                self.dataset,
+                quadrants,
+                use_corrected=self.warm_pixels.use_corrected,
+                save_path=self.dataset.plotted_stacked_trails(
+                    quadrants, self.warm_pixels.use_corrected
+                ),
+            )
 
 
 class WarmPixels:

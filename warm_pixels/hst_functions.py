@@ -1059,11 +1059,11 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     print(rho_q_set, rho_q_std_set, "exponentials")
 
     # Fit the total trap density to the full dataset using arCTIc
-    print("Performing global fit")
-    rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
-        dataset, quadrants, use_corrected=use_corrected, use_arctic=True
-    )
-    print(rho_q_set, rho_q_std_set, "ArCTIc")
+    # print("Performing global fit")
+    # rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
+    #     dataset, quadrants, use_corrected=use_corrected, use_arctic=True
+    # )
+    # print(rho_q_set, rho_q_std_set, "ArCTIc")
 
     # Fit the total trap density to the full dataset using arCTIc and MCMC
     # print("Performing global fit using arCTIc")
@@ -1291,7 +1291,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     else:
         plt.savefig(save_path, dpi=200)
         plt.close()
-        print("Saved", save_path[-40:])
+        print("Saved", save_path.name)
 
 
 def plot_trap_density_evol(

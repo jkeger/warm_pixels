@@ -5,6 +5,7 @@ import pytest
 from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
 
+from warm_pixels import hst_functions
 from warm_pixels.hst_data import Dataset, Image
 from warm_pixels.hst_functions import cti
 
@@ -106,6 +107,11 @@ def output_quadrants_to_fits(*args, **kwargs):
 def patch_arctic(monkeypatch):
     monkeypatch.setattr(
         cti, "remove_cti", remove_cti
+    )
+    monkeypatch.setattr(
+        hst_functions,
+        "trail_model_hst_arctic",
+        hst_functions.trail_model_hst
     )
 
 
