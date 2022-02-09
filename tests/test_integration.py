@@ -4,28 +4,25 @@ from warm_pixels import WarmPixels
 
 
 @pytest.mark.parametrize(
-    "prep_density",
-    [False, True]
-)
-@pytest.mark.parametrize(
-    "use_corrected",
-    [False, True]
-)
-@pytest.mark.parametrize(
-    "plot_density",
-    [False, True]
+    "true_flags",
+    [
+        ["prep_density", "plot_density"],
+        ["prep_density", "plot_density", "use_corrected"],
+        [],
+    ]
 )
 def test_integration(
         mock_dataset,
-        prep_density,
-        use_corrected,
-        plot_density,
+        true_flags,
 ):
+    kwargs = {
+        flag: True
+        for flag
+        in true_flags
+    }
     WarmPixels(
         datasets=[mock_dataset, mock_dataset],
         quadrants="A",
         overwrite=True,
-        prep_density=prep_density,
-        use_corrected=use_corrected,
-        plot_density=plot_density,
+        **kwargs,
     ).main()
