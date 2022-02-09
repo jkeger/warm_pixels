@@ -1658,4 +1658,4 @@ def plot_trap_density_evol(
         list_name, quadrant_sets, do_pdf=do_pdf
     )
     plt.savefig(save_path, dpi=200)
-    print("Saved", save_path[-40:])
+    print("Saved", save_path.name)
