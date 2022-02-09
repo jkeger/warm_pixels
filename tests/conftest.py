@@ -27,6 +27,9 @@ class MockImage(Image):
     ):
         return self.array
 
+    def date(self):
+        return 2400000.5 + 59049.90211805556
+
 
 class MockDataset(Dataset):
     # noinspection PyMissingConstructor
