@@ -4,23 +4,22 @@ import numpy as np
 import pytest
 from autoarray.instruments.acs import ImageACS, HeaderACS
 
-from warm_pixels.hst_data import Dataset
+from warm_pixels.hst_data import Dataset, Image
 
 directory = Path(__file__).parent
+output_path = directory / "output"
+dataset_path = directory / "dataset"
 
 
-@pytest.fixture(
-    name="dataset_path"
-)
-def make_dataset_path():
-    return directory / "dataset"
-
-
-class MockImage:
+class MockImage(Image):
     name = "image"
 
     def __init__(self, array):
         self.array = array
+        super().__init__(
+            path=dataset_path / self.name,
+            output_path=output_path,
+        )
 
     def load_quadrant(
             self,
@@ -49,14 +48,14 @@ class MockDataset(Dataset):
 )
 def make_image():
     return np.load(
-        str(directory / "array.npy")
+        str(dataset_path / "array.npy")
     )
 
 
 @pytest.fixture(
     name="mock_dataset"
 )
-def make_mock_dataset(image, dataset_path):
+def make_mock_dataset(image):
     return MockDataset(
         images=[MockImage(
             ImageACS(

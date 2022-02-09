@@ -86,6 +86,9 @@ class Dataset:
     def __len__(self):
         return len(self.images)
 
+    def __iter__(self):
+        return iter(self.images)
+
     @property
     def name(self):
         return self.path.name

@@ -101,12 +101,11 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
 
     # Corrected images
     warm_pixels_cor = PixelLineCollection()
-    for i_image in range(len(dataset)):
-        image_path = dataset.cor_paths[i_image]
-        image_name = dataset.image_names[i_image]
+    for i, image in enumerate(dataset):
+        image_path = image.cor_path
+        image_name = image.name
         print(
-            "\r    %s_cor_%s (%d of %d) "
-            % (image_name, quadrant, i_image + 1, dataset.n_images),
+            f"\r    {image_name}_cor_{quadrant} ({i + 1} of {len(dataset)}) ",
             end="",
             flush=True,
         )
