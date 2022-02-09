@@ -87,19 +87,19 @@ def prep_parser():
     # Other functions
     parser.add_argument(
         "-d",
-        "--prep_density",
+        "--prep-density",
         action="store_true",
         help="Fit the total trap density for all datasets.",
     )
     parser.add_argument(
         "-D",
-        "--plot_density",
+        "--plot-density",
         action="store_true",
         help="Plot the evolution of the total trap density.",
     )
     parser.add_argument(
         "-u",
-        "--use_corrected",
+        "--use-corrected",
         action="store_true",
         help="Use the corrected images with CTI removed instead of the originals.",
     )
