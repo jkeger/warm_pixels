@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
+from matplotlib import pyplot
 
 from warm_pixels import hst_functions
 from warm_pixels.hst_data import Dataset, Image
@@ -124,3 +125,27 @@ def patch_auto_array(monkeypatch):
         "output_quadrants_to_fits",
         output_quadrants_to_fits
     )
+
+
+class SaveFig:
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, *args, **kwargs):
+        self.calls.append(
+            (args, kwargs)
+        )
+
+
+@pytest.fixture(
+    autouse=True,
+    name="savefig_calls"
+)
+def patch_pyplot(monkeypatch):
+    savefig = SaveFig()
+    monkeypatch.setattr(
+        pyplot,
+        "savefig",
+        savefig
+    )
+    return savefig.calls
