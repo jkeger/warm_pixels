@@ -181,16 +181,13 @@ class DatasetProcess:
 class WarmPixels:
     def __init__(
             self,
-            directory,
+            datasets,
             quadrants,
             overwrite=False,
-            downsample=None,
             prep_density=False,
             use_corrected=False,
             plot_density=False,
     ):
-        self.directory = directory
-
         self.quadrants = quadrants
         self.overwrite = overwrite
         self.prep_density = prep_density
@@ -200,26 +197,11 @@ class WarmPixels:
         # TODO: list name was originally the input...
         self.list_name = "TODO"
 
-        self.datasets = self._load_datasets(downsample)
-
-    def _load_datasets(self, downsample=None):
-        datasets = [
-            Dataset(
-                Path(self.directory),
-                output_path=output_path
-            )
-        ]
-        # Downsample the dataset list
-        if downsample is not None:
-            n = int(downsample[0])
-            i = int(downsample[1])
-            datasets = datasets[i::n]
-            print(f"Down-sampling [{i}::{n}]")
-        return datasets
+        self.datasets = datasets
 
     @property
     def quadrant_sets(self):
-        return [[q for q in qs] for qs in args.quadrants.split("_")]
+        return [[q for q in qs] for qs in self.quadrants.split("_")]
 
     def need_to_make_file(self, filename):
         if self.overwrite:
@@ -277,16 +259,35 @@ class WarmPixels:
             )
 
 
-if __name__ == "__main__":
+def main():
     parser = ut.prep_parser()
     args = parser.parse_args()
 
+    directory = args.directory
+    downsample = args.downsample
+
+    datasets = [
+        Dataset(
+            Path(directory),
+            output_path=output_path
+        )
+    ]
+    # Downsample the dataset list
+    if downsample is not None:
+        n = int(downsample[0])
+        i = int(downsample[1])
+        datasets = datasets[i::n]
+        print(f"Down-sampling [{i}::{n}]")
+
     WarmPixels(
-        directory=args.directory,
+        datasets=datasets,
         quadrants=args.quadrants,
         overwrite=args.overwrite,
-        downsample=args.downsample,
         prep_density=args.prep_density,
         use_corrected=args.use_corrected,
         plot_density=args.plot_density,
     ).main()
+
+
+if __name__ == "__main__":
+    main()
