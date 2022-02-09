@@ -22,7 +22,7 @@ def test_integration(
         plot_density,
 ):
     WarmPixels(
-        datasets=[mock_dataset],
+        datasets=[mock_dataset, mock_dataset],
         quadrants="A",
         overwrite=True,
         prep_density=prep_density,
