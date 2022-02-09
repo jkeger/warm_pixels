@@ -6,12 +6,14 @@ from autoarray.instruments.acs import ImageACS, HeaderACS
 
 from warm_pixels.hst_data import Dataset
 
+directory = Path(__file__).parent
+
 
 @pytest.fixture(
     name="dataset_path"
 )
 def make_dataset_path():
-    return Path(__file__).parent / "dataset"
+    return directory / "dataset"
 
 
 class MockImage:
@@ -46,14 +48,9 @@ class MockDataset(Dataset):
     name="image"
 )
 def make_image():
-    image = np.zeros((10, 10))
-
-    image[3, 3] = 10
-    image[4, 3] = 20
-    image[4, 4] = 30
-    image[4, 8] = 40
-
-    return image
+    return np.load(
+        str(directory / "array.npy")
+    )
 
 
 @pytest.fixture(
