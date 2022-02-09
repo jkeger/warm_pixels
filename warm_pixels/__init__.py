@@ -127,7 +127,7 @@ class WarmPixels:
         self.plot_density = plot_density
 
         # TODO: list name was originally the input...
-        self.list_name = "TODO"
+        self.list_name = "test"
 
         self.datasets = datasets
 
