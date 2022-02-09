@@ -5,6 +5,7 @@ import pytest
 from autoarray.instruments.acs import ImageACS, HeaderACS
 
 from warm_pixels.hst_data import Dataset, Image
+from warm_pixels.hst_functions import cti
 
 directory = Path(__file__).parent
 output_path = directory / "output"
@@ -76,4 +77,20 @@ def make_mock_dataset(image):
             )
         )],
         path=dataset_path
+    )
+
+
+def remove_cti(
+        image,
+        **kwargs,
+):
+    return image
+
+
+@pytest.fixture(
+    autouse=True
+)
+def patch_arctic(monkeypatch):
+    monkeypatch.setattr(
+        cti, "remove_cti", remove_cti
     )

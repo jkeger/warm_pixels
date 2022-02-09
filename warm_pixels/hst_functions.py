@@ -12,7 +12,6 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator
 from scipy.optimize import curve_fit
 
-import arcticpy
 import arcticpy as cti
 from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
@@ -306,12 +305,12 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
     # Set up classes required to run arCTIc
     # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
     traps = [
-        arcticpy.TrapInstantCapture(density=A * rho_q, release_timescale=tau_a),
-        arcticpy.TrapInstantCapture(density=B * rho_q, release_timescale=tau_b),
-        arcticpy.TrapInstantCapture(density=C * rho_q, release_timescale=tau_c),
+        cti.TrapInstantCapture(density=A * rho_q, release_timescale=tau_a),
+        cti.TrapInstantCapture(density=B * rho_q, release_timescale=tau_b),
+        cti.TrapInstantCapture(density=C * rho_q, release_timescale=tau_c),
     ]
-    roe = arcticpy.ROE()
-    ccd = arcticpy.CCD(full_well_depth=w, well_fill_power=beta)
+    roe = cti.ROE()
+    ccd = cti.CCD(full_well_depth=w, well_fill_power=beta)
 
     # Work out how many trails are concatenated within the inputs
     trail_length = np.int(np.max(x))
@@ -328,7 +327,7 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
         model_before_trail[warm_pixel_position] = warm_pixel_flux
 
         # Run arCTIc to produce the output image with EPER trails
-        model_after_trail = arcticpy.add_cti(
+        model_after_trail = cti.add_cti(
             model_before_trail.reshape(-1, 1),  # pass 2D image to arCTIc
             parallel_roe=roe,
             parallel_ccd=ccd,
@@ -762,7 +761,6 @@ def remove_cti_dataset(dataset):
     """
     # Remove CTI from each image
     for i, image in enumerate(dataset.images):
-        image_path = image.path
         image_name = image.name
         print(
             "  Correcting %s (%d of %d)... "
@@ -773,12 +771,7 @@ def remove_cti_dataset(dataset):
 
         # Load each quadrant of the image
         image_A, image_B, image_C, image_D = [
-            aa.acs.ImageACS.from_fits(
-                file_path=image_path,
-                quadrant_letter=quadrant,
-                bias_subtract_via_bias_file=True,
-                bias_subtract_via_prescan=True,
-            ).native
+            image.load_quadrant(quadrant)
             for quadrant in ["A", "B", "C", "D"]
         ]
 

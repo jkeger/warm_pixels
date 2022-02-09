@@ -54,6 +54,9 @@ class DatasetProcess:
                 )
 
     def run(self):
+        if self.warm_pixels.use_corrected:
+            fu.remove_cti_dataset(self.dataset)
+
         for quadrant in self.warm_pixels.all_quadrants:
             self.process_quadrant(quadrant)
 
