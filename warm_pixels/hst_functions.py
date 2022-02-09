@@ -103,7 +103,6 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
     # Corrected images
     warm_pixels_cor = PixelLineCollection()
     for i, image in enumerate(dataset):
-        image_path = image.cor_path
         image_name = image.name
         print(
             f"\r    {image_name}_cor_{quadrant} ({i + 1} of {len(dataset)}) ",
@@ -112,12 +111,7 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
         )
 
         # Load the image
-        image = aa.acs.ImageACS.from_fits(
-            file_path=image_path,
-            quadrant_letter=quadrant,
-            bias_subtract_via_bias_file=True,
-            bias_subtract_via_prescan=True,
-        ).native
+        array = image.corrected().load_quadrant(quadrant)
 
         # Select consistent warm pixels found from this image
         image_name_q = image_name + "_%s" % quadrant
@@ -129,7 +123,7 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
             # Copy the original metadata but take the data from the corrected image
             warm_pixels_cor.append(
                 PixelLine(
-                    data=image[
+                    data=array[
                          row - ut.trail_length: row + ut.trail_length + 1, column
                          ],
                     origin=line.origin,
@@ -803,7 +797,7 @@ def remove_cti_dataset(dataset):
 
         # Save the corrected image
         aa.acs.output_quadrants_to_fits(
-            file_path=image.cor_path,
+            file_path=image.corrected().path,
             quadrant_a=image_out_A,
             quadrant_b=image_out_B,
             quadrant_c=image_out_C,
@@ -815,7 +809,7 @@ def remove_cti_dataset(dataset):
             overwrite=True,
         )
 
-        print(f"Saved {image.core_path.stem}")
+        print(f"Saved {image.corrected().path.stem}")
 
 
 # ========

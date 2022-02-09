@@ -31,10 +31,6 @@ class Image:
         )
         return output_path
 
-    @property
-    def cor_path(self):
-        return self.path.parent / f"{self.name}_raw_cor.fits"
-
     def image(self):
         return aa.acs.ImageACS.from_fits(
             file_path=str(self.path),
@@ -51,6 +47,21 @@ class Image:
 
     def date(self):
         return 2400000.5 + self.image().header.modified_julian_date
+
+    def corrected(self):
+        return CorrectedImage(self)
+
+
+class CorrectedImage(Image):
+    def __init__(self, image):
+        super().__init__(
+            path=(
+                    image.path.parent
+                    / f"{image.name}_raw_cor.fits"
+            ),
+            output_path=image.path,
+        )
+        self.image = image
 
 
 class Dataset:

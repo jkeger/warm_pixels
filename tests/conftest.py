@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
 
 from warm_pixels.hst_data import Dataset, Image
@@ -30,6 +31,9 @@ class MockImage(Image):
 
     def date(self):
         return 2400000.5 + 59049.90211805556
+
+    def corrected(self):
+        return self
 
 
 class MockDataset(Dataset):
@@ -69,8 +73,13 @@ def make_mock_dataset(image):
                     header_sci_obj={
                         "DATE-OBS": "2020-01-01",
                         "TIME-OBS": "15:00:00",
+                        "CCDGAIN": 1,
                     },
-                    header_hdu_obj=None,
+                    header_hdu_obj={
+                        "BSCALE": 1,
+                        "BZERO": 1,
+                        "BUNIT": "COUNTS",
+                    },
                     hdu=None,
                     quadrant_letter="A",
                 )
@@ -87,10 +96,25 @@ def remove_cti(
     return image
 
 
+def output_quadrants_to_fits(*args, **kwargs):
+    pass
+
+
 @pytest.fixture(
     autouse=True
 )
 def patch_arctic(monkeypatch):
     monkeypatch.setattr(
         cti, "remove_cti", remove_cti
+    )
+
+
+@pytest.fixture(
+    autouse=True
+)
+def patch_auto_array(monkeypatch):
+    monkeypatch.setattr(
+        acs,
+        "output_quadrants_to_fits",
+        output_quadrants_to_fits
     )
