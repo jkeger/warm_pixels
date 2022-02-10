@@ -538,7 +538,7 @@ def plot_trap_density_evol(
         colours_cor = misc.A1_c[: len(quadrant_sets)]
 
     # Set date limits
-    npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrant_sets[0]))
+    npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrant_sets[0], use_corrected=use_corrected))
     days, densities, errors = [npzfile[var] for var in npzfile.files]
     day_0 = 0
     day_1 = np.amax(days) * 1.02
@@ -619,7 +619,7 @@ def plot_trap_density_evol(
     # ========
     for i_q, quadrants in enumerate(quadrant_sets):
         # Load
-        npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrants))
+        npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrants, use_corrected=use_corrected))
         days, densities, errors = [npzfile[var] for var in npzfile.files]
 
         label = "".join(quadrants)
