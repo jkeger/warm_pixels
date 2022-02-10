@@ -14,7 +14,6 @@ class PixelLine(object):
             background=None,
             flux=None,
             n_stacked=None,
-            format=None
     ):
         """A 1D line of pixels (e.g. a single CTI trail) with metadata.
 
@@ -286,20 +285,6 @@ class PixelLineCollection:
         to just the trail (without background)."""
         self = np.array([line.remove_symmetry(n_pixels_used_for_background) for line in self.lines])
         return
-
-    @property
-    def model_untrailed(self):
-        """Convert a line with a warm pixel in the middle to an entire column (with background),
-        suitable for passing to arCTIc.
-        """
-        return [line.model_untrailed() for line in self.lines]
-
-    @property
-    def model_trailed(self):
-        """Convert a line with a warm pixel in the middle to an entire column (with background),
-        suitable for passing to arCTIc.
-        """
-        return [line.model_noise() for line in self.lines]
 
     def find_consistent_lines(self, fraction_present=2 / 3):
         """Identify lines that are consistently present across several images.
