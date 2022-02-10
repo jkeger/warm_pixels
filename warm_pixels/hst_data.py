@@ -175,7 +175,7 @@ class Dataset:
 
         # Remove CTI from each image
         for i, image in enumerate(self):
-            image_name = image.name
+            image_name = image.path.name
             image_path = corrected_dataset.path / image_name
 
             print(

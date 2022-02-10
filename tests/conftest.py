@@ -120,9 +120,6 @@ def remove_cti(
     return image
 
 
-def output_quadrants_to_fits(*args, **kwargs):
-    pass
-
 
 @pytest.fixture(
     autouse=True
@@ -135,17 +132,6 @@ def patch_arctic(monkeypatch):
         trail_model,
         "trail_model_hst_arctic",
         trail_model.trail_model_hst
-    )
-
-
-@pytest.fixture(
-    autouse=True
-)
-def patch_auto_array(monkeypatch):
-    monkeypatch.setattr(
-        acs,
-        "output_quadrants_to_fits",
-        output_quadrants_to_fits
     )
 
 
