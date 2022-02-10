@@ -1,6 +1,5 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
 
-import autoarray as aa
 import numpy as np
 
 import arcticpy as cti

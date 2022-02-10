@@ -47,6 +47,10 @@ class Image:
             bias_subtract_via_prescan=True,
         ).native
 
+    def quadrants(self):
+        for quadrant in ["A", "B", "C", "D"]:
+            yield self.load_quadrant(quadrant)
+
     def date(self):
         return 2400000.5 + self.image().header.modified_julian_date
 
@@ -180,49 +184,28 @@ class Dataset:
                 flush=True,
             )
 
-            # Load each quadrant of the image
-            image_A, image_B, image_C, image_D = [
-                image.load_quadrant(quadrant)
-                for quadrant in ["A", "B", "C", "D"]
-            ]
-
             # CTI model
-            date = 2400000.5 + image_A.header.modified_julian_date
+            date = image.date()
             roe, ccd, traps = cti_model_hst(date)
 
-            def remove_cti(image):
-                return cti.remove_cti(
-                    image=image,
+            corrected_quadrants = []
+
+            for quadrant in image.quadrants():
+                corrected_quadrant = cti.remove_cti(
+                    image=quadrant,
                     n_iterations=5,
                     parallel_roe=roe,
                     parallel_ccd=ccd,
                     parallel_traps=traps,
                     parallel_express=5
                 )
-
-            # Remove CTI (only print first time)
-            if i == 0:
-                print("")
-                image_out_A = remove_cti(image_A)
-                image_out_B, image_out_C, image_out_D = [
-                    remove_cti(image) for image in [image_B, image_C, image_D]
-                ]
-            else:
-                image_out_A, image_out_B, image_out_C, image_out_D = [
-                    remove_cti(image) for image in [image_A, image_B, image_C, image_D]
-                ]
+                corrected_quadrant.header = quadrant.header
+                corrected_quadrants.append(corrected_quadrant)
 
             # Save the corrected image
             aa.acs.output_quadrants_to_fits(
-                file_path=image_path,
-                quadrant_a=image_out_A,
-                quadrant_b=image_out_B,
-                quadrant_c=image_out_C,
-                quadrant_d=image_out_D,
-                header_a=image_A.header,
-                header_b=image_B.header,
-                header_c=image_C.header,
-                header_d=image_D.header,
+                image_path,
+                *corrected_quadrants,
                 overwrite=True,
             )
 

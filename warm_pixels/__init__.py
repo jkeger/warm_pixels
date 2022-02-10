@@ -56,9 +56,6 @@ class DatasetProcess:
                 )
 
     def run(self):
-        if self.warm_pixels.use_corrected:
-            fu.remove_cti_dataset(self.dataset)
-
         for quadrant in self.warm_pixels.all_quadrants:
             self.process_quadrant(quadrant)
 
@@ -125,6 +122,12 @@ class WarmPixels:
             use_corrected=False,
             plot_density=False,
     ):
+        if use_corrected:
+            self.datasets = [
+                dataset.corrected()
+                for dataset in datasets
+            ]
+
         self.quadrants = quadrants
         self.overwrite = overwrite
         self.prep_density = prep_density
