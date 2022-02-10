@@ -1,8 +1,9 @@
 import autofit as af
+import numpy as np
 
 import arcticpy
-from pixel_lines import PixelLineCollection
 from warm_pixels.hst_data import *  # Would be nice not to have to do this
+from warm_pixels.pixel_lines import PixelLineCollection
 
 """
 Fit warm pixel data sets using arCTIc. Can be called from standard hst_warm_pixels.py,
