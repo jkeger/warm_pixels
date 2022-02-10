@@ -8,7 +8,7 @@ from matplotlib import pyplot
 
 from warm_pixels.hst_data import Dataset, Image
 from warm_pixels.hst_functions import trail_model
-from warm_pixels.hst_functions.cti_model import cti
+from warm_pixels.hst_data import cti
 
 directory = Path(__file__).parent
 

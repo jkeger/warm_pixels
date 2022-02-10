@@ -6,7 +6,9 @@ from pathlib import Path
 import autoarray as aa
 from autoarray.instruments.acs import ImageACS
 
+import arcticpy as cti
 from warm_pixels import hst_utilities as ut
+from warm_pixels.hst_functions.cti_model import cti_model_hst
 
 
 class Image:
@@ -150,3 +152,93 @@ class Dataset:
     def plotted_distributions(self, quadrants):
         """Return the file name including the path for saving derived data."""
         return ut.output_path / f"plotted_distributions/{self.name}_plotted_distributions_{''.join(quadrants)}.png"
+
+    def corrected(self):
+        """Remove CTI trails using arctic from all images in the dataset.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            The dataset object with a list of image file paths and metadata.
+
+        Saves
+        -----
+        dataset.cor_paths
+            The corrected images with CTI removed in the same location as the
+            originals.
+        """
+        corrected_dataset = CorrectedDataset(self)
+
+        # Remove CTI from each image
+        for i, image in enumerate(self):
+            image_name = image.name
+            image_path = corrected_dataset.path / image_name
+
+            print(
+                f"  Correcting {image_name} ({i + 1} of {self})... ",
+                end="",
+                flush=True,
+            )
+
+            # Load each quadrant of the image
+            image_A, image_B, image_C, image_D = [
+                image.load_quadrant(quadrant)
+                for quadrant in ["A", "B", "C", "D"]
+            ]
+
+            # CTI model
+            date = 2400000.5 + image_A.header.modified_julian_date
+            roe, ccd, traps = cti_model_hst(date)
+
+            def remove_cti(image):
+                return cti.remove_cti(
+                    image=image,
+                    n_iterations=5,
+                    parallel_roe=roe,
+                    parallel_ccd=ccd,
+                    parallel_traps=traps,
+                    parallel_express=5
+                )
+
+            # Remove CTI (only print first time)
+            if i == 0:
+                print("")
+                image_out_A = remove_cti(image_A)
+                image_out_B, image_out_C, image_out_D = [
+                    remove_cti(image) for image in [image_B, image_C, image_D]
+                ]
+            else:
+                image_out_A, image_out_B, image_out_C, image_out_D = [
+                    remove_cti(image) for image in [image_A, image_B, image_C, image_D]
+                ]
+
+            # Save the corrected image
+            aa.acs.output_quadrants_to_fits(
+                file_path=image_path,
+                quadrant_a=image_out_A,
+                quadrant_b=image_out_B,
+                quadrant_c=image_out_C,
+                quadrant_d=image_out_D,
+                header_a=image_A.header,
+                header_b=image_B.header,
+                header_c=image_C.header,
+                header_d=image_D.header,
+                overwrite=True,
+            )
+
+            print(f"Saved {image.corrected().path.stem}")
+
+        return corrected_dataset
+
+
+class CorrectedDataset(Dataset):
+    def __init__(self, dataset: Dataset):
+        corrected_path = dataset.output_path.parent / f"{dataset.output_path.name}_corrected"
+        super().__init__(
+            path=corrected_path,
+            output_path=dataset.output_path,
+        )
+
+    @property
+    def output_path(self):
+        return self.path
