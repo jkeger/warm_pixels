@@ -11,7 +11,13 @@ from warm_pixels.hst_functions import trail_model
 from warm_pixels.hst_functions.cti_model import cti
 
 directory = Path(__file__).parent
-output_path = directory / "output"
+
+
+@pytest.fixture(
+    name="output_path"
+)
+def make_output_path():
+    return directory / "output"
 
 
 @pytest.fixture(
@@ -24,7 +30,12 @@ def make_dataset_path():
 class MockImage(Image):
     name = "image"
 
-    def __init__(self, array, dataset_path):
+    def __init__(
+            self,
+            array,
+            dataset_path,
+            output_path,
+    ):
         self.array = array
         super().__init__(
             path=dataset_path / self.name,
@@ -49,14 +60,12 @@ class MockDataset(Dataset):
     def __init__(
             self,
             images,
-            path
+            path,
+            output_path,
     ):
         self.images = images
         self.path = path
-
-    @property
-    def _output_path(self):
-        return self.path
+        self._output_path = output_path
 
 
 @pytest.fixture(
@@ -71,7 +80,11 @@ def make_image(dataset_path):
 @pytest.fixture(
     name="mock_dataset"
 )
-def make_mock_dataset(image, dataset_path):
+def make_mock_dataset(
+        image,
+        dataset_path,
+        output_path,
+):
     return MockDataset(
         images=[MockImage(
             ImageACS(
@@ -92,9 +105,11 @@ def make_mock_dataset(image, dataset_path):
                     quadrant_letter="A",
                 )
             ),
-            dataset_path=dataset_path
+            dataset_path=dataset_path,
+            output_path=output_path,
         )],
-        path=dataset_path
+        path=dataset_path,
+        output_path=output_path,
     )
 
 
@@ -145,7 +160,6 @@ class SaveFig:
 
 
 @pytest.fixture(
-    autouse=True,
     name="savefig_calls"
 )
 def patch_pyplot(monkeypatch):
