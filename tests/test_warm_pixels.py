@@ -13,12 +13,10 @@ def test_warm_pixels(
 
 
 def test_dataset_warm_pixels(
-        dataset_path,
-        image,
-        mock_dataset
+        dataset
 ):
     result = find_dataset_warm_pixels(
-        mock_dataset,
+        dataset,
         quadrant="A"
     )
 

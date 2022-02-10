@@ -34,13 +34,9 @@ def test_integration(
 
 
 def test_real_dataset(
-        dataset_path,
-        output_path,
+        dataset,
 ):
-    dataset = Dataset(
-        dataset_path,
-        output_path,
-    )
+
     WarmPixels(
         datasets=[dataset, dataset],
         quadrants="A",

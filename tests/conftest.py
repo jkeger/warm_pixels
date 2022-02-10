@@ -29,6 +29,19 @@ def make_dataset_path():
     return directory / "dataset"
 
 
+@pytest.fixture(
+    name="dataset"
+)
+def make_dataset(
+        dataset_path,
+        output_path,
+):
+    return Dataset(
+        dataset_path,
+        output_path,
+    )
+
+
 class MockImage(Image):
     name = "image_raw.fits"
 
