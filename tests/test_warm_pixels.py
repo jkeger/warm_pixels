@@ -9,7 +9,7 @@ def test_warm_pixels(
         trail_length=2,
         ignore_bad_columns=False,
     )
-    assert len(result) == 361
+    assert len(result) == 107
 
 
 def test_dataset_warm_pixels(
@@ -22,4 +22,4 @@ def test_dataset_warm_pixels(
         quadrant="A"
     )
 
-    assert len(result) == 20
+    assert len(result) == 43

@@ -27,4 +27,4 @@ def test_image(
     image, = dataset.images
     assert image.name == "example"
     assert image.path == dataset_path / "example_raw.fits"
-    assert image.cor_path == dataset_path / "example_raw_cor.fits"
+    assert image.corrected().path == dataset_path / "example_raw_cor.fits"

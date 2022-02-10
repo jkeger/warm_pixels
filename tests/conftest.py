@@ -12,13 +12,19 @@ from warm_pixels.hst_functions import cti
 
 directory = Path(__file__).parent
 output_path = directory / "output"
-dataset_path = directory / "dataset"
+
+
+@pytest.fixture(
+    name="dataset_path"
+)
+def make_dataset_path():
+    return directory / "dataset"
 
 
 class MockImage(Image):
     name = "image"
 
-    def __init__(self, array):
+    def __init__(self, array, dataset_path):
         self.array = array
         super().__init__(
             path=dataset_path / self.name,
@@ -56,7 +62,7 @@ class MockDataset(Dataset):
 @pytest.fixture(
     name="image"
 )
-def make_image():
+def make_image(dataset_path):
     return np.load(
         str(dataset_path / "array.npy")
     )
@@ -65,7 +71,7 @@ def make_image():
 @pytest.fixture(
     name="mock_dataset"
 )
-def make_mock_dataset(image):
+def make_mock_dataset(image, dataset_path):
     return MockDataset(
         images=[MockImage(
             ImageACS(
@@ -85,7 +91,8 @@ def make_mock_dataset(image):
                     hdu=None,
                     quadrant_letter="A",
                 )
-            )
+            ),
+            dataset_path=dataset_path
         )],
         path=dataset_path
     )
