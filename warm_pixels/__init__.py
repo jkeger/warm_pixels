@@ -1,8 +1,10 @@
 import os
 
+import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_data import Dataset
+from warm_pixels.hst_functions import plot
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
@@ -189,6 +191,6 @@ class WarmPixels:
         # Plot the trap density evolution
         if self.plot_density:
             print("Plot trap density evolution...", end=" ", flush=True)
-            fu.plot_trap_density_evol(
+            plot.plot_trap_density_evol(
                 self.list_name, self.quadrant_sets, do_sunspots=True, use_corrected=self.use_corrected
             )

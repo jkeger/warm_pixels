@@ -22,10 +22,12 @@ def test_integration(
         for flag
         in true_flags
     }
+    overwrite = True
     WarmPixels(
         datasets=[mock_dataset, mock_dataset],
         quadrants="A",
-        overwrite=True,
+        overwrite=overwrite,
         **kwargs,
     ).main()
-    assert len(savefig_calls) == n_calls
+    if overwrite:
+        assert len(savefig_calls) == n_calls

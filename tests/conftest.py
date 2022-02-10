@@ -6,9 +6,9 @@ from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
 from matplotlib import pyplot
 
-from warm_pixels import hst_functions
 from warm_pixels.hst_data import Dataset, Image
-from warm_pixels.hst_functions import cti
+from warm_pixels.hst_functions import trail_model
+from warm_pixels.hst_functions.cti_model import cti
 
 directory = Path(__file__).parent
 output_path = directory / "output"
@@ -117,9 +117,9 @@ def patch_arctic(monkeypatch):
         cti, "remove_cti", remove_cti
     )
     monkeypatch.setattr(
-        hst_functions,
+        trail_model,
         "trail_model_hst_arctic",
-        hst_functions.trail_model_hst
+        trail_model.trail_model_hst
     )
 
 

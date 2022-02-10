@@ -19,6 +19,7 @@ import matplotlib.patheffects as path_effects
 from matplotlib.patches import ConnectionPatch
 
 import arcticpy as cti
+import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_data import Dataset
@@ -798,7 +799,7 @@ def density_evol(do_pdf=False):
     quadrant_sets = [["A", "B", "C", "D"]]
 
     # Plot
-    fu.plot_trap_density_evol(
+    warm_pixels.hst_functions.plot.plot_trap_density_evol(
         list_name, quadrant_sets, do_sunspots=True, use_corrected=True, do_pdf=do_pdf
     )
 
