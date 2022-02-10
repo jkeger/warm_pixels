@@ -151,10 +151,6 @@ class WarmPixels:
         return [q for qs in self.quadrant_sets for q in qs]
 
     def main(self):
-        # Use the corrected images with CTI removed instead
-        if self.use_corrected:
-            print("# Using the corrected images with CTI removed. \n")
-
         # ========
         # Create directories to contain output plots
         # ========
