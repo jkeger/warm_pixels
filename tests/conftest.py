@@ -63,9 +63,13 @@ class MockDataset(Dataset):
             path,
             output_path,
     ):
-        self.images = images
+        self._images = images
         self.path = path
         self._output_path = output_path
+
+    @property
+    def images(self):
+        return self._images
 
 
 @pytest.fixture(
@@ -73,7 +77,7 @@ class MockDataset(Dataset):
 )
 def make_image(dataset_path):
     return np.load(
-        str(dataset_path / "array.npy")
+        str(dataset_path / "array_raw.fits")
     )
 
 
