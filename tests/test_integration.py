@@ -1,6 +1,6 @@
 import pytest
 
-from warm_pixels import WarmPixels, Dataset
+from warm_pixels import WarmPixels
 
 
 @pytest.mark.parametrize(
@@ -12,7 +12,7 @@ from warm_pixels import WarmPixels, Dataset
     ]
 )
 def test_integration(
-        mock_dataset,
+        dataset,
         true_flags,
         savefig_calls,
         n_calls,
@@ -24,24 +24,10 @@ def test_integration(
     }
     overwrite = True
     WarmPixels(
-        datasets=[mock_dataset, mock_dataset],
+        datasets=[dataset, dataset],
         quadrants="A",
         overwrite=overwrite,
         **kwargs,
     ).main()
     if overwrite:
         assert len(savefig_calls) == n_calls
-
-
-def test_real_dataset(
-        dataset,
-):
-
-    WarmPixels(
-        datasets=[dataset, dataset],
-        quadrants="A",
-        overwrite=True,
-        prep_density=True,
-        plot_density=True,
-        use_corrected=True,
-    ).main()

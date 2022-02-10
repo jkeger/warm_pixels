@@ -8,7 +8,7 @@ from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
 from matplotlib import pyplot
 
-from warm_pixels.hst_data import Dataset, Image
+from warm_pixels.hst_data import Dataset
 from warm_pixels.hst_data import cti
 from warm_pixels.hst_functions import trail_model
 
@@ -42,93 +42,12 @@ def make_dataset(
     )
 
 
-class MockImage(Image):
-    name = "image_raw.fits"
-
-    def __init__(
-            self,
-            array,
-            dataset_path,
-            output_path,
-    ):
-        self.array = array
-        super().__init__(
-            path=dataset_path / self.name,
-            output_path=output_path,
-        )
-
-    def load_quadrant(
-            self,
-            quadrant
-    ):
-        return self.array
-
-    def date(self):
-        return 2400000.5 + 59049.90211805556
-
-    def corrected(self):
-        return self
-
-
-class MockDataset(Dataset):
-    # noinspection PyMissingConstructor
-    def __init__(
-            self,
-            images,
-            path,
-            output_path,
-    ):
-        self._images = images
-        self.path = path
-        self._output_path = output_path
-
-    @property
-    def images(self):
-        return self._images
-
-
 @pytest.fixture(
     name="image"
 )
 def make_image(dataset_path):
     return np.load(
         str(dataset_path / "array_raw.fits")
-    )
-
-
-@pytest.fixture(
-    name="mock_dataset"
-)
-def make_mock_dataset(
-        image,
-        dataset_path,
-        output_path,
-):
-    return MockDataset(
-        images=[MockImage(
-            ImageACS(
-                image,
-                np.zeros(image.shape),
-                header=HeaderACS(
-                    header_sci_obj={
-                        "DATE-OBS": "2020-01-01",
-                        "TIME-OBS": "15:00:00",
-                        "CCDGAIN": 1,
-                    },
-                    header_hdu_obj={
-                        "BSCALE": 1,
-                        "BZERO": 1,
-                        "BUNIT": "COUNTS",
-                    },
-                    hdu=None,
-                    quadrant_letter="A",
-                )
-            ),
-            dataset_path=dataset_path,
-            output_path=output_path,
-        )],
-        path=dataset_path,
-        output_path=output_path,
     )
 
 
