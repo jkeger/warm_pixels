@@ -90,7 +90,11 @@ class Dataset:
         """
         self.path = path
         self._output_path = output_path
-        self.images = [
+        self._images = None
+
+    @property
+    def images(self):
+        return [
             Image(
                 Path(image_path),
                 output_path=self.output_path,
@@ -172,6 +176,10 @@ class Dataset:
             originals.
         """
         corrected_dataset = CorrectedDataset(self)
+        os.makedirs(
+            corrected_dataset.path,
+            exist_ok=True,
+        )
 
         # Remove CTI from each image
         for i, image in enumerate(self):

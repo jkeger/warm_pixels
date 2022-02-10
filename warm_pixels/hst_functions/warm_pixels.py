@@ -96,7 +96,7 @@ def extract_consistent_warm_pixels_corrected(dataset, quadrant):
         )
 
         # Load the image
-        array = image.corrected().load_quadrant(quadrant)
+        array = image.load_quadrant(quadrant)
 
         # Select consistent warm pixels found from this image
         image_name_q = image_name + "_%s" % quadrant

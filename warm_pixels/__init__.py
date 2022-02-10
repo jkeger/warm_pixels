@@ -127,6 +127,8 @@ class WarmPixels:
                 dataset.corrected()
                 for dataset in datasets
             ]
+        else:
+            self.datasets = datasets
 
         self.quadrants = quadrants
         self.overwrite = overwrite
@@ -136,8 +138,6 @@ class WarmPixels:
 
         # TODO: list name was originally the input...
         self.list_name = "test"
-
-        self.datasets = datasets
 
     @property
     def quadrant_sets(self):

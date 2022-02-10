@@ -1,7 +1,4 @@
-import numpy as np
 import pytest
-from autoarray.instruments import acs
-from autoarray.instruments.acs import ImageACS, HeaderACS
 
 from warm_pixels import WarmPixels, Dataset
 
