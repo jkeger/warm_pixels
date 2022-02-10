@@ -1,3 +1,5 @@
+import os
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +30,7 @@ def make_dataset_path():
 
 
 class MockImage(Image):
-    name = "image"
+    name = "image_raw.fits"
 
     def __init__(
             self,
@@ -177,6 +179,7 @@ def output_quadrants_to_fits(
         file_path,
         quadrant_a
     )
+    os.rename(f"{file_path}.npy", file_path)
 
 
 def from_fits(
@@ -221,4 +224,17 @@ def patch_fits(monkeypatch):
         acs,
         "output_quadrants_to_fits",
         output_quadrants_to_fits
+    )
+
+
+@pytest.fixture(
+    autouse=True
+)
+def remove_output(
+        output_path
+):
+    yield
+    shutil.rmtree(
+        output_path,
+        ignore_errors=True
     )
