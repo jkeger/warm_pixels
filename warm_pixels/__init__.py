@@ -30,6 +30,22 @@ class DatasetProcess:
             )
             find_dataset_warm_pixels(self.dataset, quadrant)
 
+        # Find consistent warm pixels in the set
+        if self.warm_pixels.need_to_make_file(
+                self.dataset.saved_consistent_lines(quadrant),
+        ):
+            print(
+                "  Consistent warm pixels (%s)..." % quadrant,
+                end=" ",
+                flush=True,
+            )
+            fu.find_consistent_warm_pixels(
+                self.dataset,
+                quadrant,
+                flux_min=ut.flux_bins[0],
+                flux_max=ut.flux_bins[-1],
+            )
+
         # Consistent warm pixels
         if self.warm_pixels.use_corrected:
             # Extract from corrected images with CTI removed
@@ -38,22 +54,6 @@ class DatasetProcess:
             ):
                 print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
                 fu.extract_consistent_warm_pixels_corrected(self.dataset, quadrant)
-        else:
-            # Find consistent warm pixels in the set
-            if self.warm_pixels.need_to_make_file(
-                    self.dataset.saved_consistent_lines(quadrant),
-            ):
-                print(
-                    "  Consistent warm pixels (%s)..." % quadrant,
-                    end=" ",
-                    flush=True,
-                )
-                fu.find_consistent_warm_pixels(
-                    self.dataset,
-                    quadrant,
-                    flux_min=ut.flux_bins[0],
-                    flux_max=ut.flux_bins[-1],
-                )
 
     def run(self):
         for quadrant in self.warm_pixels.all_quadrants:
