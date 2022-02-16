@@ -1,59 +1,27 @@
 import os
+from abc import ABC, abstractmethod
+
+import numpy as np
 
 import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
+from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_data import Dataset
 from warm_pixels.hst_functions import plot
 from warm_pixels.hst_utilities import output_path
+from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
 
-class DatasetProcess:
+class AbstractProcess(ABC):
     def __init__(
             self,
             dataset,
-            warm_pixels
+            warm_pixels,
     ):
         self.dataset = dataset
         self.warm_pixels = warm_pixels
-
-    def process_quadrant(self, quadrant):
-        # Find possible warm pixels in each image
-        if self.warm_pixels.need_to_make_file(
-                self.dataset.saved_lines(quadrant),
-        ):
-            print(
-                f"  Find possible warm pixels ({quadrant})...",
-                end=" ",
-                flush=True,
-            )
-            find_dataset_warm_pixels(self.dataset, quadrant)
-
-        # Find consistent warm pixels in the set
-        if self.warm_pixels.need_to_make_file(
-                self.dataset.saved_consistent_lines(quadrant),
-        ):
-            print(
-                f"  Consistent warm pixels ({quadrant})...",
-                end=" ",
-                flush=True,
-            )
-            fu.find_consistent_warm_pixels(
-                self.dataset,
-                quadrant,
-                flux_min=ut.flux_bins[0],
-                flux_max=ut.flux_bins[-1],
-            )
-
-        # Consistent warm pixels
-        if self.warm_pixels.use_corrected:
-            # Extract from corrected images with CTI removed
-            if self.warm_pixels.need_to_make_file(
-                    self.dataset.saved_consistent_lines(quadrant, use_corrected=True),
-            ):
-                print(f"  Extract CTI-removed warm pixels ({quadrant})...")
-                fu.extract_consistent_warm_pixels_corrected(self.dataset, quadrant)
 
     def run(self):
         for quadrant in self.warm_pixels.all_quadrants:
@@ -110,6 +78,122 @@ class DatasetProcess:
                 ),
             )
 
+    @abstractmethod
+    def process_quadrant(self, quadrant):
+        pass
+
+
+class RawProcess(AbstractProcess):
+    def process_quadrant(self, quadrant):
+        # Find possible warm pixels in each image
+        if self.warm_pixels.need_to_make_file(
+                self.dataset.saved_lines(quadrant),
+        ):
+            print(
+                f"  Find possible warm pixels ({quadrant})...",
+                end=" ",
+                flush=True,
+            )
+            find_dataset_warm_pixels(self.dataset, quadrant)
+
+        # Find consistent warm pixels in the set
+        if self.warm_pixels.need_to_make_file(
+                self.dataset.saved_consistent_lines(quadrant),
+        ):
+            print(
+                f"  Consistent warm pixels ({quadrant})...",
+                end=" ",
+                flush=True,
+            )
+            fu.find_consistent_warm_pixels(
+                self.dataset,
+                quadrant,
+                flux_min=ut.flux_bins[0],
+                flux_max=ut.flux_bins[-1],
+            )
+
+
+class CorrectedProcess(AbstractProcess):
+    def __init__(
+            self,
+            raw_process
+    ):
+        super().__init__(
+            dataset=raw_process.dataset.corrected(),
+            warm_pixels=raw_process.warm_pixels,
+        )
+        self.raw_process = raw_process
+
+    def process_quadrant(self, quadrant):
+        self.raw_process.process_quadrant(quadrant)
+
+        # Extract from corrected images with CTI removed
+        if self.warm_pixels.need_to_make_file(
+                self.dataset.saved_consistent_lines(quadrant, use_corrected=True),
+        ):
+            print(f"  Extract CTI-removed warm pixels ({quadrant})...")
+            self.extract_consistent_warm_pixels_corrected(quadrant)
+
+    def extract_consistent_warm_pixels_corrected(self, quadrant):
+        """Extract the corresponding warm pixels from the corrected images with CTI
+        removed, in the same locations as the orignal consistent warm pixels.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            The dataset object with a list of image file paths and metadata.
+
+        quadrant : str (opt.)
+            The quadrant (A, B, C, D) of the image to load.
+
+        Saves
+        -----
+        warm_pixels_cor : PixelLineCollection
+            The set of consistent warm pixel trails, saved to
+            dataset.saved_consistent_lines(use_corrected=True).
+        """
+        # Load original warm pixels for the whole dataset
+        warm_pixels = PixelLineCollection()
+        warm_pixels.load(self.raw_process.dataset.saved_consistent_lines(quadrant))
+
+        # Corrected images
+        warm_pixels_cor = PixelLineCollection()
+        for i, image in enumerate(self.dataset):
+            image_name = image.name
+            print(
+                f"\r    {image_name}_cor_{quadrant} ({i + 1} of {len(self.dataset)}) ",
+                end="",
+                flush=True,
+            )
+
+            # Load the image
+            array = image.load_quadrant(quadrant)
+
+            # Select consistent warm pixels found from this image
+            image_name_q = image_name + "_%s" % quadrant
+            sel = np.where(warm_pixels.origins == image_name_q)[0]
+            for i in sel:
+                line = warm_pixels.lines[i]
+                row, column = line.location
+
+                # Copy the original metadata but take the data from the corrected image
+                warm_pixels_cor.append(
+                    PixelLine(
+                        data=array[
+                             row - ut.trail_length: row + ut.trail_length + 1, column
+                             ],
+                        origin=line.origin,
+                        location=line.location,
+                        date=line.date,
+                        background=line.background,
+                    )
+                )
+
+        print("Extracted %d lines" % warm_pixels_cor.n_lines)
+
+        # Save
+        warm_pixels_cor.save(self.dataset.saved_consistent_lines(quadrant, use_corrected=True))
+
 
 class WarmPixels:
     def __init__(
@@ -121,14 +205,7 @@ class WarmPixels:
             use_corrected=False,
             plot_density=False,
     ):
-        if use_corrected:
-            self.datasets = [
-                dataset.corrected()
-                for dataset in datasets
-            ]
-        else:
-            self.datasets = datasets
-
+        self.datasets = datasets
         self.quadrants = quadrants
         self.overwrite = overwrite
         self.prep_density = prep_density
@@ -168,7 +245,13 @@ class WarmPixels:
                 f'({i_dataset + 1} of {len(self.datasets)}, '
                 f'{len(dataset)} images, "{self.quadrants}")'
             )
-            DatasetProcess(dataset, self).run()
+            process = RawProcess(
+                dataset,
+                self
+            )
+            if self.use_corrected:
+                process = CorrectedProcess(process)
+            process.run()
 
         # ========
         # Compiled results from all datasets
