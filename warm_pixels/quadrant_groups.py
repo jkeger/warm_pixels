@@ -13,3 +13,9 @@ class Quadrants:
         for group in self.groups:
             for quadrant in group:
                 yield quadrant
+
+    def __len__(self):
+        i = 0
+        for i, _ in enumerate(self):
+            pass
+        return i + 1

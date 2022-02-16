@@ -71,6 +71,7 @@ from warm_pixels import WarmPixels
 from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_data import Dataset
 from warm_pixels.hst_utilities import output_path
+from warm_pixels.quadrant_groups import Quadrants
 
 
 def main():
@@ -95,7 +96,7 @@ def main():
 
     WarmPixels(
         datasets=datasets,
-        quadrants=args.quadrants,
+        quadrants=Quadrants(args.quadrants),
         overwrite=args.overwrite,
         prep_density=args.prep_density,
         use_corrected=args.use_corrected,

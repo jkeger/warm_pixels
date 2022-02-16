@@ -18,62 +18,64 @@ class AbstractProcess(ABC):
     def __init__(
             self,
             dataset,
+            quadrants,
             warm_pixels,
     ):
         self.dataset = dataset
         self.warm_pixels = warm_pixels
+        self.quadrants = quadrants
 
     def run(self):
-        for quadrant in self.warm_pixels.all_quadrants:
+        for quadrant in self.quadrants:
             self.process_quadrant(quadrant)
 
         self.plot_distributions()
 
         # Stack warm pixels in each image quadrant or combined quadrants
-        for quadrants in self.warm_pixels.quadrant_sets:
-            self.stack_warm_pixels(quadrants)
+        for quadrants in self.quadrants.groups:
+            self.stack_warm_pixels()
 
     def plot_distributions(self):
         # Plot distributions of warm pixels in the set
         if self.warm_pixels.need_to_make_file(
-                self.dataset.plotted_distributions(self.warm_pixels.all_quadrants),
+                self.dataset.plotted_distributions(self.quadrants),
         ):
             print("  Distributions of warm pixels...", end=" ", flush=True)
             fu.plot_warm_pixel_distributions(
                 self.dataset,
-                self.warm_pixels.all_quadrants,
-                save_path=self.dataset.plotted_distributions(self.warm_pixels.all_quadrants),
+                self.quadrants,
+                save_path=self.dataset.plotted_distributions(self.quadrants),
             )
 
-    def stack_warm_pixels(self, quadrants):
+    def stack_warm_pixels(self):
         # Stack in bins
         if self.warm_pixels.need_to_make_file(
-                self.dataset.saved_stacked_lines(quadrants),
+                self.dataset.saved_stacked_lines(self.quadrants),
         ):
             print(
-                f"  Stack warm pixel trails ({''.join(quadrants)})...",
+                f"  Stack warm pixel trails ({''.join(self.quadrants)})...",
                 end=" ",
                 flush=True,
             )
-            fu.stack_dataset_warm_pixels(self.dataset, quadrants)
+            fu.stack_dataset_warm_pixels(self.dataset, self.quadrants)
 
         # Plot stacked lines
         if not self.warm_pixels.use_corrected and self.warm_pixels.need_to_make_file(
                 self.dataset.plotted_stacked_trails(
-                    quadrants,
+                    self.quadrants,
                 ),
         ):
             print(
-                f"  Plot stacked trails ({''.join(quadrants)})...",
+                f"  Plot stacked trails ({''.join(self.quadrants)})...",
                 end=" ",
                 flush=True,
             )
             fu.plot_stacked_trails(
                 self.dataset,
-                quadrants,
+                self.quadrants,
                 use_corrected=self.warm_pixels.use_corrected,
                 save_path=self.dataset.plotted_stacked_trails(
-                    quadrants
+                    self.quadrants
                 ),
             )
 
@@ -120,6 +122,7 @@ class CorrectedProcess(AbstractProcess):
         super().__init__(
             dataset=raw_process.dataset.corrected(),
             warm_pixels=raw_process.warm_pixels,
+            quadrants=raw_process.quadrants,
         )
         self.raw_process = raw_process
 
@@ -211,19 +214,10 @@ class WarmPixels:
         # TODO: list name was originally the input...
         self.list_name = "test"
 
-    @property
-    def quadrant_sets(self):
-        return [[q for q in qs] for qs in self.quadrants.split("_")]
-
     def need_to_make_file(self, filename):
         if self.overwrite:
             return True
         return not os.path.exists(filename)
-
-    @property
-    def all_quadrants(self):
-        # All quadrants, ignoring subsets
-        return [q for qs in self.quadrant_sets for q in qs]
 
     def main(self):
         # ========
@@ -245,7 +239,8 @@ class WarmPixels:
             )
             process = RawProcess(
                 dataset,
-                self
+                self.quadrants,
+                self,
             )
             if self.use_corrected:
                 process = CorrectedProcess(process)
@@ -259,7 +254,7 @@ class WarmPixels:
         # Fit and save the total trap densities
         if self.prep_density:
             # In each image quadrant or combined quadrants
-            for quadrants in self.quadrant_sets:
+            for quadrants in self.quadrants.groups:
                 print(
                     f"Fit total trap densities ({''.join(quadrants)})...",
                     end=" ",
@@ -273,5 +268,5 @@ class WarmPixels:
         if self.plot_density:
             print("Plot trap density evolution...", end=" ", flush=True)
             plot.plot_trap_density_evol(
-                self.list_name, self.quadrant_sets, do_sunspots=True, use_corrected=self.use_corrected
+                self.list_name, self.quadrants.groups, do_sunspots=True, use_corrected=self.use_corrected
             )

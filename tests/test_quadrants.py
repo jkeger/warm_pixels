@@ -32,3 +32,7 @@ def test_iter(string):
     assert list(quadrants) == [
         "A", "B", "C", "D"
     ]
+
+
+def test_len():
+    assert len(Quadrants("ABCD")) == 4
