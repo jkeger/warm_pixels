@@ -1,4 +1,4 @@
-from warm_pixels import hst_functions as fu
+from warm_pixels import hst_functions as fu, PixelLineCollection
 from warm_pixels import hst_utilities as ut
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 from .abstract import AbstractProcess
@@ -15,7 +15,10 @@ class RawProcess(AbstractProcess):
                 end=" ",
                 flush=True,
             )
-            find_dataset_warm_pixels(self.dataset, quadrant)
+            warm_pixels = find_dataset_warm_pixels(self.dataset, quadrant)
+        else:
+            warm_pixels = PixelLineCollection()
+            warm_pixels.load(self.dataset.saved_lines(quadrant))
 
         # Find consistent warm pixels in the set
         if self.need_to_make_file(
@@ -29,6 +32,7 @@ class RawProcess(AbstractProcess):
             fu.find_consistent_warm_pixels(
                 self.dataset,
                 quadrant,
+                warm_pixels=warm_pixels,
                 flux_min=ut.flux_bins[0],
                 flux_max=ut.flux_bins[-1],
             )

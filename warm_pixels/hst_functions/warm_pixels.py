@@ -11,7 +11,13 @@ logger = logging.getLogger(
 )
 
 
-def find_consistent_warm_pixels(dataset, quadrant, flux_min=None, flux_max=None):
+def find_consistent_warm_pixels(
+        dataset,
+        quadrant,
+        warm_pixels,
+        flux_min=None,
+        flux_max=None
+):
     """Find the consistent warm pixels in a dataset.
 
     find_dataset_warm_pixels() must first be run for the dataset.
@@ -34,10 +40,6 @@ def find_consistent_warm_pixels(dataset, quadrant, flux_min=None, flux_max=None)
         The set of consistent warm pixel trails, saved to
         dataset.saved_consistent_lines().
     """
-    # Load
-    warm_pixels = PixelLineCollection()
-    warm_pixels.load(dataset.saved_lines(quadrant))
-
     # Ignore warm pixels below the minimum flux
     if flux_min is not None:
         sel_flux = np.where(
