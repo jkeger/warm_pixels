@@ -50,16 +50,16 @@ class WarmPixels:
                 f'({i_dataset + 1} of {len(self.datasets)}, '
                 f'{len(dataset)} images, "{self.quadrants}")'
             )
-            process = RawProcess(
+            process_ = RawProcess(
                 dataset,
                 self.quadrants,
                 overwrite=self.overwrite,
             )
             if self.use_corrected:
-                process = CorrectedProcess(process)
-            process.run()
+                process_ = CorrectedProcess(process_)
+            process_.run()
 
-            datasets.append(process.dataset)
+            datasets.append(process_.dataset)
 
         # ========
         # Compiled results from all datasets
