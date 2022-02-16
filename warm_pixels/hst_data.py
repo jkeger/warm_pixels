@@ -137,14 +137,14 @@ class Dataset:
 
     def saved_consistent_lines(self, quadrant, use_corrected=False):
         """Return the file name including the path for saving derived data."""
-        suffix = "_cor" if use_corrected else ""
-        return self.output_path / f"saved_consistent_lines_{quadrant}{suffix}.pickle"
+        # suffix = "_cor" if use_corrected else ""
+        return self.output_path / f"saved_consistent_lines_{quadrant}.pickle"
 
     def saved_stacked_lines(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
-        suffix = "_cor" if use_corrected else ""
+
         quadrant_string = "".join(quadrants)
-        return self.output_path / f"saved_stacked_lines_{quadrant_string}{suffix}.pickle"
+        return self.output_path / f"saved_stacked_lines_{quadrant_string}.pickle"
 
     def saved_stacked_info(self, quadrants, use_corrected=False):
         """Return the file name including the path for saving derived data."""
