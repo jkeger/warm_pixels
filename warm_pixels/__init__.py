@@ -24,7 +24,7 @@ class DatasetProcess:
                 self.dataset.saved_lines(quadrant),
         ):
             print(
-                "  Find possible warm pixels (%s)..." % quadrant,
+                f"  Find possible warm pixels ({quadrant})...",
                 end=" ",
                 flush=True,
             )
@@ -35,7 +35,7 @@ class DatasetProcess:
                 self.dataset.saved_consistent_lines(quadrant),
         ):
             print(
-                "  Consistent warm pixels (%s)..." % quadrant,
+                f"  Consistent warm pixels ({quadrant})...",
                 end=" ",
                 flush=True,
             )
@@ -52,7 +52,7 @@ class DatasetProcess:
             if self.warm_pixels.need_to_make_file(
                     self.dataset.saved_consistent_lines(quadrant, use_corrected=True),
             ):
-                print("  Extract CTI-removed warm pixels (%s)..." % quadrant)
+                print(f"  Extract CTI-removed warm pixels ({quadrant})...")
                 fu.extract_consistent_warm_pixels_corrected(self.dataset, quadrant)
 
     def run(self):
