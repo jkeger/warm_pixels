@@ -55,7 +55,7 @@ class AbstractProcess(ABC):
                 end=" ",
                 flush=True,
             )
-            fu.stack_dataset_warm_pixels(self.dataset, quadrants, self.warm_pixels.use_corrected)
+            fu.stack_dataset_warm_pixels(self.dataset, quadrants)
 
         # Plot stacked lines
         if not self.warm_pixels.use_corrected and self.warm_pixels.need_to_make_file(
@@ -140,9 +140,6 @@ class CorrectedProcess(AbstractProcess):
 
         Parameters
         ----------
-        dataset : Dataset
-            The dataset object with a list of image file paths and metadata.
-
         quadrant : str (opt.)
             The quadrant (A, B, C, D) of the image to load.
 

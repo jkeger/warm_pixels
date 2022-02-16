@@ -203,7 +203,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     # Load
     stacked_lines = PixelLineCollection()
     stacked_lines.load(dataset.saved_stacked_lines(quadrants))
-    npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
+    npzfile = np.load(dataset.saved_stacked_info(quadrants))
     row_bins, flux_bins, date_bins, background_bins = [
         npzfile[var] for var in npzfile.files
     ]
@@ -261,7 +261,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     # Fit the total trap density to the full dataset
     print("Performing global fit")
     rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
-        dataset, quadrants, use_corrected=use_corrected, use_arctic=False
+        dataset, quadrants, use_arctic=False
     )
     print(rho_q_set, rho_q_std_set, "exponentials")
 
@@ -352,7 +352,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                 # ========
                 # Fit the total trap density to this single stacked trail (dotted line, which has swapped since Jacob's version)
                 rho_q_indiv, rho_q_std_indiv, y_fit_indiv = fit_dataset_total_trap_density(
-                    dataset, quadrants, use_corrected=use_corrected, use_arctic=True,
+                    dataset, quadrants, use_arctic=True,
                     row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )
                 ax.plot(pixels, y_fit_indiv, color=c, ls=misc.ls_dot, alpha=0.7)

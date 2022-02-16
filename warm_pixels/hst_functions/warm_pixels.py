@@ -63,7 +63,7 @@ def find_consistent_warm_pixels(dataset, quadrant, flux_min=None, flux_max=None)
     warm_pixels.save(dataset.saved_consistent_lines(quadrant))
 
 
-def stack_dataset_warm_pixels(dataset, quadrants, use_corrected=False):
+def stack_dataset_warm_pixels(dataset, quadrants):
     """Stack a set of premade warm pixel trails into bins.
 
     find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
@@ -123,7 +123,7 @@ def stack_dataset_warm_pixels(dataset, quadrants, use_corrected=False):
     # Save
     stacked_lines.save(dataset.saved_stacked_lines(quadrants))
     np.savez(
-        dataset.saved_stacked_info(quadrants, use_corrected),
+        dataset.saved_stacked_info(quadrants),
         row_bins,
         flux_bins,
         date_bins,

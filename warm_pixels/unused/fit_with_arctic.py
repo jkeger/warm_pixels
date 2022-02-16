@@ -89,7 +89,7 @@ def load_trails(
     # Load data
     stacked_lines = PixelLineCollection()
     stacked_lines.load(dataset.saved_stacked_lines(quadrants))
-    npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
+    npzfile = np.load(dataset.saved_stacked_info(quadrants))
     n_row_bins, n_flux_bins, n_date_bins, n_background_bins = [
         (len(npzfile[var]) - 1) for var in npzfile.files
     ]

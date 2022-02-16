@@ -87,7 +87,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
 
 def fit_dataset_total_trap_density(
-        dataset, quadrants, use_corrected=False, use_arctic=False,
+        dataset, quadrants, use_arctic=False,
         row_bins=None, flux_bins=None, background_bins=None
 ):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
@@ -115,7 +115,7 @@ def fit_dataset_total_trap_density(
     # Load
     stacked_lines = PixelLineCollection()
     stacked_lines.load(dataset.saved_stacked_lines(quadrants))
-    npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
+    npzfile = np.load(dataset.saved_stacked_info(quadrants))
     n_row_bins, n_flux_bins, n_date_bins, n_background_bins = [
         (len(npzfile[var]) - 1) for var in npzfile.files
     ]
