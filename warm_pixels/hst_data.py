@@ -220,7 +220,7 @@ class Dataset:
 
 class CorrectedDataset(Dataset):
     def __init__(self, dataset: Dataset):
-        corrected_path = dataset.output_path.parent / f"{dataset.output_path.name}_corrected"
+        corrected_path = dataset.output_path / "corrected"
         super().__init__(
             path=corrected_path,
             output_path=dataset.output_path,
