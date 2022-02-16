@@ -202,7 +202,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     """
     # Load
     stacked_lines = PixelLineCollection()
-    stacked_lines.load(dataset.saved_stacked_lines(quadrants, use_corrected))
+    stacked_lines.load(dataset.saved_stacked_lines(quadrants))
     npzfile = np.load(dataset.saved_stacked_info(quadrants, use_corrected))
     row_bins, flux_bins, date_bins, background_bins = [
         npzfile[var] for var in npzfile.files

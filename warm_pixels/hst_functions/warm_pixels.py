@@ -90,7 +90,7 @@ def stack_dataset_warm_pixels(dataset, quadrants, use_corrected=False):
     warm_pixels = PixelLineCollection()
     # Append data from each quadrant
     for quadrant in quadrants:
-        warm_pixels.load(dataset.saved_consistent_lines(quadrant, use_corrected))
+        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
 
     # Subtract preceeding pixels in each line before stacking
     #
@@ -121,7 +121,7 @@ def stack_dataset_warm_pixels(dataset, quadrants, use_corrected=False):
     )
 
     # Save
-    stacked_lines.save(dataset.saved_stacked_lines(quadrants, use_corrected))
+    stacked_lines.save(dataset.saved_stacked_lines(quadrants))
     np.savez(
         dataset.saved_stacked_info(quadrants, use_corrected),
         row_bins,

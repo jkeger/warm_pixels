@@ -48,7 +48,7 @@ class AbstractProcess(ABC):
     def stack_warm_pixels(self, quadrants):
         # Stack in bins
         if self.warm_pixels.need_to_make_file(
-                self.dataset.saved_stacked_lines(quadrants, self.warm_pixels.use_corrected),
+                self.dataset.saved_stacked_lines(quadrants),
         ):
             print(
                 f"  Stack warm pixel trails ({''.join(quadrants)})...",
@@ -129,7 +129,7 @@ class CorrectedProcess(AbstractProcess):
 
         # Extract from corrected images with CTI removed
         if self.warm_pixels.need_to_make_file(
-                self.dataset.saved_consistent_lines(quadrant, use_corrected=True),
+                self.dataset.saved_consistent_lines(quadrant),
         ):
             print(f"  Extract CTI-removed warm pixels ({quadrant})...")
             self.extract_consistent_warm_pixels_corrected(quadrant)
@@ -192,7 +192,7 @@ class CorrectedProcess(AbstractProcess):
         print("Extracted %d lines" % warm_pixels_cor.n_lines)
 
         # Save
-        warm_pixels_cor.save(self.dataset.saved_consistent_lines(quadrant, use_corrected=True))
+        warm_pixels_cor.save(self.dataset.saved_consistent_lines(quadrant))
 
 
 class WarmPixels:
