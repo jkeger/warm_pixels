@@ -61,7 +61,6 @@ class AbstractProcess(ABC):
         if not self.warm_pixels.use_corrected and self.warm_pixels.need_to_make_file(
                 self.dataset.plotted_stacked_trails(
                     quadrants,
-                    self.warm_pixels.use_corrected
                 ),
         ):
             print(
@@ -74,7 +73,7 @@ class AbstractProcess(ABC):
                 quadrants,
                 use_corrected=self.warm_pixels.use_corrected,
                 save_path=self.dataset.plotted_stacked_trails(
-                    quadrants, self.warm_pixels.use_corrected
+                    quadrants
                 ),
             )
 
