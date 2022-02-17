@@ -40,6 +40,7 @@ class RawProcess(AbstractProcess):
     def stack_warm_pixels(self, quadrants):
         super().stack_warm_pixels(quadrants)
         # Plot stacked lines
+        # TODO: this runs for corrected
         if self.need_to_make_file(
                 self.dataset.plotted_stacked_trails(
                     quadrants,
