@@ -34,8 +34,7 @@ class RawProcess(AbstractProcess):
                 end=" ",
                 flush=True,
             )
-            consistent_warm_pixels = fu.find_consistent_warm_pixels(
-                warm_pixels=warm_pixels,
+            consistent_warm_pixels = warm_pixels.consistent(
                 flux_min=ut.flux_bins[0],
                 flux_max=ut.flux_bins[-1],
             )
