@@ -22,7 +22,12 @@ class AbstractProcess(ABC):
 
     def run(self):
         for quadrant in self.quadrants:
-            self.process_quadrant(quadrant)
+            filename = self.dataset.saved_consistent_lines(quadrant)
+            if self.need_to_make_file(filename):
+                consistent_lines = self.consistent_lines_for(quadrant)
+                consistent_lines.save(
+                    self.dataset.saved_consistent_lines(quadrant)
+                )
 
         self.plot_distributions()
 
@@ -55,5 +60,5 @@ class AbstractProcess(ABC):
             fu.stack_dataset_warm_pixels(self.dataset, quadrants)
 
     @abstractmethod
-    def process_quadrant(self, quadrant):
+    def consistent_lines_for(self, quadrant):
         pass

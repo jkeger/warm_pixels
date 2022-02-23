@@ -17,17 +17,7 @@ class CorrectedProcess(AbstractProcess):
         )
         self.raw_process = raw_process
 
-    def process_quadrant(self, quadrant):
-        self.raw_process.process_quadrant(quadrant)
-
-        # Extract from corrected images with CTI removed
-        if self.need_to_make_file(
-                self.dataset.saved_consistent_lines(quadrant),
-        ):
-            print(f"  Extract CTI-removed warm pixels ({quadrant})...")
-            self.extract_consistent_warm_pixels_corrected(quadrant)
-
-    def extract_consistent_warm_pixels_corrected(self, quadrant):
+    def consistent_lines_for(self, quadrant):
         """Extract the corresponding warm pixels from the corrected images with CTI
         removed, in the same locations as the orignal consistent warm pixels.
 
@@ -42,9 +32,7 @@ class CorrectedProcess(AbstractProcess):
             The set of consistent warm pixel trails, saved to
             dataset.saved_consistent_lines(use_corrected=True).
         """
-        # Load original warm pixels for the whole dataset
-        warm_pixels = PixelLineCollection()
-        warm_pixels.load(self.raw_process.dataset.saved_consistent_lines(quadrant))
+        warm_pixels = self.raw_process.consistent_lines_for(quadrant)
 
         # Corrected images
         warm_pixels_cor = PixelLineCollection()
@@ -82,4 +70,4 @@ class CorrectedProcess(AbstractProcess):
         print("Extracted %d lines" % warm_pixels_cor.n_lines)
 
         # Save
-        warm_pixels_cor.save(self.dataset.saved_consistent_lines(quadrant))
+        return warm_pixels_cor
