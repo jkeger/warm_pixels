@@ -12,8 +12,6 @@ logger = logging.getLogger(
 
 
 def find_consistent_warm_pixels(
-        dataset,
-        quadrant,
         warm_pixels,
         flux_min=None,
         flux_max=None
@@ -61,8 +59,7 @@ def find_consistent_warm_pixels(
     # Extract the consistent warm pixels
     warm_pixels.lines = warm_pixels.lines[consistent_lines]
 
-    # Save
-    warm_pixels.save(dataset.saved_consistent_lines(quadrant))
+    return warm_pixels
 
 
 def stack_dataset_warm_pixels(dataset, quadrants):

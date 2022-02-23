@@ -68,8 +68,6 @@ def find_dataset_warm_pixels(dataset, quadrant):
         # Add them to the collection
         warm_pixels.append(new_warm_pixels)
 
-    # Save
-    warm_pixels.save(dataset.saved_lines(quadrant))
     return warm_pixels
 
 
