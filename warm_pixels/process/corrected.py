@@ -25,12 +25,6 @@ class CorrectedProcess(AbstractProcess):
         ----------
         quadrant : str (opt.)
             The quadrant (A, B, C, D) of the image to load.
-
-        Saves
-        -----
-        warm_pixels_cor : PixelLineCollection
-            The set of consistent warm pixel trails, saved to
-            dataset.saved_consistent_lines(use_corrected=True).
         """
         warm_pixels = self.raw_process.consistent_lines_for(quadrant)
 
@@ -50,8 +44,8 @@ class CorrectedProcess(AbstractProcess):
             # Select consistent warm pixels found from this image
             image_name_q = f"{image_name}_{quadrant}"
             sel = np.where(warm_pixels.origins == image_name_q)[0]
-            for i in sel:
-                line = warm_pixels.lines[i]
+            for j in sel:
+                line = warm_pixels.lines[j]
                 row, column = line.location
 
                 # Copy the original metadata but take the data from the corrected image
@@ -67,7 +61,7 @@ class CorrectedProcess(AbstractProcess):
                     )
                 )
 
-        print("Extracted %d lines" % warm_pixels_cor.n_lines)
+        print(f"Extracted {warm_pixels_cor.n_lines} lines")
 
         # Save
         return warm_pixels_cor
