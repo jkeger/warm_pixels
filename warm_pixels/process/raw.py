@@ -6,7 +6,10 @@ from .abstract import AbstractProcess
 
 class RawProcess(AbstractProcess):
     def consistent_lines_for(self, quadrant):
-        warm_pixels = find_dataset_warm_pixels(self.dataset, quadrant)
+        warm_pixels = find_dataset_warm_pixels(
+            self.dataset,
+            quadrant
+        )
 
         return warm_pixels.consistent(
             flux_min=ut.flux_bins[0],

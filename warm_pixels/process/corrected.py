@@ -63,5 +63,4 @@ class CorrectedProcess(AbstractProcess):
 
         print(f"Extracted {warm_pixels_cor.n_lines} lines")
 
-        # Save
         return warm_pixels_cor
