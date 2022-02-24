@@ -191,8 +191,8 @@ class PixelLineCollection:
 
     def consistent(
             self,
-            flux_min=None,
-            flux_max=None
+            flux_min,
+            flux_max,
     ):
         """Find the consistent warm pixels in a dataset.
 
@@ -200,44 +200,31 @@ class PixelLineCollection:
 
         Parameters
         ----------
-        dataset : Dataset
-            The dataset object with a list of image file paths and metadata.
-
-        quadrant : str (opt.)
-            The quadrant (A, B, C, D) of the image to load.
-
         flux_min, flux_max : float (opt.)
             If provided, then before checking for consistent pixels, discard any
             with fluxes outside of these limits.
-
-        Saves
-        -----
-        warm_pixels : PixelLineCollection
-            The set of consistent warm pixel trails, saved to
-            dataset.saved_consistent_lines().
         """
         # Ignore warm pixels below the minimum flux
-        if flux_min is not None:
-            sel_flux = np.where(
-                (self.fluxes > flux_min) & (self.fluxes < flux_max)
-            )[0]
-            print("Kept %d bounded fluxes of %d" % (len(sel_flux), self.n_lines))
-            self.lines = self.lines[sel_flux]
-            print("    ", end="")
+        sel_flux = np.where(
+            (flux_min < self.fluxes) & (self.fluxes < flux_max)
+        )[0]
+        print(f"Kept {len(sel_flux)} bounded fluxes of {self.n_lines}")
+        within_fluxes = PixelLineCollection(
+            self.lines[sel_flux]
+        )
+        print("    ", end="")
 
         # Find the warm pixels present in at least e.g. 2/3 of the images
-        consistent_lines = self.find_consistent_lines(
+        consistent_lines = within_fluxes.find_consistent_lines(
             fraction_present=ut.fraction_present
         )
         print(
-            "Found %d consistents of %d possibles"
-            % (len(consistent_lines), self.n_lines)
+            f"Found {len(consistent_lines)} consistent of {within_fluxes.n_lines} possibles"
         )
 
-        # Extract the consistent warm pixels
-        self.lines = self.lines[consistent_lines]
-
-        return self
+        return PixelLineCollection(
+            within_fluxes.lines[consistent_lines]
+        )
 
     def __len__(self):
         return len(self.lines)

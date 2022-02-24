@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 
-from warm_pixels import hst_functions as fu
+from warm_pixels import hst_functions as fu, PixelLineCollection
 
 
 class AbstractProcess(ABC):
