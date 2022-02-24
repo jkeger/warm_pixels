@@ -70,7 +70,7 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
         plt.close()
 
 
-def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
+def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=None):
     """Plot histograms of the properties of premade warm pixel trails.
 
     find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
@@ -95,18 +95,13 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
     ax3 = plt.subplot(gs[1, 0])
     ax4 = plt.subplot(gs[1, 1])
 
-    if len(quadrants) > 1:
-        colours = misc.A1_c[: len(quadrants)]
+    if len(all_consistent_lines) > 1:
+        colours = misc.A1_c
     else:
         colours = ["k"]
 
     # Load
-    warm_pixels = sum(
-        PixelLineCollection.load(
-            dataset.saved_consistent_lines(quadrant)
-        )
-        for quadrant in quadrants
-    )
+    warm_pixels = sum(all_consistent_lines)
 
     # Set bins for all quadrants
     n_row_bins = 15
@@ -131,12 +126,11 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
     date_bins = np.linspace(date_min, date_max, n_date_bins + 1)
 
     # Plot each quadrant separately
-    for quadrant, c in zip(quadrants, colours):
-        # Load only this quadrant
-        warm_pixels = PixelLineCollection.load(
-            dataset.saved_consistent_lines(quadrant)
-        )
-
+    for quadrant, warm_pixels, c in zip(
+            quadrants,
+            all_consistent_lines,
+            colours
+    ):
         # Data
         row_hist, row_bin_edges = np.histogram(
             warm_pixels.locations[:, 0], bins=row_bins

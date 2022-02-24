@@ -16,8 +16,12 @@ class RawProcess(AbstractProcess):
             flux_max=ut.flux_bins[-1],
         )
 
-    def stack_warm_pixels(self, quadrants):
-        super().stack_warm_pixels(quadrants)
+    def run(self):
+        super().run()
+        for quadrants in self.quadrants.groups:
+            self.plot_stacked_trails(quadrants)
+
+    def plot_stacked_trails(self, quadrants):
         # Plot stacked lines
         # TODO: this runs for corrected
         if self.need_to_make_file(
