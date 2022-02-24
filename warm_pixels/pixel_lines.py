@@ -4,7 +4,7 @@ import numpy as np
 from . import hst_utilities as ut
 
 
-class PixelLine(object):
+class PixelLine:
     def __init__(
             self,
             data=None,
@@ -50,11 +50,6 @@ class PixelLine(object):
 
         n_stacked : int
             If the line is an averaged stack, the number of stacked lines.
-
-        Attributes
-        ----------
-        length : int
-            The number of pixels in the data array.
         """
         self.data = data
         self.noise = noise
