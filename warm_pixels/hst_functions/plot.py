@@ -206,10 +206,9 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     # Load
     stacked_lines = StackedPixelLineCollection.load(dataset.saved_stacked_lines(quadrants))
 
-    n_row_bins = len(stacked_lines.row_bins) - 1
-    n_flux_bins = len(stacked_lines.flux_bins) - 1
-
-    n_background_bins = len(stacked_lines.background_bins) - 1
+    n_row_bins = stacked_lines.n_row_bins
+    n_flux_bins = stacked_lines.n_flux_bins
+    n_background_bins = stacked_lines.n_background_bins
 
     # Plot the stacked trails
     plt.figure(figsize=(25, 12))

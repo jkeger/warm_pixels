@@ -116,17 +116,14 @@ def fit_dataset_total_trap_density(
     stacked_lines = StackedPixelLineCollection.load(
         dataset.saved_stacked_lines(quadrants)
     )
-    n_row_bins = len(stacked_lines.row_bins)
-    n_flux_bins = len(stacked_lines.flux_bins)
-    n_background_bins = len(stacked_lines.background_bins)
 
     # Decide which bin to fit
     if row_bins is None:
-        row_bins = range(n_row_bins)
+        row_bins = range(stacked_lines.n_row_bins)
     if flux_bins is None:
-        flux_bins = range(n_flux_bins)
+        flux_bins = range(stacked_lines.n_flux_bins)
     if background_bins is None:
-        background_bins = range(n_background_bins)
+        background_bins = range(stacked_lines.n_background_bins)
 
     # Compile the data from all stacked lines
     n_lines_used = 0
@@ -144,11 +141,11 @@ def fit_dataset_total_trap_density(
             for i_background in background_bins:
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
-                    n_row_bins=n_row_bins,
+                    n_row_bins=stacked_lines.n_row_bins,
                     i_flux=i_flux,
-                    n_flux_bins=n_flux_bins,
+                    n_flux_bins=stacked_lines.n_flux_bins,
                     i_background=i_background,
-                    n_background_bins=n_background_bins,
+                    n_background_bins=stacked_lines.n_background_bins,
                 )
 
                 line = stacked_lines.lines[bin_index]
