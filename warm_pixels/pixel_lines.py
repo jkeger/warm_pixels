@@ -1,4 +1,6 @@
+import os
 import pickle
+from pathlib import Path
 
 import numpy as np
 
@@ -424,7 +426,6 @@ class PixelLineCollection:
             background_max=None,
             background_scale="linear",
             background_bins=None,
-            return_bin_info=False,
     ):
         """Create a collection of stacked lines by averaging within bins.
 
@@ -695,13 +696,61 @@ class PixelLineCollection:
 
             line.data = np.mean(line.data, axis=0)
 
-        if return_bin_info:
-            return (
-                PixelLineCollection(lines=stacked_lines),
-                row_bins,
-                flux_bins,
-                date_bins,
-                background_bins,
-            )
-        else:
-            return PixelLineCollection(lines=stacked_lines)
+        return StackedPixelLineCollection(
+            lines=stacked_lines,
+            row_bins=row_bins,
+            flux_bins=flux_bins,
+            date_bins=date_bins,
+            background_bins=background_bins,
+        )
+
+
+class StackedPixelLineCollection(PixelLineCollection):
+    def __init__(
+            self,
+            lines,
+            row_bins,
+            flux_bins,
+            date_bins,
+            background_bins,
+    ):
+        super().__init__(lines)
+        self.row_bins = row_bins
+        self.flux_bins = flux_bins
+        self.date_bins = date_bins
+        self.background_bins = background_bins
+
+    def save(self, filename):
+        path = Path(filename)
+        os.makedirs(
+            path,
+            exist_ok=True
+        )
+        super().save(
+            path / "lines.pickle"
+        )
+        np.savez(
+            str(path / "info.npz"),
+            self.row_bins,
+            self.flux_bins,
+            self.date_bins,
+            self.background_bins,
+        )
+
+    @classmethod
+    def load(cls, filename):
+        path = Path(filename)
+        stacked_lines = PixelLineCollection.load(
+            path / "lines.pickle"
+        )
+        npzfile = np.load(str(path / "info.npz"))
+        row_bins, flux_bins, date_bins, background_bins = [
+            (len(npzfile[var]) - 1) for var in npzfile.files
+        ]
+        return StackedPixelLineCollection(
+            stacked_lines,
+            row_bins,
+            flux_bins,
+            date_bins,
+            background_bins,
+        )

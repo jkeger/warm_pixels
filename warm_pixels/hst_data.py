@@ -142,12 +142,7 @@ class Dataset:
     def saved_stacked_lines(self, quadrants):
         """Return the file name including the path for saving derived data."""
         quadrant_string = "".join(quadrants)
-        return self.output_path / f"saved_stacked_lines_{quadrant_string}.pickle"
-
-    def saved_stacked_info(self, quadrants):
-        """Return the file name including the path for saving derived data."""
-        quadrant_string = "".join(quadrants)
-        return self.output_path / f"saved_stacked_info_{quadrant_string}.npz"
+        return self.output_path / f"saved_stacked_lines_{quadrant_string}"
 
     def plotted_stacked_trails(self, quadrants):
         """Return the file name including the path for saving derived data."""
