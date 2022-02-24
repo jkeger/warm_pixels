@@ -80,3 +80,16 @@ def test_add(
                 pixel_line, pixel_line
             ]) == combined
     ).all()
+
+
+def test_sum(
+        pixel_line_collection,
+        pixel_line,
+):
+    combined = sum(pixel_line_collection, pixel_line_collection)
+    assert isinstance(combined, PixelLineCollection)
+    assert (
+            PixelLineCollection([
+                pixel_line, pixel_line
+            ]) == combined
+    ).all()

@@ -225,7 +225,11 @@ class PixelLineCollection:
     def __add__(self, other):
         collection = PixelLineCollection()
         collection.append(self.lines)
-        collection.append(other.lines)
+        if isinstance(
+            other, PixelLineCollection
+        ):
+            other = other.lines
+        collection.append(other)
         return collection
 
     def __eq__(self, other):
