@@ -38,9 +38,7 @@ def make_pixel_line():
 def make_pixel_line_collection(
         pixel_line
 ):
-    collection = PixelLineCollection()
-    collection.append([pixel_line])
-    return collection
+    return PixelLineCollection([pixel_line])
 
 
 def test_locations(
@@ -56,8 +54,7 @@ def test_save_and_load(
     pixel_line_collection.save(
         save_path
     )
-    loaded = PixelLineCollection()
-    loaded.load(save_path)
+    loaded = PixelLineCollection.load(save_path)
     assert (loaded.locations == np.array([[14, 29]])).all()
 
 

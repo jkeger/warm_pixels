@@ -226,7 +226,7 @@ class PixelLineCollection:
         collection = PixelLineCollection()
         collection.append(self.lines)
         if isinstance(
-            other, PixelLineCollection
+                other, PixelLineCollection
         ):
             other = other.lines
         collection.append(other)
@@ -316,7 +316,8 @@ class PixelLineCollection:
         with open(filename, "wb") as f:
             pickle.dump(self.lines, f)
 
-    def load(self, filename):
+    @classmethod
+    def load(cls, filename):
         """ Load and append lines that were previously saved. """
         # Check the file extension
         filename = str(filename)
@@ -325,7 +326,7 @@ class PixelLineCollection:
 
         # Load the lines
         with open(filename, "rb") as f:
-            self.append(pickle.load(f))
+            return PixelLineCollection(pickle.load(f))
 
     def remove_symmetry(self, n_pixels_used_for_background=5):
         """Convert each line from a format that has a warm pixel in the middle (and background) 
