@@ -42,7 +42,7 @@ class WarmPixels:
         # ========
         # Find and stack warm pixels in each dataset
         # ========
-        datasets = []
+        processes = []
 
         for i_dataset, dataset in enumerate(self.datasets):
             print(
@@ -57,9 +57,9 @@ class WarmPixels:
             )
             if self.use_corrected:
                 process_ = CorrectedProcess(process_)
-                
+
             process_.plot()
-            datasets.append(process_.dataset)
+            processes.append(process_)
 
         # ========
         # Compiled results from all datasets
@@ -74,7 +74,7 @@ class WarmPixels:
                     flush=True,
                 )
                 fu.fit_total_trap_densities(
-                    datasets, self.list_name, quadrants, self.use_corrected
+                    processes, self.list_name, quadrants, self.use_corrected
                 )
 
         # Plot the trap density evolution

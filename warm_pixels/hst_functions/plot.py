@@ -13,7 +13,7 @@ from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
 from warm_pixels.misc import nice_plot
 from warm_pixels.misc import plot_hist
-from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
+from warm_pixels.pixel_lines import PixelLineCollection
 from .fit import fit_dataset_total_trap_density
 from .trail_model import trail_model_hst
 
@@ -177,7 +177,7 @@ def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=Non
         print("Saved", save_path.stem)
 
 
-def plot_stacked_trails(dataset, stacked_lines, quadrants, use_corrected=False, save_path=None):
+def plot_stacked_trails(process, quadrants, use_corrected=False, save_path=None):
     """Plot a tiled set of stacked trails.
 
     stack_dataset_warm_pixels() must first be run for the dataset.
@@ -197,7 +197,7 @@ def plot_stacked_trails(dataset, stacked_lines, quadrants, use_corrected=False, 
     save_path : str (opt.)
         The file path for saving the figure. If None, then show the figure.
     """
-
+    stacked_lines = process.stacked_lines_for_group(quadrants)
 
     n_row_bins = stacked_lines.n_row_bins
     n_flux_bins = stacked_lines.n_flux_bins
@@ -252,7 +252,7 @@ def plot_stacked_trails(dataset, stacked_lines, quadrants, use_corrected=False, 
     # Fit the total trap density to the full dataset
     print("Performing global fit")
     rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
-        dataset, quadrants, use_arctic=False
+        process, quadrants, use_arctic=False
     )
     print(rho_q_set, rho_q_std_set, "exponentials")
 
@@ -343,7 +343,7 @@ def plot_stacked_trails(dataset, stacked_lines, quadrants, use_corrected=False, 
                 # ========
                 # Fit the total trap density to this single stacked trail (dotted line, which has swapped since Jacob's version)
                 rho_q_indiv, rho_q_std_indiv, y_fit_indiv = fit_dataset_total_trap_density(
-                    dataset, quadrants, use_arctic=True,
+                    process, quadrants, use_arctic=True,
                     row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )
                 ax.plot(pixels, y_fit_indiv, color=c, ls=misc.ls_dot, alpha=0.7)
@@ -355,7 +355,7 @@ def plot_stacked_trails(dataset, stacked_lines, quadrants, use_corrected=False, 
                     n_e=line.mean_flux,
                     n_bg=line.mean_background,
                     row=line.mean_row,
-                    date=dataset.date,
+                    date=process.dataset.date,
                 )
                 ax.plot(pixels, model_trail, color=c, ls=misc.ls_dash, alpha=0.7)
 

@@ -26,9 +26,8 @@ class RawProcess(AbstractProcess):
                     filename
             ):
                 fu.plot_stacked_trails(
-                    dataset=self.dataset,
+                    process=self,
                     use_corrected=False,
                     save_path=filename,
                     quadrants=group,
-                    stacked_lines=self.stacked_lines_for_group(group)
                 )

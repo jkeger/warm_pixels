@@ -4,7 +4,7 @@ import lmfit
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
-from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
+from warm_pixels.pixel_lines import PixelLineCollection
 from . import trail_model
 
 
@@ -87,7 +87,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
 
 def fit_dataset_total_trap_density(
-        dataset, quadrants, use_arctic=False,
+        process, quadrants, use_arctic=False,
         row_bins=None, flux_bins=None, background_bins=None
 ):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
@@ -113,8 +113,8 @@ def fit_dataset_total_trap_density(
         The standard error on the total trap density.
     """
     # Load
-    stacked_lines = StackedPixelLineCollection.load(
-        dataset.saved_stacked_lines(quadrants)
+    stacked_lines = process.stacked_lines_for_group(
+        quadrants
     )
 
     # Decide which bin to fit
@@ -175,13 +175,13 @@ def fit_dataset_total_trap_density(
 
     # Run the fitting
     rho_q, rho_q_std, y_fit = fit_total_trap_density(
-        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, dataset.date, use_arctic=use_arctic
+        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, process.dataset.date, use_arctic=use_arctic
     )
 
     return rho_q, rho_q_std, y_fit
 
 
-def fit_total_trap_densities(dataset_list, list_name, quadrants, use_corrected=False):
+def fit_total_trap_densities(processes, list_name, quadrants, use_corrected=False):
     """Call fit_dataset_total_trap_density() for each dataset and compile and
     save the results.
 
@@ -215,18 +215,18 @@ def fit_total_trap_densities(dataset_list, list_name, quadrants, use_corrected=F
     density_errors = []
 
     # Analyse each dataset
-    for i_dataset, dataset in enumerate(dataset_list):
+    for i_dataset, process in enumerate(processes):
         print(
             "\rFit total trap densities (%s)... "
             '"%s" (%d of %d)'
-            % ("".join(quadrants), dataset.name, i_dataset + 1, len(dataset_list)),
+            % ("".join(quadrants), process.dataset.name, i_dataset + 1, len(processes)),
             end="            ",
             flush=True,
         )
 
         # Fit the density
         rho_q, rho_q_std, y_fit = fit_dataset_total_trap_density(
-            dataset, quadrants, use_corrected
+            process, quadrants, use_corrected
         )
 
         # Skip bad fits
@@ -235,7 +235,7 @@ def fit_total_trap_densities(dataset_list, list_name, quadrants, use_corrected=F
             continue
 
         # Append the data
-        days.append(dataset.date - ut.date_acs_launch)
+        days.append(process.dataset.date - ut.date_acs_launch)
         densities.append(rho_q)
         density_errors.append(rho_q_std)
     print("\rFit total trap densities (%s)... " % "".join(quadrants))
