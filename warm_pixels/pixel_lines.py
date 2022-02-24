@@ -1,6 +1,7 @@
 import pickle
 
 import numpy as np
+
 from . import hst_utilities as ut
 
 
@@ -220,6 +221,15 @@ class PixelLineCollection:
         return PixelLineCollection(
             within_fluxes.lines[consistent_lines]
         )
+
+    def __add__(self, other):
+        collection = PixelLineCollection()
+        collection.append(self.lines)
+        collection.append(other.lines)
+        return collection
+
+    def __eq__(self, other):
+        return self.lines == other.lines
 
     def __len__(self):
         return len(self.lines)

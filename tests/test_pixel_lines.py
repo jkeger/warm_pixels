@@ -59,3 +59,24 @@ def test_save_and_load(
     loaded = PixelLineCollection()
     loaded.load(save_path)
     assert (loaded.locations == np.array([[14, 29]])).all()
+
+
+def test_equality(pixel_line):
+    assert PixelLineCollection([
+        pixel_line
+    ]) == PixelLineCollection([
+        pixel_line
+    ])
+
+
+def test_add(
+        pixel_line,
+        pixel_line_collection
+):
+    combined = pixel_line_collection + pixel_line_collection
+    assert isinstance(combined, PixelLineCollection)
+    assert (
+            PixelLineCollection([
+                pixel_line, pixel_line
+            ]) == combined
+    ).all()
