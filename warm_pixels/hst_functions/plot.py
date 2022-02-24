@@ -101,10 +101,12 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
         colours = ["k"]
 
     # Load
-    warm_pixels = PixelLineCollection()
-    # Append data from each quadrant
-    for quadrant in quadrants:
-        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
+    warm_pixels = sum(
+        PixelLineCollection.load(
+            dataset.saved_consistent_lines(quadrant)
+        )
+        for quadrant in quadrants
+    )
 
     # Set bins for all quadrants
     n_row_bins = 15
@@ -131,8 +133,9 @@ def plot_warm_pixel_distributions(dataset, quadrants, save_path=None):
     # Plot each quadrant separately
     for quadrant, c in zip(quadrants, colours):
         # Load only this quadrant
-        warm_pixels = PixelLineCollection()
-        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
+        warm_pixels = PixelLineCollection.load(
+            dataset.saved_consistent_lines(quadrant)
+        )
 
         # Data
         row_hist, row_bin_edges = np.histogram(
@@ -201,8 +204,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
         The file path for saving the figure. If None, then show the figure.
     """
     # Load
-    stacked_lines = PixelLineCollection()
-    stacked_lines.load(dataset.saved_stacked_lines(quadrants))
+    stacked_lines = PixelLineCollection.load(dataset.saved_stacked_lines(quadrants))
     npzfile = np.load(dataset.saved_stacked_info(quadrants))
     row_bins, flux_bins, date_bins, background_bins = [
         npzfile[var] for var in npzfile.files

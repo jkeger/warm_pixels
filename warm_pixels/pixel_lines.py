@@ -222,6 +222,11 @@ class PixelLineCollection:
             within_fluxes.lines[consistent_lines]
         )
 
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        raise ValueError()
+
     def __add__(self, other):
         collection = PixelLineCollection()
         collection.append(self.lines)

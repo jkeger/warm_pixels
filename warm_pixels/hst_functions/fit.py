@@ -113,8 +113,7 @@ def fit_dataset_total_trap_density(
         The standard error on the total trap density.
     """
     # Load
-    stacked_lines = PixelLineCollection()
-    stacked_lines.load(dataset.saved_stacked_lines(quadrants))
+    stacked_lines = PixelLineCollection.load(dataset.saved_stacked_lines(quadrants))
     npzfile = np.load(dataset.saved_stacked_info(quadrants))
     n_row_bins, n_flux_bins, n_date_bins, n_background_bins = [
         (len(npzfile[var]) - 1) for var in npzfile.files

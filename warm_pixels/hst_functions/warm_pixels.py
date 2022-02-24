@@ -34,11 +34,12 @@ def stack_dataset_warm_pixels(dataset, quadrants):
     stacked_lines : PixelLineCollection
         The set of stacked pixel trails, saved to dataset.saved_stacked_lines().
     """
-    # Load
-    warm_pixels = PixelLineCollection()
-    # Append data from each quadrant
-    for quadrant in quadrants:
-        warm_pixels.load(dataset.saved_consistent_lines(quadrant))
+    warm_pixels = sum(
+        PixelLineCollection.load(
+            dataset.saved_consistent_lines(quadrant)
+        )
+        for quadrant in quadrants
+    )
 
     # Subtract preceeding pixels in each line before stacking
     #
