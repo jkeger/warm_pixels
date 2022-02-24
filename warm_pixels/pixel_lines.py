@@ -745,10 +745,10 @@ class StackedPixelLineCollection(PixelLineCollection):
         )
         npzfile = np.load(str(path / "info.npz"))
         row_bins, flux_bins, date_bins, background_bins = [
-            (len(npzfile[var]) - 1) for var in npzfile.files
+            npzfile[var] for var in npzfile.files
         ]
         return StackedPixelLineCollection(
-            stacked_lines,
+            stacked_lines.lines,
             row_bins,
             flux_bins,
             date_bins,

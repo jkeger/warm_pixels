@@ -4,7 +4,7 @@ import lmfit
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
-from warm_pixels.pixel_lines import PixelLineCollection
+from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
 from . import trail_model
 
 
@@ -113,11 +113,12 @@ def fit_dataset_total_trap_density(
         The standard error on the total trap density.
     """
     # Load
-    stacked_lines = PixelLineCollection.load(dataset.saved_stacked_lines(quadrants))
-    npzfile = np.load(dataset.saved_stacked_info(quadrants))
-    n_row_bins, n_flux_bins, n_date_bins, n_background_bins = [
-        (len(npzfile[var]) - 1) for var in npzfile.files
-    ]
+    stacked_lines = StackedPixelLineCollection.load(
+        dataset.saved_stacked_lines(quadrants)
+    )
+    n_row_bins = len(stacked_lines.row_bins)
+    n_flux_bins = len(stacked_lines.flux_bins)
+    n_background_bins = len(stacked_lines.background_bins)
 
     # Decide which bin to fit
     if row_bins is None:

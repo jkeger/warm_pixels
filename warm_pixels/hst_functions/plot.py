@@ -13,7 +13,7 @@ from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
 from warm_pixels.misc import nice_plot
 from warm_pixels.misc import plot_hist
-from warm_pixels.pixel_lines import PixelLineCollection
+from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
 from .fit import fit_dataset_total_trap_density
 from .trail_model import trail_model_hst
 
@@ -204,15 +204,12 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
         The file path for saving the figure. If None, then show the figure.
     """
     # Load
-    stacked_lines = PixelLineCollection.load(dataset.saved_stacked_lines(quadrants))
-    npzfile = np.load(dataset.saved_stacked_info(quadrants))
-    row_bins, flux_bins, date_bins, background_bins = [
-        npzfile[var] for var in npzfile.files
-    ]
-    n_row_bins = len(row_bins) - 1
-    n_flux_bins = len(flux_bins) - 1
-    n_date_bins = len(date_bins) - 1
-    n_background_bins = len(background_bins) - 1
+    stacked_lines = StackedPixelLineCollection.load(dataset.saved_stacked_lines(quadrants))
+
+    n_row_bins = len(stacked_lines.row_bins) - 1
+    n_flux_bins = len(stacked_lines.flux_bins) - 1
+
+    n_background_bins = len(stacked_lines.background_bins) - 1
 
     # Plot the stacked trails
     plt.figure(figsize=(25, 12))
@@ -422,7 +419,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                     ax.text(
                         1.02,
                         1.0,
-                        "%d" % row_bins[i_row + 1],
+                        "%d" % stacked_lines.row_bins[i_row + 1],
                         transform=ax.transAxes,
                         rotation=90,
                         ha="left",
@@ -438,7 +435,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                         ha="center",
                         va="bottom",
                     )
-                flux_max = flux_bins[i_flux + 1]
+                flux_max = stacked_lines.flux_bins[i_flux + 1]
                 pow10 = np.floor(np.log10(flux_max))
                 text = r"$%.1f \!\times\! 10^{%d}$" % (flux_max / 10 ** pow10, pow10)
                 ax.text(
@@ -448,8 +445,8 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
                 text = "Background:  "
                 for i_background in range(n_background_bins):
                     text += "%.0f$-$%.0f" % (
-                        background_bins[i_background],
-                        background_bins[i_background + 1],
+                        stacked_lines.background_bins[i_background],
+                        stacked_lines.background_bins[i_background + 1],
                     )
                     if i_background < n_background_bins - 1:
                         text += ",  "
