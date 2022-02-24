@@ -177,7 +177,7 @@ def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=Non
         print("Saved", save_path.stem)
 
 
-def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None):
+def plot_stacked_trails(dataset, stacked_lines, quadrants, use_corrected=False, save_path=None):
     """Plot a tiled set of stacked trails.
 
     stack_dataset_warm_pixels() must first be run for the dataset.
@@ -197,8 +197,7 @@ def plot_stacked_trails(dataset, quadrants, use_corrected=False, save_path=None)
     save_path : str (opt.)
         The file path for saving the figure. If None, then show the figure.
     """
-    # Load
-    stacked_lines = StackedPixelLineCollection.load(dataset.saved_stacked_lines(quadrants))
+
 
     n_row_bins = stacked_lines.n_row_bins
     n_flux_bins = stacked_lines.n_flux_bins

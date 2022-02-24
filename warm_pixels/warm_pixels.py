@@ -39,9 +39,7 @@ def find_dataset_warm_pixels(dataset, quadrant):
         )
 
         # Load the image
-        array = image.load_quadrant(
-            quadrant
-        )
+        array = image.load_quadrant(quadrant)
 
         date = 2400000.5 + array.header.modified_julian_date
 

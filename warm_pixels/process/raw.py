@@ -16,28 +16,19 @@ class RawProcess(AbstractProcess):
             flux_max=ut.flux_bins[-1],
         )
 
-    def run(self):
-        super().run()
-        for quadrants in self.quadrants.groups:
-            self.plot_stacked_trails(quadrants)
-
-    def plot_stacked_trails(self, quadrants):
-        # Plot stacked lines
-        if self.need_to_make_file(
-                self.dataset.plotted_stacked_trails(
-                    quadrants,
-                ),
-        ):
-            print(
-                f"  Plot stacked trails ({''.join(quadrants)})...",
-                end=" ",
-                flush=True,
+    def plot(self):
+        super().plot()
+        for group in self.quadrants.groups:
+            filename = self.dataset.plotted_stacked_trails(
+                group,
             )
-            fu.plot_stacked_trails(
-                self.dataset,
-                quadrants,
-                use_corrected=False,
-                save_path=self.dataset.plotted_stacked_trails(
-                    quadrants
-                ),
-            )
+            if self.need_to_make_file(
+                    filename
+            ):
+                fu.plot_stacked_trails(
+                    dataset=self.dataset,
+                    use_corrected=False,
+                    save_path=filename,
+                    quadrants=group,
+                    stacked_lines=self.stacked_lines_for_group(group)
+                )

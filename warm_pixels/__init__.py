@@ -57,15 +57,15 @@ class WarmPixels:
             )
             if self.use_corrected:
                 process_ = CorrectedProcess(process_)
-            process_.run()
-
+                
+            process_.plot()
             datasets.append(process_.dataset)
 
         # ========
         # Compiled results from all datasets
         # ========
         # Fit and save the total trap densities
-        if self.prep_density:
+        if self.prep_density or self.plot_density:
             # In each image quadrant or combined quadrants
             for quadrants in self.quadrants.groups:
                 print(
