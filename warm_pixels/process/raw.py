@@ -23,7 +23,6 @@ class RawProcess(AbstractProcess):
 
     def plot_stacked_trails(self, quadrants):
         # Plot stacked lines
-        # TODO: this runs for corrected
         if self.need_to_make_file(
                 self.dataset.plotted_stacked_trails(
                     quadrants,

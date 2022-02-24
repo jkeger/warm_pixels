@@ -65,32 +65,6 @@ class AbstractProcess(ABC):
                 save_path=filename,
             )
 
-    def stack_dataset_warm_pixels(self, quadrants):
-        """Stack a set of premade warm pixel trails into bins.
-
-        find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
-        run for the dataset.
-
-        Parameters
-        ----------
-        quadrants : [str]
-            The list of quadrants (A, B, C, D) of the images to load, combined
-            together if more than one provided.
-        """
-        warm_pixels = sum(
-            self.consistent_lines_for_quadrant(
-                quadrant
-            )
-            for quadrant in quadrants
-        )
-
-        # Stack the lines in bins by distance from readout and total flux
-        return warm_pixels.generate_stacked_lines_from_bins(
-            n_row_bins=ut.n_row_bins,
-            flux_bins=ut.flux_bins,
-            n_background_bins=ut.n_background_bins,
-        )
-
     @abstractmethod
     def consistent_lines_for(self, quadrant):
         pass
