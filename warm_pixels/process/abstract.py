@@ -25,9 +25,10 @@ class AbstractProcess(ABC):
             filename = self.dataset.saved_consistent_lines(quadrant)
             if self.need_to_make_file(filename):
                 consistent_lines = self.consistent_lines_for(quadrant)
-                consistent_lines.save(
-                    self.dataset.saved_consistent_lines(quadrant)
-                )
+                consistent_lines.save(filename)
+            else:
+                consistent_lines = PixelLineCollection()
+                consistent_lines.load(filename)
 
         self.plot_distributions()
 
