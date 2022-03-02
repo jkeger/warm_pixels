@@ -1,6 +1,7 @@
 from typing import List
 
 from warm_pixels import hst_utilities as ut
+from .cache import cache
 from .quadrant import Quadrant
 
 
@@ -12,12 +13,14 @@ class Group:
     def __iter__(self):
         return iter(self.quadrants)
 
+    @cache
     def consistent_lines(self):
         return [
             quadrant.consistent_lines()
             for quadrant in self.quadrants
         ]
 
+    @cache
     def stacked_lines(self):
         return sum(
             self.consistent_lines()

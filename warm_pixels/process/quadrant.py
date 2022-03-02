@@ -3,6 +3,7 @@ import numpy as np
 from warm_pixels import hst_utilities as ut
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
+from .cache import cache
 
 
 class Quadrant:
@@ -13,19 +14,23 @@ class Quadrant:
     def __str__(self):
         return self.quadrant
 
-    def consistent_lines(self):
-        warm_pixels = find_dataset_warm_pixels(
+    @cache
+    def warm_pixels(self):
+        return find_dataset_warm_pixels(
             self.dataset,
             self.quadrant
         )
 
-        return warm_pixels.consistent(
+    @cache
+    def consistent_lines(self):
+        return self.warm_pixels().consistent(
             flux_min=ut.flux_bins[0],
             flux_max=ut.flux_bins[-1],
         )
 
 
 class CorrectedQuadrant(Quadrant):
+    @cache
     def consistent_lines(self):
         """Extract the corresponding warm pixels from the corrected images with CTI
         removed, in the same locations as the orignal consistent warm pixels.
