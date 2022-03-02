@@ -7,9 +7,12 @@ from warm_pixels.quadrant_groups import Quadrants
 @pytest.mark.parametrize(
     "true_flags, n_calls",
     [
-        (["prep_density", "plot_density"], 7),
-        (["prep_density", "plot_density", "use_corrected"], 5),
-        ([], 6),
+        # (["prep_density", "plot_density"], 7),
+        # (["prep_density", "plot_density", "use_corrected"], 5),
+        # ([], 6),
+        (["prep_density", "plot_density"], 25),
+        (["prep_density", "plot_density", "use_corrected"], 7),
+        ([], 22),
     ]
 )
 def test_integration(

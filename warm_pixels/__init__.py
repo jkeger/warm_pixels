@@ -9,6 +9,7 @@ from warm_pixels.hst_functions import plot
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.process import RawProcess, CorrectedProcess
+from warm_pixels.process.quadrant import Group, Quadrant, CorrectedQuadrant
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
 
@@ -32,6 +33,11 @@ class WarmPixels:
         # TODO: list name was originally the input...
         self.list_name = "test"
 
+    def need_to_make_file(self, filename):
+        if self.overwrite:
+            return True
+        return not os.path.exists(filename)
+
     def main(self):
         # ========
         # Create directories to contain output plots
@@ -42,7 +48,7 @@ class WarmPixels:
         # ========
         # Find and stack warm pixels in each dataset
         # ========
-        processes = []
+        all_groups = []
 
         for i_dataset, dataset in enumerate(self.datasets):
             print(
@@ -50,16 +56,51 @@ class WarmPixels:
                 f'({i_dataset + 1} of {len(self.datasets)}, '
                 f'{len(dataset)} images, "{self.quadrants}")'
             )
-            process_ = RawProcess(
-                dataset,
-                self.quadrants,
-                overwrite=self.overwrite,
-            )
+            QuadrantClass = Quadrant
             if self.use_corrected:
-                process_ = CorrectedProcess(process_)
+                QuadrantClass = CorrectedQuadrant
+                dataset = dataset.corrected()
 
-            process_.plot()
-            processes.append(process_)
+            groups = [
+                Group(
+                    dataset,
+                    [
+                        QuadrantClass(
+                            quadrant=quadrant,
+                            dataset=dataset
+                        )
+                        for quadrant in group
+                    ])
+                for group in self.quadrants.groups
+            ]
+            all_quadrants = [
+                quadrant
+                for group in groups
+                for quadrant in group.quadrants
+            ]
+
+            all_groups.append(groups)
+
+            filename = dataset.plotted_distributions(self.quadrants)
+            if self.need_to_make_file(filename):
+                print("  Distributions of warm pixels...", end=" ", flush=True)
+                fu.plot_warm_pixel_distributions(
+                    all_quadrants,
+                    save_path=filename,
+                )
+
+            for group in self.quadrants.groups:
+                filename = dataset.plotted_stacked_trails(
+                    group,
+                )
+                if self.need_to_make_file(
+                        filename
+                ):
+                    fu.plot_stacked_trails(
+                        use_corrected=False,
+                        save_path=filename,
+                        group=group,
+                    )
 
         # ========
         # Compiled results from all datasets
@@ -67,14 +108,14 @@ class WarmPixels:
         # Fit and save the total trap densities
         if self.prep_density or self.plot_density:
             # In each image quadrant or combined quadrants
-            for quadrants in self.quadrants.groups:
+            for groups in zip(*all_groups):
                 print(
-                    f"Fit total trap densities ({''.join(quadrants)})...",
+                    f"Fit total trap densities ({''.join(self.quadrants)})...",
                     end=" ",
                     flush=True,
                 )
                 fu.fit_total_trap_densities(
-                    processes, self.list_name, quadrants, self.use_corrected
+                    groups, self.list_name, self.use_corrected
                 )
 
         # Plot the trap density evolution

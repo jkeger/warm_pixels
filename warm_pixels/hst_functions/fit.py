@@ -5,6 +5,7 @@ import numpy as np
 
 from warm_pixels import hst_utilities as ut
 from warm_pixels.pixel_lines import PixelLineCollection
+from warm_pixels.process.quadrant import Group
 from . import trail_model
 
 
@@ -87,7 +88,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
 
 def fit_dataset_total_trap_density(
-        process, quadrants, use_arctic=False,
+        group: Group, use_arctic=False,
         row_bins=None, flux_bins=None, background_bins=None
 ):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
@@ -113,9 +114,7 @@ def fit_dataset_total_trap_density(
         The standard error on the total trap density.
     """
     # Load
-    stacked_lines = process.stacked_lines_for_group(
-        quadrants
-    )
+    stacked_lines = group.stacked_lines()
 
     # Decide which bin to fit
     if row_bins is None:
@@ -175,13 +174,13 @@ def fit_dataset_total_trap_density(
 
     # Run the fitting
     rho_q, rho_q_std, y_fit = fit_total_trap_density(
-        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, process.dataset.date, use_arctic=use_arctic
+        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, group.dataset.date, use_arctic=use_arctic
     )
 
     return rho_q, rho_q_std, y_fit
 
 
-def fit_total_trap_densities(processes, list_name, quadrants, use_corrected=False):
+def fit_total_trap_densities(groups, list_name, use_corrected=False):
     """Call fit_dataset_total_trap_density() for each dataset and compile and
     save the results.
 
@@ -215,18 +214,18 @@ def fit_total_trap_densities(processes, list_name, quadrants, use_corrected=Fals
     density_errors = []
 
     # Analyse each dataset
-    for i_dataset, process in enumerate(processes):
+    for i_dataset, group in enumerate(groups):
         print(
-            "\rFit total trap densities (%s)... "
+            "\rFit total trap densities... "
             '"%s" (%d of %d)'
-            % ("".join(quadrants), process.dataset.name, i_dataset + 1, len(processes)),
+            % (group.dataset.name, i_dataset + 1, len(groups)),
             end="            ",
             flush=True,
         )
 
         # Fit the density
         rho_q, rho_q_std, y_fit = fit_dataset_total_trap_density(
-            process, quadrants, use_corrected
+            group, use_corrected
         )
 
         # Skip bad fits
@@ -235,10 +234,10 @@ def fit_total_trap_densities(processes, list_name, quadrants, use_corrected=Fals
             continue
 
         # Append the data
-        days.append(process.dataset.date - ut.date_acs_launch)
+        days.append(group.dataset.date - ut.date_acs_launch)
         densities.append(rho_q)
         density_errors.append(rho_q_std)
-    print("\rFit total trap densities (%s)... " % "".join(quadrants))
+    print("\rFit total trap densities")
 
     if len(days) == 0:
         raise AssertionError(
@@ -253,7 +252,7 @@ def fit_total_trap_densities(processes, list_name, quadrants, use_corrected=Fals
 
     # Save
     np.savez(
-        ut.dataset_list_saved_density_evol(list_name, quadrants, use_corrected),
+        ut.dataset_list_saved_density_evol(list_name, groups[0].quadrants, use_corrected),
         days,
         densities,
         density_errors,

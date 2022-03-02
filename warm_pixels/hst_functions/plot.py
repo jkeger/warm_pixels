@@ -14,6 +14,7 @@ from warm_pixels import misc
 from warm_pixels.misc import nice_plot
 from warm_pixels.misc import plot_hist
 from warm_pixels.pixel_lines import PixelLineCollection
+from warm_pixels.process.quadrant import Group
 from .fit import fit_dataset_total_trap_density
 from .trail_model import trail_model_hst
 
@@ -70,7 +71,7 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
         plt.close()
 
 
-def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=None):
+def plot_warm_pixel_distributions(quadrants, save_path=None):
     """Plot histograms of the properties of premade warm pixel trails.
 
     find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
@@ -78,9 +79,6 @@ def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=Non
 
     Parameters
     ----------
-    dataset : Dataset
-        The dataset object with a list of image file paths and metadata.
-
     quadrants : [str]
         The list of quadrants (A, B, C, D) of the images to plot.
 
@@ -95,13 +93,13 @@ def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=Non
     ax3 = plt.subplot(gs[1, 0])
     ax4 = plt.subplot(gs[1, 1])
 
-    if len(all_consistent_lines) > 1:
+    if len(quadrants) > 1:
         colours = misc.A1_c
     else:
         colours = ["k"]
 
     # Load
-    warm_pixels = sum(all_consistent_lines)
+    warm_pixels = sum(quadrant.consistent_lines() for quadrant in quadrants)
 
     # Set bins for all quadrants
     n_row_bins = 15
@@ -126,11 +124,11 @@ def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=Non
     date_bins = np.linspace(date_min, date_max, n_date_bins + 1)
 
     # Plot each quadrant separately
-    for quadrant, warm_pixels, c in zip(
+    for quadrant, c in zip(
             quadrants,
-            all_consistent_lines,
             colours
     ):
+        warm_pixels = quadrants.consistent_lines()
         # Data
         row_hist, row_bin_edges = np.histogram(
             warm_pixels.locations[:, 0], bins=row_bins
@@ -177,7 +175,7 @@ def plot_warm_pixel_distributions(quadrants, all_consistent_lines, save_path=Non
         print("Saved", save_path.stem)
 
 
-def plot_stacked_trails(process, quadrants, use_corrected=False, save_path=None):
+def plot_stacked_trails(group: Group, use_corrected=False, save_path=None):
     """Plot a tiled set of stacked trails.
 
     stack_dataset_warm_pixels() must first be run for the dataset.
@@ -197,7 +195,7 @@ def plot_stacked_trails(process, quadrants, use_corrected=False, save_path=None)
     save_path : str (opt.)
         The file path for saving the figure. If None, then show the figure.
     """
-    stacked_lines = process.stacked_lines_for_group(quadrants)
+    stacked_lines = group.stacked_lines()
 
     n_row_bins = stacked_lines.n_row_bins
     n_flux_bins = stacked_lines.n_flux_bins
@@ -252,7 +250,7 @@ def plot_stacked_trails(process, quadrants, use_corrected=False, save_path=None)
     # Fit the total trap density to the full dataset
     print("Performing global fit")
     rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
-        process, quadrants, use_arctic=False
+        group, use_arctic=False
     )
     print(rho_q_set, rho_q_std_set, "exponentials")
 

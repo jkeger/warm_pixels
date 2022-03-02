@@ -75,7 +75,8 @@ class CorrectedQuadrant(Quadrant):
 
 
 class Group:
-    def __init__(self, quadrants: List[Quadrant]):
+    def __init__(self, dataset, quadrants: List[Quadrant]):
+        self.dataset = dataset
         self.quadrants = quadrants
 
     def consistent_lines(self):

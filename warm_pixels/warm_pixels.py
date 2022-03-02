@@ -3,8 +3,8 @@ from typing import Optional
 import numpy as np
 from scipy.ndimage import uniform_filter
 
+from warm_pixels import hst_functions as uf
 from warm_pixels import hst_utilities as ut
-from warm_pixels.hst_functions import plot_warm_pixels
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 
 
@@ -57,7 +57,7 @@ def find_dataset_warm_pixels(dataset, quadrant):
         print("Found %d possible warm pixels " % len(new_warm_pixels))
 
         # Plot
-        plot_warm_pixels(
+        uf.plot_warm_pixels(
             array,
             PixelLineCollection(new_warm_pixels),
             save_path=dataset.output_path / image_name_q,
