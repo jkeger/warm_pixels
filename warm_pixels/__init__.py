@@ -69,7 +69,9 @@ class WarmPixels:
                     # Plot
                     fu.plot_warm_pixels(
                         image_quadrant.array(),
-                        image_quadrant.warm_pixels(),
+                        PixelLineCollection(
+                            image_quadrant.warm_pixels(),
+                        ),
                         save_path=dataset.output_path / image_quadrant.name,
                     )
 
