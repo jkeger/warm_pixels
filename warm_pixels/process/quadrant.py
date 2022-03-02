@@ -89,10 +89,7 @@ class Quadrant:
         Warm pixels that are consistent across multiple images and therefore highly unlikely
         to have been caused by true light sources.
         """
-        return self.warm_pixels().consistent(
-            flux_min=ut.flux_bins[0],
-            flux_max=ut.flux_bins[-1],
-        )
+        return self.warm_pixels().consistent()
 
 
 class CorrectedQuadrant(Quadrant):

@@ -189,8 +189,8 @@ class PixelLineCollection:
 
     def consistent(
             self,
-            flux_min,
-            flux_max,
+            flux_min=ut.flux_bins[0],
+            flux_max=ut.flux_bins[-1],
     ):
         """Find the consistent warm pixels in a dataset.
 
@@ -206,18 +206,13 @@ class PixelLineCollection:
         sel_flux = np.where(
             (flux_min < self.fluxes) & (self.fluxes < flux_max)
         )[0]
-        print(f"Kept {len(sel_flux)} bounded fluxes of {self.n_lines}")
         within_fluxes = PixelLineCollection(
             self.lines[sel_flux]
         )
-        print("    ", end="")
 
         # Find the warm pixels present in at least e.g. 2/3 of the images
         consistent_lines = within_fluxes.find_consistent_lines(
             fraction_present=ut.fraction_present
-        )
-        print(
-            f"Found {len(consistent_lines)} consistent of {within_fluxes.n_lines} possibles"
         )
 
         return PixelLineCollection(
@@ -336,7 +331,7 @@ class PixelLineCollection:
             return PixelLineCollection(pickle.load(f))
 
     def remove_symmetry(self, n_pixels_used_for_background=5):
-        """Convert each line from a format that has a warm pixel in the middle (and background) 
+        """Convert each line from a format that has a warm pixel in the middle (and background)
         to just the trail (without background)."""
         self = np.array([line.remove_symmetry(n_pixels_used_for_background) for line in self.lines])
         return
@@ -475,9 +470,6 @@ class PixelLineCollection:
         background_bins, n_background_bins, background_min, background_max,
         background_scale : [float], int, float, float, str
             As above, for the bins by background.
-
-        return_bin_info : bool
-            If True, then also return the bin values for each parameter.
 
         Returns
         -------
