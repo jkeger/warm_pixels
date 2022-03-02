@@ -12,6 +12,9 @@ class Quadrant:
         self.quadrant = quadrant
         self.dataset = dataset
 
+    def __str__(self):
+        return self.quadrant
+
     def consistent_lines(self):
         warm_pixels = find_dataset_warm_pixels(
             self.dataset,
@@ -78,6 +81,9 @@ class Group:
     def __init__(self, dataset, quadrants: List[Quadrant]):
         self.dataset = dataset
         self.quadrants = quadrants
+
+    def __iter__(self):
+        return iter(self.quadrants)
 
     def consistent_lines(self):
         return [

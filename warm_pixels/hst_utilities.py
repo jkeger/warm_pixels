@@ -135,7 +135,7 @@ def dataset_list_saved_density_evol(list_name, quadrants, use_corrected=False):
         suffix = "_cor"
     else:
         suffix = ""
-    return output_path / f"density_evol_{list_name}_{''.join(quadrants)}{suffix}.npz"
+    return output_path / f"density_evol_{list_name}_{''.join(map(str, quadrants))}{suffix}.npz"
 
 
 def dataset_list_plotted_density_evol(list_name, quadrant_sets, do_pdf=False):

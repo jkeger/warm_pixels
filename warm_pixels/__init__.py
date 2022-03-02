@@ -89,7 +89,7 @@ class WarmPixels:
                     save_path=filename,
                 )
 
-            for group in self.quadrants.groups:
+            for group in groups:
                 filename = dataset.plotted_stacked_trails(
                     group,
                 )

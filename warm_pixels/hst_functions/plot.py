@@ -128,7 +128,7 @@ def plot_warm_pixel_distributions(quadrants, save_path=None):
             quadrants,
             colours
     ):
-        warm_pixels = quadrants.consistent_lines()
+        warm_pixels = quadrant.consistent_lines()
         # Data
         row_hist, row_bin_edges = np.histogram(
             warm_pixels.locations[:, 0], bins=row_bins
@@ -341,7 +341,7 @@ def plot_stacked_trails(group: Group, use_corrected=False, save_path=None):
                 # ========
                 # Fit the total trap density to this single stacked trail (dotted line, which has swapped since Jacob's version)
                 rho_q_indiv, rho_q_std_indiv, y_fit_indiv = fit_dataset_total_trap_density(
-                    process, quadrants, use_arctic=True,
+                    group, use_arctic=True,
                     row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )
                 ax.plot(pixels, y_fit_indiv, color=c, ls=misc.ls_dot, alpha=0.7)
@@ -353,7 +353,7 @@ def plot_stacked_trails(group: Group, use_corrected=False, save_path=None):
                     n_e=line.mean_flux,
                     n_bg=line.mean_background,
                     row=line.mean_row,
-                    date=process.dataset.date,
+                    date=group.dataset.date,
                 )
                 ax.plot(pixels, model_trail, color=c, ls=misc.ls_dash, alpha=0.7)
 

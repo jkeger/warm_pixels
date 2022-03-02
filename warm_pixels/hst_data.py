@@ -146,7 +146,7 @@ class Dataset:
 
     def plotted_stacked_trails(self, quadrants):
         """Return the file name including the path for saving derived data."""
-        return ut.output_path / f"stacked_trail_plots/{self.name}_plotted_stacked_trails_{''.join(quadrants)}.png"
+        return ut.output_path / f"stacked_trail_plots/{self.name}_plotted_stacked_trails_{''.join(map(str, quadrants))}.png"
 
     def plotted_distributions(self, quadrants):
         """Return the file name including the path for saving derived data."""
