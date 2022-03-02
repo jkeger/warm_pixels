@@ -1,15 +1,32 @@
+from typing import List
+
 from warm_pixels.process.group import Group
 from warm_pixels.process.quadrant import Quadrant, CorrectedQuadrant
 from warm_pixels.quadrant_groups import QuadrantsString
+from warm_pixels.hst_data import Dataset
 
 
 class QuadrantDataset:
     def __init__(
             self,
-            dataset,
+            dataset: Dataset,
             quadrants_string: QuadrantsString,
-            use_corrected
+            use_corrected: bool,
     ):
+        """
+        Comprises a dataset with an object indicating which quadrants should be processed
+        and how they should be processed.
+
+        Parameters
+        ----------
+        dataset
+            A dataset containing images associated with a single date
+        quadrants_string
+            An object indicating which quadrants should be processed and how they should
+            be grouped
+        use_corrected
+            If True then images are corrected to test the efficacy of CTI removal
+        """
         QuadrantClass = Quadrant
         if use_corrected:
             QuadrantClass = CorrectedQuadrant
@@ -29,7 +46,10 @@ class QuadrantDataset:
         ]
 
     @property
-    def all_quadrants(self):
+    def all_quadrants(self) -> List[Quadrant]:
+        """
+        A list of all quadrants
+        """
         return [
             quadrant
             for group in self.groups

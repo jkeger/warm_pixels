@@ -481,17 +481,13 @@ class PixelLineCollection:
 
         Returns
         -------
-        stacked_lines : PixelLineCollection
+        stacked_lines : StackedPixelLineCollection
             A new collection of the stacked pixel lines, including errors.
             Metadata parameters contain the lower edge bin value.
 
             The following extra parameters are added to each PixelLine object,
             containing the mean and rms of the parameters in each bin: mean_row,
             rms_row, mean_background, rms_background, mean_flux, rms_flux.
-
-        row_bins, flux_bins, date_bins, background_bins : [float]
-            Returned if return_bin_info is True. The edge values of the bins for
-            each parameter.
         """
         # Line length
         length = self.lengths[0]
