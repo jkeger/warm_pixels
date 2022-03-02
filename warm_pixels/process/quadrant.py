@@ -1,13 +1,29 @@
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
+from warm_pixels.hst_data import Dataset
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 from .cache import cache
 
 
 class Quadrant:
-    def __init__(self, quadrant, dataset):
+    def __init__(
+            self,
+            quadrant: str,
+            dataset: Dataset
+    ):
+        """
+        Computes warm pixels and lines across a given CCD quadrant for a
+        dataset.
+
+        Parameters
+        ----------
+        quadrant
+            The name of a quadrant (A, B, C or D)
+        dataset
+            A dataset with images from a given date
+        """
         self.quadrant = quadrant
         self.dataset = dataset
 
@@ -15,14 +31,24 @@ class Quadrant:
         return self.quadrant
 
     @cache
-    def warm_pixels(self):
+    def warm_pixels(self) -> PixelLineCollection:
+        """
+        A collection of warm pixels found in images in the dataset.
+
+        This is where a single pixel is much brighter than surrounding pixels indicating
+        that it is not due to a true light source in an image.
+        """
         return find_dataset_warm_pixels(
             self.dataset,
             self.quadrant
         )
 
     @cache
-    def consistent_lines(self):
+    def consistent_lines(self) -> PixelLineCollection:
+        """
+        Warm pixels that are consistent across multiple images and therefore highly unlikely
+        to have been caused by true light sources.
+        """
         return self.warm_pixels().consistent(
             flux_min=ut.flux_bins[0],
             flux_max=ut.flux_bins[-1],
