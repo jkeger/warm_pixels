@@ -51,6 +51,8 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
     rho_q_std : float
         The standard error on the total trap density.
+
+    eval
     """
 
     # Initialise the fitting model
@@ -88,22 +90,18 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
 
 def fit_dataset_total_trap_density(
-        group: Group, use_arctic=False,
-        row_bins=None, flux_bins=None, background_bins=None
+        group: Group,
+        use_arctic=False,
+        row_bins=None,
+        flux_bins=None,
+        background_bins=None
 ):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
 
     Parameters
     ----------
-    dataset : Dataset
-        The dataset object with a list of image file paths and metadata.
-
-    quadrants : [str]
-        The list of quadrants (A, B, C, D) of the images to load, combined
-        together if more than one provided.
-
-    use_corrected : bool (opt.)
-        If True, then use the corrected images with CTI removed instead.
+    group
+        A group of quadrants and a dataset for which consistent stacked lines are computed.
 
     Returns
     -------
@@ -112,6 +110,8 @@ def fit_dataset_total_trap_density(
 
     rho_q_std : float
         The standard error on the total trap density.
+
+    y_fit
     """
     # Load
     stacked_lines = group.stacked_lines()
