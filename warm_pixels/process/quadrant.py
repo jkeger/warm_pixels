@@ -1,10 +1,39 @@
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
-from warm_pixels.hst_data import Dataset
+from warm_pixels.hst_data import Dataset, Image
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
-from warm_pixels.warm_pixels import find_dataset_warm_pixels
+from warm_pixels.warm_pixels import find_warm_pixels
 from .cache import cache
+
+
+class ImageQuadrant:
+    def __init__(
+            self,
+            quadrant: str,
+            image: Image,
+    ):
+        self.quadrant = quadrant
+        self.image = image
+
+    @cache
+    def array(self):
+        return self.image.load_quadrant(self.quadrant)
+
+    @property
+    def name(self):
+        return f"{self.image.name}_{self.quadrant}"
+
+    @cache
+    def warm_pixels(self):
+        return find_warm_pixels(
+            image=self.array(),
+            trail_length=ut.trail_length,
+            n_parallel_overscan=20,
+            n_serial_prescan=24,
+            origin=self.name,
+            date=self.image.date(),
+        )
 
 
 class Quadrant:
@@ -26,6 +55,13 @@ class Quadrant:
         """
         self.quadrant = quadrant
         self.dataset = dataset
+        self.image_quadrants = [
+            ImageQuadrant(
+                quadrant=quadrant,
+                image=image,
+            )
+            for image in self.dataset
+        ]
 
     def __str__(self):
         return self.quadrant
@@ -38,10 +74,14 @@ class Quadrant:
         This is where a single pixel is much brighter than surrounding pixels indicating
         that it is not due to a true light source in an image.
         """
-        return find_dataset_warm_pixels(
-            self.dataset,
-            self.quadrant
-        )
+        warm_pixels = PixelLineCollection()
+
+        # Find the warm pixels in each image
+        for image_quadrant in self.image_quadrants:
+            # Add them to the collection
+            warm_pixels.append(image_quadrant.warm_pixels())
+
+        return warm_pixels
 
     @cache
     def consistent_lines(self) -> PixelLineCollection:

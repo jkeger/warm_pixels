@@ -3,70 +3,7 @@ from typing import Optional
 import numpy as np
 from scipy.ndimage import uniform_filter
 
-from warm_pixels import hst_functions as uf
-from warm_pixels import hst_utilities as ut
-from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
-
-
-def find_dataset_warm_pixels(dataset, quadrant):
-    """Find the possible warm pixels in all images in a dataset.
-
-    Parameters
-    ----------
-    dataset : Dataset
-        The dataset object with a list of image file paths and metadata.
-
-    quadrant : str (opt.)
-        The quadrant (A, B, C, D) of the image to load.
-
-    Saves
-    -----
-    warm_pixels : PixelLineCollection
-        The set of warm pixel trails, saved to dataset.saved_lines().
-    """
-    # Initialise the collection of warm pixel trails
-    warm_pixels = PixelLineCollection()
-    print("")
-
-    # Find the warm pixels in each image
-    for i, image in enumerate(dataset.images):
-        image_name = image.name
-        print(
-            "    %s_%s (%d of %d): "
-            % (image_name, quadrant, i + 1, len(dataset)),
-            end="",
-            flush=True,
-        )
-
-        # Load the image
-        array = image.load_quadrant(quadrant)
-
-        date = 2400000.5 + array.header.modified_julian_date
-
-        image_name_q = image_name + "_%s" % quadrant
-
-        # Find the warm pixel trails
-        new_warm_pixels = find_warm_pixels(
-            image=array,
-            trail_length=ut.trail_length,
-            n_parallel_overscan=20,
-            n_serial_prescan=24,
-            origin=image_name_q,
-            date=date,
-        )
-        print("Found %d possible warm pixels " % len(new_warm_pixels))
-
-        # Plot
-        uf.plot_warm_pixels(
-            array,
-            PixelLineCollection(new_warm_pixels),
-            save_path=dataset.output_path / image_name_q,
-        )
-
-        # Add them to the collection
-        warm_pixels.append(new_warm_pixels)
-
-    return warm_pixels
+from warm_pixels.pixel_lines import PixelLine
 
 
 def find_warm_pixels(

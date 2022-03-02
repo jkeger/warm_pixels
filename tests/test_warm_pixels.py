@@ -1,4 +1,5 @@
-from warm_pixels.warm_pixels import find_warm_pixels, find_dataset_warm_pixels
+from warm_pixels.process.quadrant import Quadrant
+from warm_pixels.warm_pixels import find_warm_pixels
 
 
 def test_warm_pixels(
@@ -15,9 +16,10 @@ def test_warm_pixels(
 def test_dataset_warm_pixels(
         dataset
 ):
-    result = find_dataset_warm_pixels(
-        dataset,
-        quadrant="A"
+    dataset_quadrant = Quadrant(
+        quadrant="A",
+        dataset=dataset,
     )
+    result = dataset_quadrant.warm_pixels()
 
     assert len(result) == 43

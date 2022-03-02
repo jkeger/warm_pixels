@@ -3,7 +3,6 @@ import os
 import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
-from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_data import Dataset
 from warm_pixels.hst_functions import plot
 from warm_pixels.hst_utilities import output_path
@@ -11,7 +10,6 @@ from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.process.group import Group
 from warm_pixels.process.quadrant import Quadrant, CorrectedQuadrant
 from warm_pixels.quadrant_dataset import QuadrantDataset
-from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
 
 class WarmPixels:
@@ -65,6 +63,15 @@ class WarmPixels:
             )
 
             all_groups.append(quadrant_dataset_.groups)
+
+            for quadrant in quadrant_dataset_.all_quadrants:
+                for image_quadrant in quadrant.image_quadrants:
+                    # Plot
+                    fu.plot_warm_pixels(
+                        image_quadrant.array(),
+                        image_quadrant.warm_pixels(),
+                        save_path=dataset.output_path / image_quadrant.name,
+                    )
 
             filename = dataset.plotted_distributions(self.quadrants)
             if self.need_to_make_file(filename):
