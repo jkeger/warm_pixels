@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
@@ -31,11 +29,6 @@ class CorrectedQuadrant(Quadrant):
     def consistent_lines(self):
         """Extract the corresponding warm pixels from the corrected images with CTI
         removed, in the same locations as the orignal consistent warm pixels.
-
-        Parameters
-        ----------
-        quadrant : str (opt.)
-            The quadrant (A, B, C, D) of the image to load.
         """
         warm_pixels = super().consistent_lines()
 
@@ -75,27 +68,3 @@ class CorrectedQuadrant(Quadrant):
         print(f"Extracted {warm_pixels_cor.n_lines} lines")
 
         return warm_pixels_cor
-
-
-class Group:
-    def __init__(self, dataset, quadrants: List[Quadrant]):
-        self.dataset = dataset
-        self.quadrants = quadrants
-
-    def __iter__(self):
-        return iter(self.quadrants)
-
-    def consistent_lines(self):
-        return [
-            quadrant.consistent_lines()
-            for quadrant in self.quadrants
-        ]
-
-    def stacked_lines(self):
-        return sum(
-            self.consistent_lines()
-        ).generate_stacked_lines_from_bins(
-            n_row_bins=ut.n_row_bins,
-            flux_bins=ut.flux_bins,
-            n_background_bins=ut.n_background_bins,
-        )

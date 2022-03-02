@@ -14,7 +14,7 @@ from warm_pixels import misc
 from warm_pixels.misc import nice_plot
 from warm_pixels.misc import plot_hist
 from warm_pixels.pixel_lines import PixelLineCollection
-from warm_pixels.process.quadrant import Group
+from warm_pixels.process.group import Group
 from .fit import fit_dataset_total_trap_density
 from .trail_model import trail_model_hst
 

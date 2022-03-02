@@ -5,7 +5,7 @@ import numpy as np
 
 from warm_pixels import hst_utilities as ut
 from warm_pixels.pixel_lines import PixelLineCollection
-from warm_pixels.process.quadrant import Group
+from warm_pixels.process.group import Group
 from . import trail_model
 
 
