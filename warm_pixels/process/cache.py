@@ -2,6 +2,10 @@ from functools import wraps
 
 
 def cache(func):
+    """
+    Cache the results of a method that takes no arguments
+    """
+
     @wraps(func)
     def wrapper(*args):
         self = args[0]
