@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 
 from warm_pixels import PixelLineCollection
 from warm_pixels import hst_functions as fu
-from warm_pixels import hst_utilities as ut
-from warm_pixels.pixel_lines import StackedPixelLineCollection
+from warm_pixels.process.quadrant import Group, Quadrant
 
 
 class AbstractProcess(ABC):
@@ -75,24 +74,10 @@ class AbstractProcess(ABC):
             )
 
     def stacked_lines_for_group(self, group):
-        consistent_line_group = []
-        for quadrant in group:
-            consistent_line_group.append(
-                self.consistent_lines_for_quadrant(quadrant)
+        return Group([
+            Quadrant(
+                quadrant=quadrant,
+                dataset=self.dataset
             )
-
-        filename = self.dataset.saved_stacked_lines(group)
-        if self.need_to_make_file(filename):
-            stacked_lines = sum(
-                consistent_line_group
-            ).generate_stacked_lines_from_bins(
-                n_row_bins=ut.n_row_bins,
-                flux_bins=ut.flux_bins,
-                n_background_bins=ut.n_background_bins,
-            )
-            stacked_lines.save(filename)
-        else:
-            stacked_lines = StackedPixelLineCollection.load(
-                filename
-            )
-        return stacked_lines
+            for quadrant in group
+        ]).stacked_lines()
