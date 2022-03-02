@@ -1,20 +1,14 @@
 from warm_pixels import hst_functions as fu
-from warm_pixels import hst_utilities as ut
-from warm_pixels.warm_pixels import find_dataset_warm_pixels
 from .abstract import AbstractProcess
+from .quadrant import Quadrant
 
 
 class RawProcess(AbstractProcess):
     def consistent_lines_for(self, quadrant):
-        warm_pixels = find_dataset_warm_pixels(
-            self.dataset,
-            quadrant
-        )
-
-        return warm_pixels.consistent(
-            flux_min=ut.flux_bins[0],
-            flux_max=ut.flux_bins[-1],
-        )
+        return Quadrant(
+            quadrant=quadrant,
+            dataset=self.dataset
+        ).consistent_lines()
 
     def plot(self):
         super().plot()
