@@ -1,6 +1,6 @@
 import pytest
 
-from warm_pixels.quadrant_groups import Quadrants
+from warm_pixels.quadrant_groups import QuadrantsString
 
 
 @pytest.mark.parametrize(
@@ -14,7 +14,7 @@ from warm_pixels.quadrant_groups import Quadrants
 def test_quadrant_groups(
         string, groups
 ):
-    quadrants = Quadrants(string)
+    quadrants = QuadrantsString(string)
     assert quadrants.groups == groups
 
 
@@ -27,7 +27,7 @@ def test_quadrant_groups(
     ]
 )
 def test_iter(string):
-    quadrants = Quadrants(string)
+    quadrants = QuadrantsString(string)
 
     assert list(quadrants) == [
         "A", "B", "C", "D"
@@ -35,4 +35,4 @@ def test_iter(string):
 
 
 def test_len():
-    assert len(Quadrants("ABCD")) == 4
+    assert len(QuadrantsString("ABCD")) == 4

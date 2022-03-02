@@ -10,6 +10,7 @@ from warm_pixels.hst_utilities import output_path
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.process.group import Group
 from warm_pixels.process.quadrant import Quadrant, CorrectedQuadrant
+from warm_pixels.quadrant_dataset import QuadrantDataset
 from warm_pixels.warm_pixels import find_dataset_warm_pixels
 
 
@@ -56,40 +57,24 @@ class WarmPixels:
                 f'({i_dataset + 1} of {len(self.datasets)}, '
                 f'{len(dataset)} images, "{self.quadrants}")'
             )
-            QuadrantClass = Quadrant
-            if self.use_corrected:
-                QuadrantClass = CorrectedQuadrant
-                dataset = dataset.corrected()
 
-            groups = [
-                Group(
-                    dataset,
-                    [
-                        QuadrantClass(
-                            quadrant=quadrant,
-                            dataset=dataset
-                        )
-                        for quadrant in group
-                    ])
-                for group in self.quadrants.groups
-            ]
-            all_quadrants = [
-                quadrant
-                for group in groups
-                for quadrant in group.quadrants
-            ]
+            quadrant_dataset_ = QuadrantDataset(
+                dataset=dataset,
+                quadrants_string=self.quadrants,
+                use_corrected=self.use_corrected,
+            )
 
-            all_groups.append(groups)
+            all_groups.append(quadrant_dataset_.groups)
 
             filename = dataset.plotted_distributions(self.quadrants)
             if self.need_to_make_file(filename):
                 print("  Distributions of warm pixels...", end=" ", flush=True)
                 fu.plot_warm_pixel_distributions(
-                    all_quadrants,
+                    quadrant_dataset_.all_quadrants,
                     save_path=filename,
                 )
 
-            for group in groups:
+            for group in quadrant_dataset_.groups:
                 filename = dataset.plotted_stacked_trails(
                     group,
                 )
