@@ -24,15 +24,13 @@ class QuadrantDataset:
             be grouped
         """
         self.groups = [
-            QuadrantGroup(
-                dataset,
-                [
-                    Quadrant(
-                        quadrant=quadrant,
-                        dataset=dataset
-                    )
-                    for quadrant in group
-                ])
+            QuadrantGroup([
+                Quadrant(
+                    quadrant=quadrant,
+                    dataset=dataset
+                )
+                for quadrant in group
+            ])
             for group in tuple(map(
                 tuple,
                 quadrants_string.split("_")

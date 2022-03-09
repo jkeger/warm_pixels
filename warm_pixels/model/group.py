@@ -1,16 +1,14 @@
 from typing import List
 
 from warm_pixels import hst_utilities as ut
+from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
 from .cache import cache
 from .quadrant import Quadrant
-from warm_pixels.data import Dataset
-from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
 
 
 class QuadrantGroup:
     def __init__(
             self,
-            dataset: Dataset,
             quadrants: List[Quadrant]
     ):
         """
@@ -19,17 +17,18 @@ class QuadrantGroup:
 
         Parameters
         ----------
-        dataset
-            A collection of images all captured on the same date
         quadrants
             Objects comprising a dataset and a single quadrant that can be
             used to find warm pixels and lines
         """
-        self.dataset = dataset
         self.quadrants = quadrants
 
     def __iter__(self):
         return iter(self.quadrants)
+
+    @property
+    def dataset(self):
+        return self.quadrants[0].dataset
 
     @cache
     def consistent_lines(self) -> List[PixelLineCollection]:
