@@ -114,9 +114,16 @@ class WarmPixels:
                     end=" ",
                     flush=True,
                 )
-                fu.fit_total_trap_densities(
+                filename = ut.dataset_list_saved_density_evol(
+                    self.list_name,
+                    self.quadrants,
+                    self.use_corrected
+                )
+
+                trap_densities = fu.fit_total_trap_densities(
                     groups, self.list_name, self.use_corrected
                 )
+                trap_densities.save(filename)
 
         # Plot the trap density evolution
         if self.plot_density:

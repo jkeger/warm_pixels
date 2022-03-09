@@ -4,8 +4,8 @@ import lmfit
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
-from warm_pixels.pixel_lines import PixelLineCollection
 from warm_pixels.model.group import QuadrantGroup
+from warm_pixels.pixel_lines import PixelLineCollection
 from . import trail_model
 
 
@@ -250,10 +250,28 @@ def fit_total_trap_densities(groups, list_name, use_corrected=False):
     densities = np.array(densities)[sort]
     density_errors = np.array(density_errors)[sort]
 
-    # Save
-    np.savez(
-        ut.dataset_list_saved_density_evol(list_name, groups[0].quadrants, use_corrected),
-        days,
-        densities,
-        density_errors,
+    return TranDensities(
+        days=days,
+        densities=densities,
+        density_errors=density_errors,
     )
+
+
+class TranDensities:
+    def __init__(
+            self,
+            days,
+            densities,
+            density_errors,
+    ):
+        self.days = days
+        self.densities = densities
+        self.density_errors = density_errors
+
+    def save(self, filename):
+        np.savez(
+            filename,
+            self.days,
+            self.densities,
+            self.density_errors,
+        )
