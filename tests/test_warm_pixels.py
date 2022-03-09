@@ -1,4 +1,4 @@
-from warm_pixels.model.quadrant import DatasetQuadrant
+from warm_pixels.model.quadrant import Quadrant
 from warm_pixels.warm_pixels import find_warm_pixels
 
 
@@ -16,7 +16,7 @@ def test_warm_pixels(
 def test_dataset_warm_pixels(
         dataset
 ):
-    dataset_quadrant = DatasetQuadrant(
+    dataset_quadrant = Quadrant(
         quadrant="A",
         dataset=dataset,
     )
