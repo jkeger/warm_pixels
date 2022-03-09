@@ -83,10 +83,18 @@ def test_dataset_source(
     assert len(source.datasets()) == 1
 
 
+@pytest.mark.parametrize(
+    "date, count",
+    [
+        (dt.date(2019, 12, 30), 1),
+        (dt.date(2020, 1, 1), 0),
+        (dt.date(2020, 10, 1), 0),
+    ]
+)
 def test_filter(
-        source
+        source,
+        date,
+        count
 ):
-    source = source.after(
-        dt.date(2019, 12, 30)
-    )
-    assert len(source.datasets()) == 1
+    source = source.after(date)
+    assert len(source.datasets()) == count
