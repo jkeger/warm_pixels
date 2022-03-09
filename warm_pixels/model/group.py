@@ -3,7 +3,7 @@ from typing import List
 from warm_pixels import hst_utilities as ut
 from .cache import cache
 from .quadrant import DatasetQuadrant
-from warm_pixels.hst_data import Dataset
+from warm_pixels.dataset import Dataset
 from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
 
 

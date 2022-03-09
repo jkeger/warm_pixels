@@ -3,7 +3,7 @@ import os
 import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
-from warm_pixels.hst_data import Dataset
+from warm_pixels.dataset import Dataset
 from warm_pixels.hst_functions import plot
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection

@@ -3,7 +3,7 @@ from typing import List
 from warm_pixels.model.group import QuadrantGroup
 from warm_pixels.model.quadrant import DatasetQuadrant, CorrectedQuadrant
 from warm_pixels.quadrant_groups import QuadrantsString
-from warm_pixels.hst_data import Dataset
+from warm_pixels.dataset import Dataset
 
 
 class QuadrantDataset:
