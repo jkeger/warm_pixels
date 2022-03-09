@@ -7,8 +7,8 @@ from warm_pixels.hst_data import Dataset
 from warm_pixels.hst_functions import plot
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
-from warm_pixels.process.group import Group
-from warm_pixels.process.quadrant import Quadrant, CorrectedQuadrant
+from warm_pixels.model.group import QuadrantGroup
+from warm_pixels.model.quadrant import DatasetQuadrant, CorrectedQuadrant
 from warm_pixels.quadrant_dataset import QuadrantDataset
 
 

@@ -1,7 +1,7 @@
 from typing import List
 
-from warm_pixels.process.group import Group
-from warm_pixels.process.quadrant import Quadrant, CorrectedQuadrant
+from warm_pixels.model.group import QuadrantGroup
+from warm_pixels.model.quadrant import DatasetQuadrant, CorrectedQuadrant
 from warm_pixels.quadrant_groups import QuadrantsString
 from warm_pixels.hst_data import Dataset
 
@@ -27,13 +27,13 @@ class QuadrantDataset:
         use_corrected
             If True then images are corrected to test the efficacy of CTI removal
         """
-        QuadrantClass = Quadrant
+        QuadrantClass = DatasetQuadrant
         if use_corrected:
             QuadrantClass = CorrectedQuadrant
             dataset = dataset.corrected()
 
         self.groups = [
-            Group(
+            QuadrantGroup(
                 dataset,
                 [
                     QuadrantClass(
@@ -46,7 +46,7 @@ class QuadrantDataset:
         ]
 
     @property
-    def all_quadrants(self) -> List[Quadrant]:
+    def all_quadrants(self) -> List[DatasetQuadrant]:
         """
         A list of all quadrants
         """

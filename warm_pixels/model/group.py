@@ -2,16 +2,16 @@ from typing import List
 
 from warm_pixels import hst_utilities as ut
 from .cache import cache
-from .quadrant import Quadrant
+from .quadrant import DatasetQuadrant
 from warm_pixels.hst_data import Dataset
 from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
 
 
-class Group:
+class QuadrantGroup:
     def __init__(
             self,
             dataset: Dataset,
-            quadrants: List[Quadrant]
+            quadrants: List[DatasetQuadrant]
     ):
         """
         Stacked and consistent lines are computed for a group of CCD quadrants

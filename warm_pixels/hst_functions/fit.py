@@ -5,7 +5,7 @@ import numpy as np
 
 from warm_pixels import hst_utilities as ut
 from warm_pixels.pixel_lines import PixelLineCollection
-from warm_pixels.process.group import Group
+from warm_pixels.model.group import QuadrantGroup
 from . import trail_model
 
 
@@ -90,7 +90,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
 
 
 def fit_dataset_total_trap_density(
-        group: Group,
+        group: QuadrantGroup,
         use_arctic=False,
         row_bins=None,
         flux_bins=None,

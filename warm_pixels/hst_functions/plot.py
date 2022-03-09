@@ -14,7 +14,7 @@ from warm_pixels import misc
 from warm_pixels.misc import nice_plot
 from warm_pixels.misc import plot_hist
 from warm_pixels.pixel_lines import PixelLineCollection
-from warm_pixels.process.group import Group
+from warm_pixels.model.group import QuadrantGroup
 from .fit import fit_dataset_total_trap_density
 from .trail_model import trail_model_hst
 
@@ -175,7 +175,7 @@ def plot_warm_pixel_distributions(quadrants, save_path=None):
         print("Saved", save_path.stem)
 
 
-def plot_stacked_trails(group: Group, use_corrected=False, save_path=None):
+def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=None):
     """Plot a tiled set of stacked trails.
 
     stack_dataset_warm_pixels() must first be run for the dataset.

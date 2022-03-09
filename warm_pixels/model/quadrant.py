@@ -36,7 +36,7 @@ class ImageQuadrant:
         )
 
 
-class Quadrant:
+class DatasetQuadrant:
     def __init__(
             self,
             quadrant: str,
@@ -92,7 +92,7 @@ class Quadrant:
         return self.warm_pixels().consistent()
 
 
-class CorrectedQuadrant(Quadrant):
+class CorrectedQuadrant(DatasetQuadrant):
     @cache
     def consistent_lines(self):
         """Extract the corresponding warm pixels from the corrected images with CTI
