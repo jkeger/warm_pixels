@@ -180,7 +180,7 @@ def fit_dataset_total_trap_density(
     return rho_q, rho_q_std, y_fit
 
 
-def fit_total_trap_densities(groups, list_name, use_corrected=False):
+def fit_total_trap_densities(groups):
     """Call fit_dataset_total_trap_density() for each dataset and compile and
     save the results.
 
@@ -224,9 +224,7 @@ def fit_total_trap_densities(groups, list_name, use_corrected=False):
         )
 
         # Fit the density
-        rho_q, rho_q_std, y_fit = fit_dataset_total_trap_density(
-            group, use_corrected
-        )
+        rho_q, rho_q_std, y_fit = fit_dataset_total_trap_density(group)
 
         # Skip bad fits
         if rho_q is None or rho_q_std is None:
