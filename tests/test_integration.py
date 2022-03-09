@@ -3,7 +3,6 @@ import pytest
 from warm_pixels import WarmPixels
 
 
-
 @pytest.mark.parametrize(
     "true_flags, n_calls",
     [
@@ -28,6 +27,7 @@ def test_integration(
         datasets=[dataset, dataset],
         quadrants="A",
         overwrite=overwrite,
+        list_name="test",
         **kwargs,
     ).main()
     if overwrite:

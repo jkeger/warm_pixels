@@ -65,27 +65,32 @@ dataset_list : str (opt.)
 --test_image_and_bias_files, -t
     Test loading the image and corresponding bias files in the list of datasets.
 """
+import os
 from pathlib import Path
 
 from warm_pixels import WarmPixels
 from warm_pixels import hst_utilities as ut
-from warm_pixels.hst_data import Dataset
+from warm_pixels.data import Dataset
 from warm_pixels.hst_utilities import output_path
-from warm_pixels.quadrant_groups import QuadrantsString
 
 
 def main():
     parser = ut.prep_parser()
     args = parser.parse_args()
 
-    directory = args.directory
+    directory = Path(args.directory)
+    dataset_folders = os.listdir(
+        directory
+    )
+
     downsample = args.downsample
 
     datasets = [
         Dataset(
-            Path(directory),
+            directory / folder,
             output_path=output_path
         )
+        for folder in dataset_folders
     ]
     # Downsample the dataset list
     if downsample is not None:
@@ -96,11 +101,12 @@ def main():
 
     WarmPixels(
         datasets=datasets,
-        quadrants=QuadrantsString(args.quadrants),
+        quadrants=args.quadrants,
         overwrite=args.overwrite,
         prep_density=args.prep_density,
         use_corrected=args.use_corrected,
         plot_density=args.plot_density,
+        list_name=directory.name,
     ).main()
 
 

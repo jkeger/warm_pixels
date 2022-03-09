@@ -19,6 +19,7 @@ class WarmPixels:
             self,
             datasets,
             quadrants,
+            list_name: str,
             overwrite=False,
             prep_density=False,
             use_corrected=False,
@@ -37,9 +38,7 @@ class WarmPixels:
         self.prep_density = prep_density
         self.use_corrected = use_corrected
         self.plot_density = plot_density
-
-        # TODO: list name was originally the input...
-        self.list_name = "test"
+        self.list_name = list_name
 
     def need_to_make_file(self, filename):
         if self.overwrite:
