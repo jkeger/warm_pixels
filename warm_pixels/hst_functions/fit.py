@@ -248,14 +248,14 @@ def fit_total_trap_densities(groups):
     densities = np.array(densities)[sort]
     density_errors = np.array(density_errors)[sort]
 
-    return TranDensities(
+    return TrapDensities(
         days=days,
         densities=densities,
         density_errors=density_errors,
     )
 
 
-class TranDensities:
+class TrapDensities:
     def __init__(
             self,
             days,
@@ -272,4 +272,18 @@ class TranDensities:
             self.days,
             self.densities,
             self.density_errors,
+        )
+
+    @classmethod
+    def load(cls, filename):
+        npzfile = np.load(filename)
+        days, densities, density_errors = [
+            npzfile[var]
+            for var
+            in npzfile.files
+        ]
+        return TrapDensities(
+            days=days,
+            densities=densities,
+            density_errors=density_errors,
         )
