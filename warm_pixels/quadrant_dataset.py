@@ -1,8 +1,8 @@
 from typing import List
 
-from warm_pixels.dataset import Dataset
+from warm_pixels.data import Dataset
 from warm_pixels.model.group import QuadrantGroup
-from warm_pixels.model.quadrant import Quadrant, CorrectedQuadrant
+from warm_pixels.model.quadrant import Quadrant
 
 
 class QuadrantDataset:
@@ -10,7 +10,6 @@ class QuadrantDataset:
             self,
             dataset: Dataset,
             quadrants_string: str,
-            use_corrected: bool,
     ):
         """
         Comprises a dataset with an object indicating which quadrants should be processed
@@ -23,11 +22,7 @@ class QuadrantDataset:
         quadrants_string
             An object indicating which quadrants should be processed and how they should
             be grouped
-        use_corrected
-            If True then images are corrected to test the efficacy of CTI removal
         """
-        dataset = dataset.corrected()
-
         self.groups = [
             QuadrantGroup(
                 dataset,

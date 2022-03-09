@@ -3,12 +3,12 @@ import os
 import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
-from warm_pixels.dataset import Dataset
+from warm_pixels.data import Dataset
 from warm_pixels.hst_functions import plot
 from warm_pixels.hst_utilities import output_path
-from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.model.group import QuadrantGroup
 from warm_pixels.model.quadrant import Quadrant, CorrectedQuadrant
+from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.quadrant_dataset import QuadrantDataset
 
 
@@ -22,6 +22,13 @@ class WarmPixels:
             use_corrected=False,
             plot_density=False,
     ):
+        if use_corrected:
+            datasets = [
+                dataset.corrected()
+                for dataset
+                in datasets
+            ]
+
         self.datasets = datasets
         self.quadrants = quadrants
         self.overwrite = overwrite
@@ -59,7 +66,6 @@ class WarmPixels:
             quadrant_dataset_ = QuadrantDataset(
                 dataset=dataset,
                 quadrants_string=self.quadrants,
-                use_corrected=self.use_corrected,
             )
 
             all_groups.append(quadrant_dataset_.groups)

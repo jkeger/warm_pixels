@@ -1,7 +1,7 @@
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
-from warm_pixels.dataset import Dataset, Image, CorrectedDataset
+from warm_pixels.data import Dataset, Image, CorrectedDataset
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.warm_pixels import find_warm_pixels
 from .cache import cache

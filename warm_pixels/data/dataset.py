@@ -4,70 +4,11 @@ from glob import glob
 from pathlib import Path
 
 import autoarray as aa
-from autoarray.instruments.acs import ImageACS
 
 import arcticpy as cti
 from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_functions.cti_model import cti_model_hst
-
-
-class Image:
-    def __init__(
-            self,
-            path: Path,
-            output_path: Path
-    ):
-        self.path = path
-        self._output_path = output_path
-
-    @property
-    def name(self):
-        return self.path.name.split("_")[0]
-
-    @property
-    def output_path(self):
-        output_path = self._output_path / self.name
-        os.makedirs(
-            output_path,
-            exist_ok=True
-        )
-        return output_path
-
-    def image(self):
-        return aa.acs.ImageACS.from_fits(
-            file_path=str(self.path),
-            quadrant_letter="A"
-        )
-
-    def load_quadrant(self, quadrant):
-        return ImageACS.from_fits(
-            file_path=str(self.path),
-            quadrant_letter=quadrant,
-            bias_subtract_via_bias_file=True,
-            bias_subtract_via_prescan=True,
-        ).native
-
-    def quadrants(self):
-        for quadrant in ["A", "B", "C", "D"]:
-            yield self.load_quadrant(quadrant)
-
-    def date(self):
-        return 2400000.5 + self.image().header.modified_julian_date
-
-    def corrected(self):
-        return CorrectedImage(self)
-
-
-class CorrectedImage(Image):
-    def __init__(self, image):
-        super().__init__(
-            path=(
-                    image.path.parent
-                    / f"{image.name}_raw_cor.fits"
-            ),
-            output_path=image.path,
-        )
-        self.image = image
+from .image import Image
 
 
 class Dataset:
@@ -153,18 +94,8 @@ class Dataset:
         return ut.output_path / f"plotted_distributions/{self.name}_plotted_distributions_{''.join(quadrants)}.png"
 
     def corrected(self):
-        """Remove CTI trails using arctic from all images in the dataset.
-
-        Parameters
-        ----------
-        dataset : Dataset
-            The dataset object with a list of image file paths and metadata.
-
-        Saves
-        -----
-        dataset.cor_paths
-            The corrected images with CTI removed in the same location as the
-            originals.
+        """
+        Remove CTI trails using arctic from all images in the dataset.
         """
         corrected_dataset = CorrectedDataset(self)
         os.makedirs(

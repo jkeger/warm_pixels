@@ -1,6 +1,6 @@
 import pytest
 
-from warm_pixels.dataset import Dataset
+from warm_pixels.data import Dataset
 
 
 @pytest.fixture(

@@ -8,8 +8,8 @@ from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
 from matplotlib import pyplot
 
-from warm_pixels.dataset import Dataset
-from warm_pixels.dataset import cti
+from warm_pixels.data import Dataset
+from warm_pixels.data.dataset import cti
 from warm_pixels.hst_functions import trail_model
 
 directory = Path(__file__).parent
