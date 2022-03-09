@@ -1,7 +1,7 @@
 import pytest
 
 from warm_pixels import WarmPixels
-from warm_pixels.quadrant_groups import QuadrantsString
+
 
 
 @pytest.mark.parametrize(
@@ -26,7 +26,7 @@ def test_integration(
     overwrite = True
     WarmPixels(
         datasets=[dataset, dataset],
-        quadrants=QuadrantsString("A"),
+        quadrants="A",
         overwrite=overwrite,
         **kwargs,
     ).main()

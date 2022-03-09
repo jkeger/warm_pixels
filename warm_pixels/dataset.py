@@ -74,7 +74,7 @@ class Dataset:
     def __init__(
             self,
             path: Path,
-            output_path: Path
+            output_path: Path,
     ):
         """Simple class to store a list of image file paths and mild metadata.
 

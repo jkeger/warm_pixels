@@ -1,16 +1,15 @@
 from typing import List
 
+from warm_pixels.dataset import Dataset
 from warm_pixels.model.group import QuadrantGroup
 from warm_pixels.model.quadrant import DatasetQuadrant, CorrectedQuadrant
-from warm_pixels.quadrant_groups import QuadrantsString
-from warm_pixels.dataset import Dataset
 
 
 class QuadrantDataset:
     def __init__(
             self,
             dataset: Dataset,
-            quadrants_string: QuadrantsString,
+            quadrants_string: str,
             use_corrected: bool,
     ):
         """
@@ -42,7 +41,10 @@ class QuadrantDataset:
                     )
                     for quadrant in group
                 ])
-            for group in quadrants_string.groups
+            for group in tuple(map(
+                tuple,
+                quadrants_string.split("_")
+            ))
         ]
 
     @property

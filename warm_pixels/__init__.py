@@ -116,5 +116,5 @@ class WarmPixels:
         if self.plot_density:
             print("Plot trap density evolution...", end=" ", flush=True)
             plot.plot_trap_density_evol(
-                self.list_name, self.quadrants.groups, do_sunspots=True, use_corrected=self.use_corrected
+                self.list_name, self.quadrants.split("_"), do_sunspots=True, use_corrected=self.use_corrected
             )
