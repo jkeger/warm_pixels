@@ -26,6 +26,13 @@ class QuadrantGroup:
     def __iter__(self):
         return iter(self.quadrants)
 
+    def __str__(self):
+        return "".join(
+            quadrant.quadrant
+            for quadrant
+            in self.quadrants
+        )
+
     @property
     def dataset(self):
         return self.quadrants[0].dataset

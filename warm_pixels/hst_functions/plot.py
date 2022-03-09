@@ -1,6 +1,7 @@
 import logging
 import os
 import warnings
+from typing import List
 
 import numpy as np
 import requests
@@ -13,9 +14,9 @@ from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
 from warm_pixels.misc import nice_plot
 from warm_pixels.misc import plot_hist
-from warm_pixels.pixel_lines import PixelLineCollection
 from warm_pixels.model.group import QuadrantGroup
-from .fit import fit_dataset_total_trap_density
+from warm_pixels.pixel_lines import PixelLineCollection
+from .fit import fit_dataset_total_trap_density, TrapDensities
 from .trail_model import trail_model_hst
 
 logger = logging.getLogger(
@@ -491,7 +492,11 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
 
 def plot_trap_density_evol(
-        list_name, quadrant_sets, do_sunspots=True, use_corrected=False, do_pdf=False
+        list_name,
+        all_trap_densities: List[TrapDensities],
+        do_sunspots=True,
+        use_corrected=False,
+        do_pdf=False
 ):
     """Plot the evolution of the total trap density.
 
@@ -501,12 +506,6 @@ def plot_trap_density_evol(
     ----------
     list_name : str
         The name of the list of image datasets.
-
-    quadrant_sets : [[str]]
-        The list of quadrants (A, B, C, D) of the images to load, optionally in
-        subsets to be combined together.
-
-        e.g. [["A", "B"]] to combine vs [["A"], ["B"]] to keep separate.
 
     do_sunspots : bool (opt.)
         Whether or not to also plot the monthly average sunspot number.
@@ -519,16 +518,21 @@ def plot_trap_density_evol(
         If True, then save as a pdf instead of a png.
     """
     # Colours
-    if len(quadrant_sets) == 1:
+    if len(all_trap_densities) == 1:
         colours = ["k"]
         colours_cor = ["0.35"]
     else:
-        colours = misc.A1_c[: len(quadrant_sets)]
-        colours_cor = misc.A1_c[: len(quadrant_sets)]
+        colours = misc.A1_c[: len(all_trap_densities)]
+        colours_cor = misc.A1_c[: len(all_trap_densities)]
 
     # Set date limits
-    npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrant_sets[0], use_corrected=use_corrected))
-    days, densities, errors = [npzfile[var] for var in npzfile.files]
+    # npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrant_sets[0], use_corrected=use_corrected))
+    # days, densities, errors = [npzfile[var] for var in npzfile.files]
+    trap_densities = all_trap_densities[0]
+    days = trap_densities.days
+    densities = trap_densities.densities
+    errors = trap_densities.density_errors
+
     day_0 = 0
     day_1 = np.amax(days) * 1.02
 
@@ -606,12 +610,12 @@ def plot_trap_density_evol(
     # ========
     # Load and plot data
     # ========
-    for i_q, quadrants in enumerate(quadrant_sets):
-        # Load
-        npzfile = np.load(ut.dataset_list_saved_density_evol(list_name, quadrants, use_corrected=use_corrected))
-        days, densities, errors = [npzfile[var] for var in npzfile.files]
+    for i_q, trap_densities in enumerate(all_trap_densities):
+        days = trap_densities.days
+        densities = trap_densities.densities
+        errors = trap_densities.density_errors
 
-        label = "".join(quadrants)
+        label = trap_densities.quadrants_string
         c = colours[i_q]
 
         # Fit trends
@@ -703,21 +707,15 @@ def plot_trap_density_evol(
         if use_corrected:
             c = colours_cor[i_q]
 
-            # Load
-            npzfile = np.load(
-                ut.dataset_list_saved_density_evol(list_name, quadrants, use_corrected)
-            )
-            days, densities_cor, errors_cor = [npzfile[var] for var in npzfile.files]
-
             # Plot negative values separately
-            where_pos = np.where(densities_cor > 0)[0]
-            where_neg = np.where(densities_cor < 0)[0]
+            where_pos = np.where(densities > 0)[0]
+            where_neg = np.where(densities < 0)[0]
 
             # Data
             ax.errorbar(
                 days[where_pos],
-                densities_cor[where_pos],
-                yerr=errors_cor[where_pos],
+                densities[where_pos],
+                yerr=errors[where_pos],
                 c=c,
                 ls="none",
                 marker="x",
@@ -727,7 +725,7 @@ def plot_trap_density_evol(
             )
             ax.scatter(
                 days[where_neg],
-                abs(densities_cor[where_neg]),
+                abs(densities[where_neg]),
                 color=c,
                 facecolor="w",
                 marker="o",
@@ -735,8 +733,8 @@ def plot_trap_density_evol(
             )
             ax.errorbar(
                 days[where_neg],
-                abs(densities_cor[where_neg]),
-                yerr=errors_cor[where_neg],
+                abs(densities[where_neg]),
+                yerr=errors[where_neg],
                 c=c,
                 ls="none",
                 capsize=3,
@@ -838,7 +836,7 @@ def plot_trap_density_evol(
     nice_plot(ax_yr)
 
     save_path = ut.dataset_list_plotted_density_evol(
-        list_name, quadrant_sets, do_pdf=do_pdf
+        list_name, [trap_densities.quadrants_string for trap_densities in all_trap_densities], do_pdf=do_pdf
     )
     plt.savefig(save_path, dpi=200)
     print("Saved", save_path.name)

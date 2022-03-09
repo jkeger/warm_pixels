@@ -1,10 +1,12 @@
 import os
+from pathlib import Path
 
 import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
 from warm_pixels.data import Dataset
 from warm_pixels.hst_functions import plot
+from warm_pixels.hst_functions.fit import TrapDensities
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.model.group import QuadrantGroup
 from warm_pixels.model.quadrant import Quadrant, CorrectedQuadrant
@@ -68,6 +70,7 @@ class WarmPixels:
                 quadrants_string=self.quadrants,
             )
 
+            # List of lists of groups
             all_groups.append(quadrant_dataset_.groups)
 
             for quadrant in quadrant_dataset_.all_quadrants:
@@ -102,30 +105,41 @@ class WarmPixels:
                         group=group,
                     )
 
+        all_trap_densities = []
+
         # ========
         # Compiled results from all datasets
         # ========
         # Fit and save the total trap densities
         if self.prep_density or self.plot_density:
-            # In each image quadrant or combined quadrants
+            # Pivot groups into one list for each quadrant group over time
             for groups in zip(*all_groups):
                 print(
                     f"Fit total trap densities ({''.join(self.quadrants)})...",
                     end=" ",
                     flush=True,
                 )
-                filename = ut.dataset_list_saved_density_evol(
+                filename = Path(ut.dataset_list_saved_density_evol(
                     self.list_name,
-                    self.quadrants,
+                    groups,
                     self.use_corrected
-                )
+                ))
 
-                trap_densities = fu.fit_total_trap_densities(groups)
-                trap_densities.save(filename)
+                if not filename.exists():
+                    trap_densities = fu.fit_total_trap_densities(groups)
+                    trap_densities.save(filename)
+                else:
+                    trap_densities = TrapDensities.load(filename)
+                all_trap_densities.append(
+                    trap_densities
+                )
 
         # Plot the trap density evolution
         if self.plot_density:
             print("Plot trap density evolution...", end=" ", flush=True)
             plot.plot_trap_density_evol(
-                self.list_name, self.quadrants.split("_"), do_sunspots=True, use_corrected=self.use_corrected
+                all_trap_densities=all_trap_densities,
+                list_name=self.list_name,
+                do_sunspots=True,
+                use_corrected=self.use_corrected
             )

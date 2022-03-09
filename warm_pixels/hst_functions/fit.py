@@ -1,4 +1,5 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
+from typing import Iterable, Tuple
 
 import lmfit
 import numpy as np
@@ -180,7 +181,7 @@ def fit_dataset_total_trap_density(
     return rho_q, rho_q_std, y_fit
 
 
-def fit_total_trap_densities(groups):
+def fit_total_trap_densities(groups: Tuple[QuadrantGroup]):
     """Call fit_dataset_total_trap_density() for each dataset and compile and
     save the results.
 
@@ -198,15 +199,6 @@ def fit_total_trap_densities(groups):
 
     use_corrected : bool (opt.)
         If True, then use the corrected images with CTI removed instead.
-
-    Saves
-    -----
-    days : [float]
-    densities : [float]
-    density_errors : [float]
-        The date (days since launch), total trap density, and standard error on
-        the density for each dataset in the list, saved to
-        dataset_list_saved_density_evol().
     """
     # Initialise arrays
     days = []
@@ -249,6 +241,7 @@ def fit_total_trap_densities(groups):
     density_errors = np.array(density_errors)[sort]
 
     return TrapDensities(
+        quadrants_string=str(groups[0]),
         days=days,
         densities=densities,
         density_errors=density_errors,
@@ -258,10 +251,12 @@ def fit_total_trap_densities(groups):
 class TrapDensities:
     def __init__(
             self,
+            quadrants_string,
             days,
             densities,
             density_errors,
     ):
+        self.quadrants_string = quadrants_string
         self.days = days
         self.densities = densities
         self.density_errors = density_errors
@@ -269,6 +264,7 @@ class TrapDensities:
     def save(self, filename):
         np.savez(
             filename,
+            self.quadrants_string,
             self.days,
             self.densities,
             self.density_errors,
@@ -277,12 +273,13 @@ class TrapDensities:
     @classmethod
     def load(cls, filename):
         npzfile = np.load(filename)
-        days, densities, density_errors = [
+        quadrants_string, days, densities, density_errors = [
             npzfile[var]
             for var
             in npzfile.files
         ]
         return TrapDensities(
+            quadrants_string=quadrants_string,
             days=days,
             densities=densities,
             density_errors=density_errors,
