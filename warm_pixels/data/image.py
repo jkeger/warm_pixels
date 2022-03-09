@@ -1,4 +1,5 @@
 """Defines where the HST data is located on disc, and a class to read it in/contain it"""
+import datetime as dt
 import os
 from pathlib import Path
 
@@ -48,6 +49,14 @@ class Image:
 
     def date(self):
         return 2400000.5 + self.image().header.modified_julian_date
+
+    def observation_date(self) -> dt.date:
+        """
+        The date of observation
+        """
+        return dt.date.fromisoformat(
+            self.image().header.date_of_observation
+        )
 
     def corrected(self):
         return CorrectedImage(self)

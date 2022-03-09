@@ -64,6 +64,9 @@ class Dataset:
         )
         return output_path
 
+    def observation_date(self):
+        return self.images[0].observation_date()
+
     @property
     def date(self):
         """Return the Julian date of the set, taken from the first image."""
