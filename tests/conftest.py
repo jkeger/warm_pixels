@@ -26,7 +26,7 @@ def make_output_path():
     name="dataset_path"
 )
 def make_dataset_path():
-    return directory / "dataset"
+    return directory / "dataset_list/dataset"
 
 
 @pytest.fixture(
