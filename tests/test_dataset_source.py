@@ -64,22 +64,19 @@ def test_before(
 
 
 @pytest.mark.parametrize(
-    "start, step, count, name",
+    "step, count, name",
     [
-        (0, 1, 1, "dataset_list_downsampled_0-1"),
-        (1, 1, 0, "dataset_list_downsampled_1-1"),
-        (0, 2, 1, "dataset_list_downsampled_0-2"),
+        (1, 1, "dataset_list_downsampled_1"),
+        (2, 1, "dataset_list_downsampled_2"),
     ]
 )
 def test_down_sample(
         source,
-        start,
         step,
         count,
         name,
 ):
     source = source.downsample(
-        start=start,
         step=step,
     )
     assert len(source.datasets()) == count

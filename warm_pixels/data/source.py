@@ -34,12 +34,10 @@ class AbstractDatasetSource:
 
     def downsample(
             self,
-            start,
             step,
     ):
         return DownsampleDatasetSource(
             source=self,
-            start=start,
             step=step,
         )
 
@@ -73,18 +71,16 @@ class DownsampleDatasetSource(AbstractDatasetSource):
     def __init__(
             self,
             source,
-            start,
             step,
     ):
         self.source = source
-        self.start = start
         self.step = step
 
     def __str__(self):
-        return f"{self.source}_downsampled_{self.start}-{self.step}"
+        return f"{self.source}_downsampled_{self.step}"
 
     def datasets(self):
-        return self.source.datasets()[self.start::self.step]
+        return self.source.datasets()[0::self.step]
 
 
 class FilteredDatasetSource(AbstractDatasetSource):

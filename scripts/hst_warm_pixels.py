@@ -66,11 +66,10 @@ dataset_list : str (opt.)
     Test loading the image and corresponding bias files in the list of datasets.
 """
 import argparse
-import os
 from pathlib import Path
 
 from warm_pixels import WarmPixels
-from warm_pixels.data import Dataset
+from warm_pixels.data.source import FileDatasetSource
 from warm_pixels.hst_utilities import output_path
 
 parser = argparse.ArgumentParser()
@@ -119,45 +118,34 @@ parser.add_argument(
 parser.add_argument(
     "-w",
     "--downsample",
-    nargs=2,
     default=None,
-    metavar=("downsample_N", "downsample_i"),
-    help="Downsample to run 1/N of the datasets, starting with set i.",
+    type=int,
+    help="Downsample to run 1/N of the datasets",
 )
 
 
 def main():
     args = parser.parse_args()
 
-    directory = Path(args.directory)
-    dataset_folders = os.listdir(
-        directory
+    dataset_source = FileDatasetSource(
+        Path(args.directory),
+        output_path=output_path,
     )
 
     downsample = args.downsample
-
-    datasets = [
-        Dataset(
-            directory / folder,
-            output_path=output_path
-        )
-        for folder in dataset_folders
-    ]
-    # Downsample the dataset list
     if downsample is not None:
-        n = int(downsample[0])
-        i = int(downsample[1])
-        datasets = datasets[i::n]
-        print(f"Down-sampling [{i}::{n}]")
+        dataset_source.downsample(
+            step=downsample
+        )
 
     WarmPixels(
-        datasets=datasets,
+        datasets=list(dataset_source),
         quadrants=args.quadrants,
         overwrite=args.overwrite,
         prep_density=args.prep_density,
         use_corrected=args.use_corrected,
         plot_density=args.plot_density,
-        list_name=directory.name,
+        list_name=str(dataset_source),
     ).main()
 
 
