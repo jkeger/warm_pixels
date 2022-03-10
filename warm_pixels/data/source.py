@@ -15,6 +15,9 @@ class AbstractDatasetSource:
     def datasets(self):
         pass
 
+    def __iter__(self):
+        return iter(self.datasets())
+
     def after(self, date: dt.date):
         return FilteredDatasetSource(
             f"after_{date}",
