@@ -23,6 +23,7 @@ class QuadrantDataset:
             An object indicating which quadrants should be processed and how they should
             be grouped
         """
+        self.dataset = dataset
         self.groups = [
             QuadrantGroup([
                 Quadrant(

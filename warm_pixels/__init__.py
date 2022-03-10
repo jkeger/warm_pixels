@@ -14,6 +14,19 @@ from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.quadrant_dataset import QuadrantDataset
 
 
+def plot_all_warm_pixels(quadrant_dataset_):
+    for quadrant in quadrant_dataset_.all_quadrants:
+        for image_quadrant in quadrant.image_quadrants:
+            # Plot
+            fu.plot_warm_pixels(
+                image_quadrant.array(),
+                PixelLineCollection(
+                    image_quadrant.warm_pixels(),
+                ),
+                save_path=quadrant_dataset_.dataset.output_path / image_quadrant.name,
+            )
+
+
 class WarmPixels:
     def __init__(
             self,
@@ -24,6 +37,7 @@ class WarmPixels:
             prep_density=False,
             use_corrected=False,
             plot_density=False,
+            plot_warm_pixels=False,
     ):
         if use_corrected:
             datasets = [
@@ -39,6 +53,7 @@ class WarmPixels:
         self.use_corrected = use_corrected
         self.plot_density = plot_density
         self.list_name = list_name
+        self.plot_warm_pixels = plot_warm_pixels
 
     def need_to_make_file(self, filename):
         if self.overwrite:
@@ -72,16 +87,8 @@ class WarmPixels:
             # List of lists of groups
             all_groups.append(quadrant_dataset_.groups)
 
-            for quadrant in quadrant_dataset_.all_quadrants:
-                for image_quadrant in quadrant.image_quadrants:
-                    # Plot
-                    fu.plot_warm_pixels(
-                        image_quadrant.array(),
-                        PixelLineCollection(
-                            image_quadrant.warm_pixels(),
-                        ),
-                        save_path=dataset.output_path / image_quadrant.name,
-                    )
+            if self.plot_warm_pixels:
+                plot_all_warm_pixels(quadrant_dataset_)
 
             filename = dataset.plotted_distributions(self.quadrants)
             if self.need_to_make_file(filename):
