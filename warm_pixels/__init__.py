@@ -142,10 +142,16 @@ class WarmPixels:
 
         # Plot the trap density evolution
         if self.plot_density:
+            save_path = ut.dataset_list_plotted_density_evol(
+                self.list_name,
+                [
+                    trap_densities.quadrants_string
+                    for trap_densities
+                    in all_trap_densities
+                ]
+            )
             print("Plot trap density evolution...", end=" ", flush=True)
             plot.plot_trap_density_evol(
                 all_trap_densities=all_trap_densities,
-                list_name=self.list_name,
-                do_sunspots=True,
                 use_corrected=self.use_corrected
-            )
+            ).savefig(save_path, dpi=200)

@@ -491,11 +491,8 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
 
 def plot_trap_density_evol(
-        list_name,
         all_trap_densities: List[TrapDensities],
-        do_sunspots=True,
         use_corrected=False,
-        do_pdf=False
 ):
     """Plot the evolution of the total trap density.
 
@@ -506,15 +503,9 @@ def plot_trap_density_evol(
     list_name : str
         The name of the list of image datasets.
 
-    do_sunspots : bool (opt.)
-        Whether or not to also plot the monthly average sunspot number.
-
     use_corrected : bool (opt.)
         If True, then also plot the results from the corrected images with CTI
         removed.
-
-    do_pdf : bool (opt.)
-        If True, then save as a pdf instead of a png.
     """
     # Colours
     if len(all_trap_densities) == 1:
@@ -542,69 +533,68 @@ def plot_trap_density_evol(
     # ========
     # Load and plot sunspot data
     # ========
-    if do_sunspots:
-        # Load
-        # https://wwwbis.sidc.be/silso/datafiles#total monthly mean
-        # Year | Month | Decimal year | N sunspots | Std dev | N obs | Provisional?
-        sunspot_path = "SN_m_tot_V2.0.txt"
-        if not os.path.exists(sunspot_path):
-            response = requests.get(
-                "https://wwwbis.sidc.be/silso/DATA/SN_ms_tot_V2.0.txt"
-            )
-            response.raise_for_status()
-            with open(sunspot_path, "w+b") as f:
-                f.write(response.content)
-
-        sunspot_data = np.genfromtxt(
-            "SN_m_tot_V2.0.txt",
-            dtype=[("dcml_year", float), ("sunspots", float), ("sunspots_err", float)],
-            usecols=(2, 3, 4),
+    # Load
+    # https://wwwbis.sidc.be/silso/datafiles#total monthly mean
+    # Year | Month | Decimal year | N sunspots | Std dev | N obs | Provisional?
+    sunspot_path = "SN_m_tot_V2.0.txt"
+    if not os.path.exists(sunspot_path):
+        response = requests.get(
+            "https://wwwbis.sidc.be/silso/DATA/SN_ms_tot_V2.0.txt"
         )
-        with warnings.catch_warnings():
-            # Ignore astropy.time's "dubious year" warnings
-            warnings.simplefilter("ignore")
-            sunspot_days = (
-                    ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
-            )
+        response.raise_for_status()
+        with open(sunspot_path, "w+b") as f:
+            f.write(response.content)
 
-        # Restrict to the relevant dates
-        sel_ss = np.where((day_0 < sunspot_days) & (sunspot_days < day_1))[0]
-        sunspot_data = sunspot_data[sel_ss]
-        sunspot_days = sunspot_days[sel_ss]
-
-        # Plot
-        ax2 = ax.twinx()
-        ax2.errorbar(
-            sunspot_days,
-            sunspot_data["sunspots"],
-            yerr=sunspot_data["sunspots_err"],
-            c="0.8",
-            ls="none",
-            marker=".",
-            capsize=3,
-            elinewidth=1,
+    sunspot_data = np.genfromtxt(
+        "SN_m_tot_V2.0.txt",
+        dtype=[("dcml_year", float), ("sunspots", float), ("sunspots_err", float)],
+        usecols=(2, 3, 4),
+    )
+    with warnings.catch_warnings():
+        # Ignore astropy.time's "dubious year" warnings
+        warnings.simplefilter("ignore")
+        sunspot_days = (
+                ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
         )
 
-        # Label on primary axes
-        ax.errorbar(
-            [],
-            [],
-            yerr=[],
-            c="0.8",
-            ls="none",
-            marker=".",
-            capsize=3,
-            elinewidth=1,
-            label="Sunspot number",
-        )
+    # Restrict to the relevant dates
+    sel_ss = np.where((day_0 < sunspot_days) & (sunspot_days < day_1))[0]
+    sunspot_data = sunspot_data[sel_ss]
+    sunspot_days = sunspot_days[sel_ss]
 
-        # Axes etc
-        ax.patch.set_visible(False)
-        ax2.patch.set_visible(True)
-        ax2.set_zorder(-1)
-        ax2.set_ylabel(r"Sunspot Number, Monthly Average")
-        ax2.set_ylim(0, None)
-        plt.sca(ax)
+    # Plot
+    ax2 = ax.twinx()
+    ax2.errorbar(
+        sunspot_days,
+        sunspot_data["sunspots"],
+        yerr=sunspot_data["sunspots_err"],
+        c="0.8",
+        ls="none",
+        marker=".",
+        capsize=3,
+        elinewidth=1,
+    )
+
+    # Label on primary axes
+    ax.errorbar(
+        [],
+        [],
+        yerr=[],
+        c="0.8",
+        ls="none",
+        marker=".",
+        capsize=3,
+        elinewidth=1,
+        label="Sunspot number",
+    )
+
+    # Axes etc
+    ax.patch.set_visible(False)
+    ax2.patch.set_visible(True)
+    ax2.set_zorder(-1)
+    ax2.set_ylabel(r"Sunspot Number, Monthly Average")
+    ax2.set_ylim(0, None)
+    plt.sca(ax)
 
     # ========
     # Load and plot data
@@ -624,70 +614,70 @@ def plot_trap_density_evol(
             if len(sel) == 0:
                 continue
 
-            # Sunspot fit
-            if do_sunspots and False:
-                # Cumulative sunspot number
-                sunspot_cum = np.cumsum(sunspot_data["sunspots"])
-                sunspot_cum_err = np.sqrt(np.cumsum(sunspot_data["sunspots"] ** 2))
+            # # Sunspot fit
+            # if do_sunspots and False:
+            #     # Cumulative sunspot number
+            #     sunspot_cum = np.cumsum(sunspot_data["sunspots"])
+            #     sunspot_cum_err = np.sqrt(np.cumsum(sunspot_data["sunspots"] ** 2))
+            #
+            #     # Plot cumulative sunspot number
+            #     if i_sel == 0 and True:  ##
+            #         ax2.errorbar(
+            #             days,
+            #             np.interp(days, sunspot_days, sunspot_cum),
+            #             yerr=np.interp(days, sunspot_days, sunspot_cum_err),
+            #             c="0.8",
+            #             ls="none",
+            #             marker="o",
+            #             capsize=3,
+            #             elinewidth=1,
+            #         )
+            #         ax2.set_ylim(0, sunspot_cum[-1] * 1.05)
+            #         ax2.set_ylabel(r"Cumulative Sunspot Number")
+            #         plt.sca(ax)
+            # # Linear fit
+            #
+            # Fitting function
+            def linear(x, m, c):
+                return m * x + c
 
-                # Plot cumulative sunspot number
-                if i_sel == 0 and True:  ##
-                    ax2.errorbar(
-                        days,
-                        np.interp(days, sunspot_days, sunspot_cum),
-                        yerr=np.interp(days, sunspot_days, sunspot_cum_err),
-                        c="0.8",
-                        ls="none",
-                        marker="o",
-                        capsize=3,
-                        elinewidth=1,
-                    )
-                    ax2.set_ylim(0, sunspot_cum[-1] * 1.05)
-                    ax2.set_ylabel(r"Cumulative Sunspot Number")
-                    plt.sca(ax)
-            # Linear fit
+            # Fit (around middle t for nicer error plotting)
+            day_mid = np.mean(days[sel])
+            popt, pcov = curve_fit(
+                linear, days[sel] - day_mid, densities[sel], sigma=errors[sel]
+            )
+            grad, icpt = popt
+            err_grad = np.sqrt(pcov[0, 0])
+            err_icpt = np.sqrt(pcov[1, 1])
+            if days[sel][-1] > ut.day_T_change:
+                # Extrapolate on to the plot edge
+                days_fit = np.append(days[sel], [day_1])
+                if days[sel][0] < ut.day_side2_fail:
+                    # And back to the T change
+                    days_fit = np.append([ut.day_T_change], days_fit)
             else:
-                # Fitting function
-                def linear(x, m, c):
-                    return m * x + c
+                # Extrapolate on to the T change
+                days_fit = np.append(days[sel], [ut.day_T_change])
+                # And back to the plot edge
+                days_fit = np.append([day_0], days_fit)
+            fit_densities = linear(days_fit - day_mid, grad, icpt)
 
-                # Fit (around middle t for nicer error plotting)
-                day_mid = np.mean(days[sel])
-                popt, pcov = curve_fit(
-                    linear, days[sel] - day_mid, densities[sel], sigma=errors[sel]
-                )
-                grad, icpt = popt
-                err_grad = np.sqrt(pcov[0, 0])
-                err_icpt = np.sqrt(pcov[1, 1])
-                if days[sel][-1] > ut.day_T_change:
-                    # Extrapolate on to the plot edge
-                    days_fit = np.append(days[sel], [day_1])
-                    if days[sel][0] < ut.day_side2_fail:
-                        # And back to the T change
-                        days_fit = np.append([ut.day_T_change], days_fit)
-                else:
-                    # Extrapolate on to the T change
-                    days_fit = np.append(days[sel], [ut.day_T_change])
-                    # And back to the plot edge
-                    days_fit = np.append([day_0], days_fit)
-                fit_densities = linear(days_fit - day_mid, grad, icpt)
+            # Plot
+            ax.plot(days_fit, fit_densities, c=c, lw=1)
+            fit_errors = np.sqrt(
+                err_icpt ** 2 + ((days_fit - day_mid) * err_grad) ** 2
+            )
+            ax.plot(days_fit, fit_densities + fit_errors, c=c, lw=1, alpha=0.25)
+            ax.plot(days_fit, fit_densities - fit_errors, c=c, lw=1, alpha=0.25)
 
-                # Plot
-                ax.plot(days_fit, fit_densities, c=c, lw=1)
-                fit_errors = np.sqrt(
-                    err_icpt ** 2 + ((days_fit - day_mid) * err_grad) ** 2
-                )
-                ax.plot(days_fit, fit_densities + fit_errors, c=c, lw=1, alpha=0.25)
-                ax.plot(days_fit, fit_densities - fit_errors, c=c, lw=1, alpha=0.25)
+            # Shift for neater function of t
+            icpt -= grad * day_mid
 
-                # Shift for neater function of t
-                icpt -= grad * day_mid
-
-                label += str(
-                    "\n"
-                    + r"$(%.3f \pm %.3f) \!\times\! 10^{-4}\;\, t \,+\, (%.3f \pm %.3f)$"
-                    % (grad / 1e-4, err_grad / 1e-4, icpt, err_icpt)
-                )
+            label += str(
+                "\n"
+                + r"$(%.3f \pm %.3f) \!\times\! 10^{-4}\;\, t \,+\, (%.3f \pm %.3f)$"
+                % (grad / 1e-4, err_grad / 1e-4, icpt, err_icpt)
+            )
 
         # Data
         ax.errorbar(
@@ -834,8 +824,4 @@ def plot_trap_density_evol(
     nice_plot(ax)
     nice_plot(ax_yr)
 
-    save_path = ut.dataset_list_plotted_density_evol(
-        list_name, [trap_densities.quadrants_string for trap_densities in all_trap_densities], do_pdf=do_pdf
-    )
-    plt.savefig(save_path, dpi=200)
-    print("Saved", save_path.name)
+    return plt
