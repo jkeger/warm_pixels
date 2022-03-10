@@ -72,7 +72,7 @@ from pathlib import Path
 from warm_pixels import WarmPixels
 from warm_pixels.data.source import FileDatasetSource
 from warm_pixels.hst_utilities import output_path
-from warm_pixels.plot import output_plots
+from warm_pixels.plot import Plot
 
 parser = argparse.ArgumentParser()
 
@@ -119,15 +119,10 @@ parser.add_argument(
 
 # Other functions
 parser.add_argument(
-    "-D",
-    "--plot-density",
-    action="store_true",
-    help="Plot the evolution of the total trap density.",
-)
-parser.add_argument(
-    "--plot-warm-pixels",
-    action="store_true",
-    help="Output plots of warm pixels.",
+    '--plot',
+    nargs='+',
+    help='Specify plots from {TODO}',
+    required=True
 )
 parser.add_argument(
     "-u",
@@ -170,13 +165,12 @@ def main():
         datasets=list(source),
         quadrants=args.quadrants,
     )
-    output_plots(
+    plot = Plot(
         warm_pixels,
         list_name=str(source),
         use_corrected=use_corrected,
-        plot_density=args.plot_density,
-        plot_warm_pixels=args.plot_warm_pixels,
     )
+    plot.by_name(args.plot)
 
 
 if __name__ == "__main__":
