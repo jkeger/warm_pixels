@@ -66,6 +66,7 @@ dataset_list : str (opt.)
     Test loading the image and corresponding bias files in the list of datasets.
 """
 import argparse
+import datetime as dt
 from pathlib import Path
 
 from warm_pixels import WarmPixels
@@ -80,6 +81,25 @@ parser.add_argument(
     nargs="?",
     type=str,
     help="The path to the directory containing data.",
+)
+
+# Filter
+parser.add_argument(
+    "--after",
+    default=None,
+    type=str
+)
+parser.add_argument(
+    "--before",
+    default=None,
+    type=str
+)
+parser.add_argument(
+    "-w",
+    "--downsample",
+    default=None,
+    type=int,
+    help="Downsample to run 1/N of the datasets",
 )
 
 # Optional arguments
@@ -115,37 +135,41 @@ parser.add_argument(
     action="store_true",
     help="Use the corrected images with CTI removed instead of the originals.",
 )
-parser.add_argument(
-    "-w",
-    "--downsample",
-    default=None,
-    type=int,
-    help="Downsample to run 1/N of the datasets",
-)
 
 
 def main():
     args = parser.parse_args()
 
-    dataset_source = FileDatasetSource(
+    source = FileDatasetSource(
         Path(args.directory),
         output_path=output_path,
     )
 
     downsample = args.downsample
     if downsample is not None:
-        dataset_source.downsample(
+        source = source.downsample(
             step=downsample
         )
 
+    after = args.after
+    if after is not None:
+        source = source.after(
+            dt.date.fromisoformat(after)
+        )
+    before = args.before
+    if before is not None:
+        source = source.before(
+            dt.date.fromisoformat(before)
+        )
+
     WarmPixels(
-        datasets=list(dataset_source),
+        datasets=list(source),
         quadrants=args.quadrants,
         overwrite=args.overwrite,
         prep_density=args.prep_density,
         use_corrected=args.use_corrected,
         plot_density=args.plot_density,
-        list_name=str(dataset_source),
+        list_name=str(source),
     ).main()
 
 
