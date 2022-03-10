@@ -66,7 +66,9 @@ def test_before(
 @pytest.mark.parametrize(
     "start, step, count, name",
     [
-        (0, 1, 1, "dataset_list_downsampled_0-1")
+        (0, 1, 1, "dataset_list_downsampled_0-1"),
+        (1, 1, 0, "dataset_list_downsampled_1-1"),
+        (0, 2, 1, "dataset_list_downsampled_0-2"),
     ]
 )
 def test_down_sample(
