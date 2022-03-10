@@ -141,7 +141,6 @@ def fit_dataset_total_trap_density(
             for i_background in background_bins:
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
-                    n_row_bins=stacked_lines.n_row_bins,
                     i_flux=i_flux,
                     n_flux_bins=stacked_lines.n_flux_bins,
                     i_background=i_background,
@@ -187,18 +186,8 @@ def fit_total_trap_densities(groups: Tuple[QuadrantGroup]):
 
     Parameters
     ----------
-    dataset_list : [str]
-        The list of image datasets to run.
-
-    list_name : str
-        The name of the list of image datasets.
-
-    quadrants : [str]
-        The list of quadrants (A, B, C, D) of the images to load, combined
-        together if more than one provided.
-
-    use_corrected : bool (opt.)
-        If True, then use the corrected images with CTI removed instead.
+    groups
+        Groups of quadrants from datasets over time
     """
     # Initialise arrays
     days = []

@@ -379,7 +379,6 @@ class PixelLineCollection:
     @staticmethod
     def stacked_bin_index(
             i_row=0,
-            n_row_bins=1,
             i_flux=0,
             n_flux_bins=1,
             i_date=0,
@@ -629,7 +628,6 @@ class PixelLineCollection:
             # Get the index in the 1D array for this bin
             index = self.stacked_bin_index(
                 i_row=i_row,
-                n_row_bins=n_row_bins,
                 i_flux=i_flux,
                 n_flux_bins=n_flux_bins,
                 i_date=i_date,

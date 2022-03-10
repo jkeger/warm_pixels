@@ -280,7 +280,6 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
                 bin_index = PixelLineCollection.stacked_bin_index(
                     i_row=i_row,
-                    n_row_bins=n_row_bins,
                     i_flux=i_flux,
                     n_flux_bins=n_flux_bins,
                     i_background=i_background,
