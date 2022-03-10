@@ -10,8 +10,8 @@ class OptionException(Exception):
     pass
 
 
-def plot_all_warm_pixels(quadrant_dataset_):
-    for quadrant in quadrant_dataset_.all_quadrants:
+def plot_all_warm_pixels(dataset):
+    for quadrant in dataset.all_quadrants:
         for image_quadrant in quadrant.image_quadrants:
             # Plot
             plot_warm_pixels(
@@ -19,7 +19,7 @@ def plot_all_warm_pixels(quadrant_dataset_):
                 PixelLineCollection(
                     image_quadrant.warm_pixels(),
                 ),
-                save_path=quadrant_dataset_.dataset.output_path / image_quadrant.name,
+                save_path=dataset.output_path / image_quadrant.name,
             )
 
 
@@ -40,24 +40,22 @@ class Plot:
         }
 
     def warm_pixels(self):
-        for quadrant_dataset in self._warm_pixels.quadrant_datasets():
-            plot_all_warm_pixels(quadrant_dataset)
+        for dataset in self._warm_pixels.datasets:
+            plot_all_warm_pixels(dataset)
 
     def warm_pixel_distributions(self):
-        for quadrant_dataset in self._warm_pixels.quadrant_datasets():
-            dataset = quadrant_dataset.dataset
+        for dataset in self._warm_pixels.datasets:
             filename = dataset.plotted_distributions(
                 self._warm_pixels.quadrants
             )
             plot_warm_pixel_distributions(
-                quadrant_dataset.all_quadrants,
+                dataset.all_quadrants,
                 save_path=filename,
             )
 
     def stacked_trails(self):
-        for quadrant_dataset in self._warm_pixels.quadrant_datasets():
-            dataset = quadrant_dataset.dataset
-            for group in quadrant_dataset.groups:
+        for dataset in self._warm_pixels.datasets:
+            for group in dataset.groups:
                 filename = dataset.plotted_stacked_trails(
                     group,
                 )

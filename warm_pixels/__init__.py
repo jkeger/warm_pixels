@@ -7,7 +7,6 @@ from warm_pixels.model.cache import cache
 from warm_pixels.model.group import QuadrantGroup
 from warm_pixels.model.quadrant import Quadrant, CorrectedQuadrant
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
-from warm_pixels.quadrant_dataset import QuadrantDataset
 
 
 class WarmPixels:
@@ -19,22 +18,11 @@ class WarmPixels:
         self.datasets = datasets
         self.quadrants = quadrants
 
-    @cache
-    def quadrant_datasets(self):
-        return [
-            QuadrantDataset(
-                dataset=dataset,
-                quadrants_string=self.quadrants,
-            )
-            for dataset
-            in self.datasets
-        ]
-
     def all_groups(self):
         return [
             quadrant_dataset_.groups
             for quadrant_dataset_
-            in self.quadrant_datasets()
+            in self.datasets
         ]
 
     @cache

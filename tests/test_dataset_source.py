@@ -15,6 +15,7 @@ def make_source(
     return FileDatasetSource(
         dataset_list_path,
         output_path,
+        quadrants_string="A"
     )
 
 

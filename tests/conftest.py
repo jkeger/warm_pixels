@@ -46,6 +46,7 @@ def make_dataset(
     return Dataset(
         dataset_path,
         output_path,
+        quadrants_string="A",
     )
 
 

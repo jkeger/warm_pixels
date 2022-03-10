@@ -2,12 +2,14 @@
 import os
 from glob import glob
 from pathlib import Path
+from typing import List
 
 import autoarray as aa
 
 import arcticpy as cti
 from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_functions.cti_model import cti_model_hst
+from warm_pixels.model.cache import cache
 from .image import Image
 
 
@@ -16,6 +18,7 @@ class Dataset:
             self,
             path: Path,
             output_path: Path,
+            quadrants_string: str,
     ):
         """Simple class to store a list of image file paths and mild metadata.
 
@@ -33,7 +36,41 @@ class Dataset:
         self._output_path = output_path
         self._images = None
 
+        self.quadrants_string = quadrants_string
+
     @property
+    @cache
+    def groups(self):
+        from warm_pixels.model.group import QuadrantGroup
+        from warm_pixels.model.quadrant import Quadrant
+
+        return [
+            QuadrantGroup([
+                Quadrant(
+                    quadrant=quadrant,
+                    dataset=self
+                )
+                for quadrant in group
+            ])
+            for group in tuple(map(
+                tuple,
+                self.quadrants_string.split("_")
+            ))
+        ]
+
+    @property
+    def all_quadrants(self) -> List:
+        """
+        A list of all quadrants
+        """
+        return [
+            quadrant
+            for group in self.groups
+            for quadrant in group.quadrants
+        ]
+
+    @property
+    @cache
     def images(self):
         return [
             Image(
@@ -153,6 +190,7 @@ class CorrectedDataset(Dataset):
         super().__init__(
             path=corrected_path,
             output_path=dataset.output_path,
+            quadrants_string=dataset.quadrants_string,
         )
 
     @property

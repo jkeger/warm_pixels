@@ -92,6 +92,7 @@ class FileDatasetSource(AbstractDatasetSource):
             self,
             directory: Path,
             output_path: Path,
+            quadrants_string: str,
     ):
         """
         Load datasets from a directory.
@@ -106,6 +107,7 @@ class FileDatasetSource(AbstractDatasetSource):
         """
         self.directory = directory
         self.output_path = output_path
+        self.quadrants_string = quadrants_string
 
     def __str__(self):
         """
@@ -123,7 +125,8 @@ class FileDatasetSource(AbstractDatasetSource):
         return [
             Dataset(
                 self.directory / folder,
-                output_path=self.output_path
+                output_path=self.output_path,
+                quadrants_string=self.quadrants_string
             )
             for folder in dataset_folders
         ]
