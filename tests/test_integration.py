@@ -1,6 +1,6 @@
 import pytest
 
-from warm_pixels import WarmPixels
+from warm_pixels import WarmPixels, main
 
 
 @pytest.mark.parametrize(
@@ -23,13 +23,23 @@ def test_integration(
         in true_flags
     }
     overwrite = True
-    WarmPixels(
+    warm_pixels = WarmPixels(
         datasets=[dataset, dataset],
         quadrants="A",
         overwrite=overwrite,
         list_name="test",
         plot_warm_pixels=True,
         **kwargs,
-    ).main()
+    )
+    try:
+        del kwargs["prep_density"]
+    except KeyError:
+        pass
+    main(
+        warm_pixels,
+        list_name="test",
+        plot_warm_pixels=True,
+        **kwargs,
+    )
     if overwrite:
         assert len(savefig_calls) == n_calls
