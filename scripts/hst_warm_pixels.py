@@ -69,7 +69,7 @@ import argparse
 import datetime as dt
 from pathlib import Path
 
-from warm_pixels import WarmPixels
+from warm_pixels import WarmPixels, output_plots
 from warm_pixels.data.source import FileDatasetSource
 from warm_pixels.hst_utilities import output_path
 
@@ -118,16 +118,15 @@ parser.add_argument(
 
 # Other functions
 parser.add_argument(
-    "-d",
-    "--prep-density",
-    action="store_true",
-    help="Fit the total trap density for all datasets.",
-)
-parser.add_argument(
     "-D",
     "--plot-density",
     action="store_true",
     help="Plot the evolution of the total trap density.",
+)
+parser.add_argument(
+    "--plot-warm-pixels",
+    action="store_true",
+    help="Output plots of warm pixels.",
 )
 parser.add_argument(
     "-u",
@@ -162,15 +161,21 @@ def main():
             dt.date.fromisoformat(before)
         )
 
-    WarmPixels(
+    use_corrected = args.use_corrected
+    if use_corrected:
+        source = source.corrected()
+
+    warm_pixels = WarmPixels(
         datasets=list(source),
         quadrants=args.quadrants,
-        overwrite=args.overwrite,
-        prep_density=args.prep_density,
-        use_corrected=args.use_corrected,
-        plot_density=args.plot_density,
+    )
+    output_plots(
+        warm_pixels,
         list_name=str(source),
-    ).main()
+        use_corrected=use_corrected,
+        plot_density=args.plot_density,
+        plot_warm_pixels=args.plot_warm_pixels,
+    )
 
 
 if __name__ == "__main__":

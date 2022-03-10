@@ -68,6 +68,24 @@ class AbstractDatasetSource:
             step=step,
         )
 
+    def corrected(self):
+        return CorrectedDatasetSource(self)
+
+
+class CorrectedDatasetSource(AbstractDatasetSource):
+    def __init__(self, source):
+        self.source = source
+
+    def __str__(self):
+        return f"{self.source}_corrected"
+
+    def datasets(self):
+        return [
+            dataset.corrected()
+            for dataset
+            in self.datasets()
+        ]
+
 
 class FileDatasetSource(AbstractDatasetSource):
     def __init__(

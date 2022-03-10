@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import warm_pixels.hst_functions.plot
 from warm_pixels import hst_functions as fu
@@ -28,7 +27,7 @@ def plot_all_warm_pixels(quadrant_dataset_):
             )
 
 
-def main(
+def output_plots(
         warm_pixels_,
         list_name,
         use_corrected=False,
@@ -81,33 +80,9 @@ class WarmPixels:
             self,
             datasets,
             quadrants,
-            list_name: str,
-            overwrite=False,
-            prep_density=False,
-            use_corrected=False,
-            plot_density=False,
-            plot_warm_pixels=False,
     ):
-        if use_corrected:
-            datasets = [
-                dataset.corrected()
-                for dataset
-                in datasets
-            ]
-
         self.datasets = datasets
         self.quadrants = quadrants
-        self.overwrite = overwrite
-        self.prep_density = prep_density
-        self.use_corrected = use_corrected
-        self.plot_density = plot_density
-        self.list_name = list_name
-        self.plot_warm_pixels = plot_warm_pixels
-
-    def need_to_make_file(self, filename):
-        if self.overwrite:
-            return True
-        return not os.path.exists(filename)
 
     @cache
     def quadrant_datasets(self):
@@ -134,100 +109,3 @@ class WarmPixels:
             fu.fit_total_trap_densities(groups)
             for groups in zip(*self.all_groups())
         ]
-
-    def main(self):
-        # ========
-        # Create directories to contain output plots
-        # ========
-        os.makedirs(ut.output_path / "stacked_trail_plots", exist_ok=True)
-        os.makedirs(ut.output_path / "plotted_distributions", exist_ok=True)
-
-        # ========
-        # Find and stack warm pixels in each dataset
-        # ========
-        all_groups = []
-
-        for i_dataset, dataset in enumerate(self.datasets):
-            print(
-                f'Dataset "{dataset.name}" '
-                f'({i_dataset + 1} of {len(self.datasets)}, '
-                f'{len(dataset)} images, "{self.quadrants}")'
-            )
-
-            quadrant_dataset_ = QuadrantDataset(
-                dataset=dataset,
-                quadrants_string=self.quadrants,
-            )
-
-            if self.plot_warm_pixels:
-                plot_all_warm_pixels(quadrant_dataset_)
-
-            # List of lists of groups
-            all_groups.append(quadrant_dataset_.groups)
-
-            filename = dataset.plotted_distributions(self.quadrants)
-            if self.need_to_make_file(filename):
-                print("  Distributions of warm pixels...", end=" ", flush=True)
-                fu.plot_warm_pixel_distributions(
-                    quadrant_dataset_.all_quadrants,
-                    save_path=filename,
-                )
-
-            for group in quadrant_dataset_.groups:
-                filename = dataset.plotted_stacked_trails(
-                    group,
-                )
-                if self.need_to_make_file(
-                        filename
-                ):
-                    fu.plot_stacked_trails(
-                        use_corrected=False,
-                        save_path=filename,
-                        group=group,
-                    )
-
-        all_trap_densities = []
-
-        # ========
-        # Compiled results from all datasets
-        # ========
-        # Fit and save the total trap densities
-        if self.prep_density or self.plot_density:
-            # Pivot groups into one list for each quadrant group over time
-            for groups in zip(*all_groups):
-                print(
-                    f"Fit total trap densities ({''.join(self.quadrants)})...",
-                    end=" ",
-                    flush=True,
-                )
-                filename = Path(ut.dataset_list_saved_density_evol(
-                    self.list_name,
-                    groups,
-                    self.use_corrected
-                ))
-
-                if not filename.exists():
-                    trap_densities = fu.fit_total_trap_densities(groups)
-                    trap_densities.save(filename)
-                else:
-                    trap_densities = TrapDensities.load(filename)
-                all_trap_densities.append(
-                    trap_densities
-                )
-
-        # Plot the trap density evolution
-        if self.plot_density:
-            save_path = ut.dataset_list_plotted_density_evol(
-                self.list_name,
-                [
-                    trap_densities.quadrants_string
-                    for trap_densities
-                    in all_trap_densities
-                ]
-            )
-            print("Plot trap density evolution...", end=" ", flush=True)
-            plot.plot_trap_density_evol(
-                all_trap_densities=all_trap_densities,
-                use_corrected=self.use_corrected,
-                save_path=save_path
-            )
