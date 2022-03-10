@@ -69,9 +69,10 @@ import argparse
 import datetime as dt
 from pathlib import Path
 
-from warm_pixels import WarmPixels, output_plots
+from warm_pixels import WarmPixels
 from warm_pixels.data.source import FileDatasetSource
 from warm_pixels.hst_utilities import output_path
+from warm_pixels.plot import output_plots
 
 parser = argparse.ArgumentParser()
 

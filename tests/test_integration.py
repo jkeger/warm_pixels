@@ -1,4 +1,5 @@
-from warm_pixels import WarmPixels, output_plots
+from warm_pixels import WarmPixels
+from warm_pixels.plot import output_plots
 
 
 def test_integration(
