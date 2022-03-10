@@ -491,6 +491,7 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
 
 def plot_trap_density_evol(
+        save_path,
         all_trap_densities: List[TrapDensities],
         use_corrected=False,
 ):
@@ -500,9 +501,11 @@ def plot_trap_density_evol(
 
     Parameters
     ----------
-    list_name : str
-        The name of the list of image datasets.
-
+    save_path
+        The path at which the plot should be saved
+    all_trap_densities
+        A list of objects each describing how trap densities vary over time for
+        a group of quadrants
     use_corrected : bool (opt.)
         If True, then also plot the results from the corrected images with CTI
         removed.
@@ -824,4 +827,4 @@ def plot_trap_density_evol(
     nice_plot(ax)
     nice_plot(ax_yr)
 
-    return plt
+    plt.savefig(save_path, dpi=200)

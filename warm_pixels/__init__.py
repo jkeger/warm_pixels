@@ -153,5 +153,6 @@ class WarmPixels:
             print("Plot trap density evolution...", end=" ", flush=True)
             plot.plot_trap_density_evol(
                 all_trap_densities=all_trap_densities,
-                use_corrected=self.use_corrected
-            ).savefig(save_path, dpi=200)
+                use_corrected=self.use_corrected,
+                save_path=save_path
+            )

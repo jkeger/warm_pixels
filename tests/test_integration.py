@@ -28,6 +28,7 @@ def test_integration(
         quadrants="A",
         overwrite=overwrite,
         list_name="test",
+        plot_warm_pixels=True,
         **kwargs,
     ).main()
     if overwrite:
