@@ -1,6 +1,7 @@
 import os
 import pickle
 from pathlib import Path
+from typing import List
 
 import numpy as np
 
@@ -406,16 +407,16 @@ class PixelLineCollection:
             row_max=None,
             row_scale="linear",
             row_bins=None,
-            n_flux_bins=1,
-            flux_min=None,
-            flux_max=None,
-            flux_scale="log",
-            flux_bins=None,
-            n_date_bins=1,
-            date_min=None,
-            date_max=None,
-            date_scale="linear",
-            date_bins=None,
+            n_flux_bins: int = 1,
+            flux_min: float = None,
+            flux_max: float = None,
+            flux_scale: str = "log",
+            flux_bins: List[float] = None,
+            n_date_bins: int = 1,
+            date_min: fluxes = None,
+            date_max: fluxes = None,
+            date_scale: str = "linear",
+            date_bins: List[float] = None,
             n_background_bins=1,
             background_min=None,
             background_max=None,
@@ -459,17 +460,19 @@ class PixelLineCollection:
             The spacing (linear or logarithmic) for the row bins, if row_bins is
             not provided.
 
-        flux_bins, n_flux_bins, flux_min, flux_max, flux_scale : [float], int,
-        float, float, str
+        flux_bins, n_flux_bins, flux_min, flux_max, flux_scale
             As above, for the bins by flux.
 
-        date_bins, n_date_bins, date_min, date_max, date_scale : [float], int,
-        float, float, str
+        date_bins, n_date_bins, date_min, date_max, date_scale
             As above, for the bins by Julian date.
 
         background_bins, n_background_bins, background_min, background_max,
         background_scale : [float], int, float, float, str
             As above, for the bins by background.
+        n_background_bins
+        background_min
+        background_max
+        background_bins
 
         Returns
         -------
