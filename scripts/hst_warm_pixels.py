@@ -65,17 +65,68 @@ dataset_list : str (opt.)
 --test_image_and_bias_files, -t
     Test loading the image and corresponding bias files in the list of datasets.
 """
+import argparse
 import os
 from pathlib import Path
 
 from warm_pixels import WarmPixels
-from warm_pixels import hst_utilities as ut
 from warm_pixels.data import Dataset
 from warm_pixels.hst_utilities import output_path
 
+parser = argparse.ArgumentParser()
+
+# Positional arguments
+parser.add_argument(
+    "directory",
+    nargs="?",
+    type=str,
+    help="The path to the directory containing data.",
+)
+
+# Optional arguments
+parser.add_argument(
+    "-q",
+    "--quadrants",
+    default="ABCD",
+    type=str,
+    help="The image quadrants to use.",
+)
+parser.add_argument(
+    "--overwrite",
+    action="store_true",
+    help="If --overwrite is passed then overwrite existing files"
+)
+
+# Other functions
+parser.add_argument(
+    "-d",
+    "--prep-density",
+    action="store_true",
+    help="Fit the total trap density for all datasets.",
+)
+parser.add_argument(
+    "-D",
+    "--plot-density",
+    action="store_true",
+    help="Plot the evolution of the total trap density.",
+)
+parser.add_argument(
+    "-u",
+    "--use-corrected",
+    action="store_true",
+    help="Use the corrected images with CTI removed instead of the originals.",
+)
+parser.add_argument(
+    "-w",
+    "--downsample",
+    nargs=2,
+    default=None,
+    metavar=("downsample_N", "downsample_i"),
+    help="Downsample to run 1/N of the datasets, starting with set i.",
+)
+
 
 def main():
-    parser = ut.prep_parser()
     args = parser.parse_args()
 
     directory = Path(args.directory)

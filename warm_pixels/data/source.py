@@ -7,9 +7,8 @@ from warm_pixels import Dataset
 
 
 class AbstractDatasetSource:
-    @property
     @abstractmethod
-    def name(self):
+    def __str__(self):
         pass
 
     @abstractmethod
@@ -30,6 +29,17 @@ class AbstractDatasetSource:
             lambda dataset: dataset.observation_date() < date
         )
 
+    def downsample(
+            self,
+            start,
+            step,
+    ):
+        return DownsampleDatasetSource(
+            source=self,
+            start=start,
+            step=step,
+        )
+
 
 class FileDatasetSource(AbstractDatasetSource):
     def __init__(
@@ -40,8 +50,7 @@ class FileDatasetSource(AbstractDatasetSource):
         self.directory = directory
         self.output_path = output_path
 
-    @property
-    def name(self):
+    def __str__(self):
         return self.directory.name
 
     def datasets(self):
@@ -57,6 +66,24 @@ class FileDatasetSource(AbstractDatasetSource):
         ]
 
 
+class DownsampleDatasetSource(AbstractDatasetSource):
+    def __init__(
+            self,
+            source,
+            start,
+            step,
+    ):
+        self.source = source
+        self.start = start
+        self.step = step
+
+    def __str__(self):
+        return f"{self.source}_downsampled_{self.start}-{self.step}"
+
+    def datasets(self):
+        return self.source.datasets()[self.start::self.step]
+
+
 class FilteredDatasetSource(AbstractDatasetSource):
     def __init__(
             self,
@@ -68,9 +95,8 @@ class FilteredDatasetSource(AbstractDatasetSource):
         self.source = source
         self.filter = filter_
 
-    @property
-    def name(self):
-        return f"{self.source.name}_{self.filter_name}"
+    def __str__(self):
+        return f"{self.source}_{self.filter_name}"
 
     def datasets(self):
         return [

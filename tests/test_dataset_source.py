@@ -22,7 +22,7 @@ def test_dataset_source(
         source
 ):
     assert len(source.datasets()) == 1
-    assert source.name == "dataset_list"
+    assert str(source) == "dataset_list"
 
 
 @pytest.mark.parametrize(
@@ -41,7 +41,7 @@ def test_after(
 ):
     source = source.after(date)
     assert len(source.datasets()) == count
-    assert source.name == name
+    assert str(source) == name
 
 
 @pytest.mark.parametrize(
@@ -60,4 +60,25 @@ def test_before(
 ):
     source = source.before(date)
     assert len(source.datasets()) == count
-    assert source.name == name
+    assert str(source) == name
+
+
+@pytest.mark.parametrize(
+    "start, step, count, name",
+    [
+        (0, 1, 1, "dataset_list_downsampled_0-1")
+    ]
+)
+def test_down_sample(
+        source,
+        start,
+        step,
+        count,
+        name,
+):
+    source = source.downsample(
+        start=start,
+        step=step,
+    )
+    assert len(source.datasets()) == count
+    assert str(source) == name

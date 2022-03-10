@@ -55,66 +55,6 @@ day_side2_fail = date_side2_fail - date_acs_launch
 day_sm4_repair = date_sm4_repair - date_acs_launch
 
 
-# ========
-# Utility functions
-# ========
-def prep_parser():
-    """Prepare the sys args parser."""
-    parser = argparse.ArgumentParser()
-
-    # Positional arguments
-    parser.add_argument(
-        "directory",
-        nargs="?",
-        type=str,
-        help="The path to the directory containing data.",
-    )
-
-    # Optional arguments
-    parser.add_argument(
-        "-q",
-        "--quadrants",
-        default="ABCD",
-        type=str,
-        help="The image quadrants to use.",
-    )
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="If --overwrite is passed then overwrite existing files"
-    )
-
-    # Other functions
-    parser.add_argument(
-        "-d",
-        "--prep-density",
-        action="store_true",
-        help="Fit the total trap density for all datasets.",
-    )
-    parser.add_argument(
-        "-D",
-        "--plot-density",
-        action="store_true",
-        help="Plot the evolution of the total trap density.",
-    )
-    parser.add_argument(
-        "-u",
-        "--use-corrected",
-        action="store_true",
-        help="Use the corrected images with CTI removed instead of the originals.",
-    )
-    parser.add_argument(
-        "-w",
-        "--downsample",
-        nargs=2,
-        default=None,
-        metavar=("downsample_N", "downsample_i"),
-        help="Downsample to run 1/N of the datasets, starting with set i.",
-    )
-
-    return parser
-
-
 def dec_yr_to_jd(dates):
     """Convert one or more decimal-year dates to Julian dates."""
     time = Time(dates, format="decimalyear")
