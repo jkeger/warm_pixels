@@ -31,20 +31,30 @@ the next-stage functions.
 Example use
 -----------
 
-python3 hst_warm_pixels.py sample
+./hst_warm_pixels.py directory --plot warm-pixels density
 
 
 Parameters
 ----------
-dataset_list : str (opt.)
-    The name of the list of image datasets to run. Defaults to "test". See the
-    dataset_lists dictionary for the options.
+directory
+    A directory containing dataset directories. Each dataset directory is loaded
+    as a dataset.
+
+--downsample
+    Pass in an integer such that only every nth dataset is included in the fit
 
 --quadrants, -q : str (opt.)
     The image quadrants to use, e.g. "A" or "ABCD" (default). To analyse the
     quadrants separately (done regardless for functions before the stacking),
     use e.g. "A_B_C_D", or e.g. "AB_CD" for combined A & B kept separate from
     combined C & D.
+
+--plot
+    Pass in a list of plots that should be output chosen from:
+        warm-pixels
+        warm-pixel_distributions
+        stacked-trails
+        density
 
 --prep_density, -d
     Fit the total trap density across all datasets.
@@ -58,12 +68,6 @@ dataset_list : str (opt.)
     remove CTI from the images in each dataset (e.g. with `-r .`).
     Note, mdate_plot_stack defaults to "0" in this mode.
 
---downsample, -w <N> <i> : int int
-    Downsample the dataset list to run 1/N of the datasets, starting with set i.
-    e.g. -w 10 5 will run the datasets with indices 5, 15, 25, ... in the list.
-
---test_image_and_bias_files, -t
-    Test loading the image and corresponding bias files in the list of datasets.
 """
 import argparse
 import datetime as dt
@@ -110,11 +114,6 @@ parser.add_argument(
     default="ABCD",
     type=str,
     help="The image quadrants to use.",
-)
-parser.add_argument(
-    "--overwrite",
-    action="store_true",
-    help="If --overwrite is passed then overwrite existing files"
 )
 
 # Other functions
@@ -169,6 +168,7 @@ def main():
         warm_pixels,
         list_name=str(source),
         use_corrected=use_corrected,
+        quadrants_string=args.quadrants
     )
     plot.by_name(args.plot)
 

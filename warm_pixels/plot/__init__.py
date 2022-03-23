@@ -1,3 +1,5 @@
+from typing import List
+
 from warm_pixels import hst_utilities as ut
 from warm_pixels.pixel_lines import PixelLineCollection
 from .stacked_trails import plot_stacked_trails
@@ -31,6 +33,21 @@ class Plot:
             use_corrected,
             quadrants_string,
     ):
+        """
+        Handles plotting of various outputs from the pipeline.
+
+        Parameters
+        ----------
+        warm_pixels_
+            API to access pipeline output such as warm pixels and fits
+        list_name
+            A name for the set of data
+        use_corrected
+            Are images CTI corrected?
+        quadrants_string
+            A string describing the groups of quadrants from HST images included.
+            e.g. AB_CD where AB and CD are groups
+        """
         self._warm_pixels = warm_pixels_
         self.list_name = list_name
         self.use_corrected = use_corrected
@@ -46,10 +63,16 @@ class Plot:
         }
 
     def warm_pixels(self):
+        """
+        Plot warm pixels for each quadrant of each dataset
+        """
         for dataset in self._warm_pixels.datasets:
             plot_all_warm_pixels(dataset)
 
     def warm_pixel_distributions(self):
+        """
+        Plot a histogram of the distribution of warm pixels
+        """
         for dataset in self._warm_pixels.datasets:
             filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self.all_quadrants_string}.png"
             plot_warm_pixel_distributions(
@@ -58,6 +81,9 @@ class Plot:
             )
 
     def stacked_trails(self):
+        """
+        Plot a tiled set of stacked trails for each dataset
+        """
         for dataset in self._warm_pixels.datasets:
             for group in dataset.groups:
                 filename = ut.output_path / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self.all_quadrants_string}.png"
@@ -68,6 +94,9 @@ class Plot:
                 )
 
     def density(self, extension="png"):
+        """
+        Plot the evolution of trap density over time
+        """
         save_path = ut.output_path / f"density_evol_{self.list_name}{self.quadrants_string}.{extension}"
         plot_trap_density_evol(
             all_trap_densities=self._warm_pixels.all_trap_densities(),
@@ -75,7 +104,20 @@ class Plot:
             save_path=save_path
         )
 
-    def by_name(self, plot_names):
+    def by_name(self, plot_names: List[str]):
+        """
+        Create all plots in the list of plot names.
+
+        This is so plots can be conveniently passed in via the command line.
+
+        Parameters
+        ----------
+        plot_names
+            A list of names of plots. These should match method names from this class
+            but may use hyphens instead of underscores.
+
+            e.g. ["density", "warm-pixel-distributions"]
+        """
         for name in plot_names:
             name = name.replace("-", "_")
             if name not in self.all_methods:
