@@ -16,10 +16,6 @@ class WarmPixels:
     ):
         self.datasets = datasets
 
-    @property
-    def quadrants(self):
-        return map(str, self.datasets[0].all_quadrants)
-
     def all_groups(self):
         return [
             quadrant_dataset_.groups

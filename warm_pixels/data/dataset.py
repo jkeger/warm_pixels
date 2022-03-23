@@ -7,7 +7,6 @@ from typing import List
 import autoarray as aa
 
 import arcticpy as cti
-from warm_pixels import hst_utilities as ut
 from warm_pixels.hst_functions.cti_model import cti_model_hst
 from warm_pixels.model.cache import cache
 from .image import Image
@@ -124,14 +123,6 @@ class Dataset:
         """Return the file name including the path for saving derived data."""
         quadrant_string = "".join(quadrants)
         return self.output_path / f"saved_stacked_lines_{quadrant_string}"
-
-    def plotted_stacked_trails(self, quadrants):
-        """Return the file name including the path for saving derived data."""
-        return ut.output_path / f"stacked_trail_plots/{self.name}_plotted_stacked_trails_{''.join(map(str, quadrants))}.png"
-
-    def plotted_distributions(self, quadrants):
-        """Return the file name including the path for saving derived data."""
-        return ut.output_path / f"plotted_distributions/{self.name}_plotted_distributions_{''.join(quadrants)}.png"
 
     def corrected(self):
         """

@@ -29,10 +29,16 @@ class Plot:
             warm_pixels_,
             list_name,
             use_corrected,
+            quadrants_string,
     ):
         self._warm_pixels = warm_pixels_
         self.list_name = list_name
         self.use_corrected = use_corrected
+
+        self.quadrants_string = quadrants_string
+        self.all_quadrants_string = "".join(
+            quadrants_string.split("_")
+        )
 
         self.all_methods = {
             name for name in dir(self)
@@ -45,9 +51,7 @@ class Plot:
 
     def warm_pixel_distributions(self):
         for dataset in self._warm_pixels.datasets:
-            filename = dataset.plotted_distributions(
-                self._warm_pixels.quadrants
-            )
+            filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self.all_quadrants_string}.png"
             plot_warm_pixel_distributions(
                 dataset.all_quadrants,
                 save_path=filename,
@@ -56,24 +60,15 @@ class Plot:
     def stacked_trails(self):
         for dataset in self._warm_pixels.datasets:
             for group in dataset.groups:
-                filename = dataset.plotted_stacked_trails(
-                    group,
-                )
+                filename = ut.output_path / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self.all_quadrants_string}.png"
                 plot_stacked_trails(
                     use_corrected=False,
                     save_path=filename,
                     group=group,
                 )
 
-    def density(self):
-        save_path = ut.dataset_list_plotted_density_evol(
-            self.list_name,
-            [
-                trap_densities.quadrants_string
-                for trap_densities
-                in self._warm_pixels.all_trap_densities()
-            ]
-        )
+    def density(self, extension="png"):
+        save_path = ut.output_path / f"density_evol_{self.list_name}{self.quadrants_string}.{extension}"
         plot_trap_density_evol(
             all_trap_densities=self._warm_pixels.all_trap_densities(),
             use_corrected=self.use_corrected,
