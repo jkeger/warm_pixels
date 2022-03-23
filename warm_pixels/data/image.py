@@ -1,6 +1,5 @@
 """Defines where the HST data is located on disc, and a class to read it in/contain it"""
 import datetime as dt
-import os
 from pathlib import Path
 
 import autoarray as aa
@@ -11,23 +10,12 @@ class Image:
     def __init__(
             self,
             path: Path,
-            output_path: Path
     ):
         self.path = path
-        self._output_path = output_path
 
     @property
     def name(self):
         return self.path.name.split("_")[0]
-
-    @property
-    def output_path(self):
-        output_path = self._output_path / self.name
-        os.makedirs(
-            output_path,
-            exist_ok=True
-        )
-        return output_path
 
     def image(self):
         return aa.acs.ImageACS.from_fits(
@@ -69,6 +57,5 @@ class CorrectedImage(Image):
                     image.path.parent
                     / f"{image.name}_raw_cor.fits"
             ),
-            output_path=image.path,
         )
         self.image = image

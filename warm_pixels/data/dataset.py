@@ -74,7 +74,6 @@ class Dataset:
         return [
             Image(
                 Path(image_path),
-                output_path=self.output_path,
             )
             for image_path in glob(
                 f"{self.path}/*_raw.fits"
