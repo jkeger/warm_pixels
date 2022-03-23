@@ -138,6 +138,7 @@ def main():
     source = FileDatasetSource(
         Path(args.directory),
         output_path=output_path,
+        quadrants_string=args.quadrants
     )
 
     downsample = args.downsample
@@ -163,7 +164,6 @@ def main():
 
     warm_pixels = WarmPixels(
         datasets=list(source),
-        quadrants=args.quadrants,
     )
     plot = Plot(
         warm_pixels,

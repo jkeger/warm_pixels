@@ -13,10 +13,12 @@ class WarmPixels:
     def __init__(
             self,
             datasets,
-            quadrants,
     ):
         self.datasets = datasets
-        self.quadrants = quadrants
+
+    @property
+    def quadrants(self):
+        return map(str, self.datasets[0].all_quadrants)
 
     def all_groups(self):
         return [
