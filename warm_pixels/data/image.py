@@ -30,20 +30,24 @@ class Image:
             str(self.path), 0
         )["BIASFILE"].replace("jref$", "")
 
-    def image(self):
+    def _check_bia_exists(self):
         if not self.bia_path.exists():
+            response = requests.get(
+                f"{HST_DATA_URL}/{self.bia_path.name}"
+            )
+            response.raise_for_status()
             with open(self.bia_path, "w+b") as f:
-                response = requests.get(
-                    f"{HST_DATA_URL}/{self.bia_path.name}"
-                )
-                response.raise_for_status()
                 f.write(response.content)
+
+    def image(self):
+        self._check_bia_exists()
         return aa.acs.ImageACS.from_fits(
             file_path=str(self.path),
             quadrant_letter="A"
         )
 
     def load_quadrant(self, quadrant):
+        self._check_bia_exists()
         return ImageACS.from_fits(
             file_path=str(self.path),
             quadrant_letter=quadrant,
