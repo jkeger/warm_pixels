@@ -3,10 +3,13 @@ import datetime as dt
 from pathlib import Path
 
 import autoarray as aa
+import requests
 from autoarray.instruments.acs import ImageACS
+from autoarray.structures.arrays.two_d.array_2d_util import header_obj_from
 
+from warm_pixels.model.cache import cache
 
-# https://hst-crds.stsci.edu/unchecked_get/references/hst/58518491j_bia.fits
+HST_DATA_URL = "https://hst-crds.stsci.edu/unchecked_get/references/hst"
 
 
 class Image:
@@ -21,10 +24,20 @@ class Image:
         return self.path.name.split("_")[0]
 
     @property
+    @cache
     def bia_path(self):
-        return self.path.parent / self.path.name.replace("_raw", "_bia")
+        return self.path.parent / header_obj_from(
+            str(self.path), 0
+        )["BIASFILE"].replace("jref$", "")
 
     def image(self):
+        if not self.bia_path.exists():
+            with open(self.bia_path, "w+b") as f:
+                response = requests.get(
+                    f"{HST_DATA_URL}/{self.bia_path.name}"
+                )
+                response.raise_for_status()
+                f.write(response.content)
         return aa.acs.ImageACS.from_fits(
             file_path=str(self.path),
             quadrant_letter="A"
