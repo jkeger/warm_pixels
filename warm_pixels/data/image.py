@@ -6,6 +6,9 @@ import autoarray as aa
 from autoarray.instruments.acs import ImageACS
 
 
+# https://hst-crds.stsci.edu/unchecked_get/references/hst/58518491j_bia.fits
+
+
 class Image:
     def __init__(
             self,
@@ -16,6 +19,10 @@ class Image:
     @property
     def name(self):
         return self.path.name.split("_")[0]
+
+    @property
+    def bia_path(self):
+        return self.path.parent / self.path.name.replace("_raw", "_bia")
 
     def image(self):
         return aa.acs.ImageACS.from_fits(

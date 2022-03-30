@@ -28,4 +28,5 @@ def test_image(
     image, = dataset.images
     assert image.name == "array"
     assert image.path == dataset_path / "array_raw.fits"
+    assert image.bia_path == dataset_path / "array_bia.fits"
     assert image.corrected().path == dataset_path / "array_raw_cor.fits"
