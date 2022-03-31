@@ -15,13 +15,17 @@ class OptionException(Exception):
 def plot_all_warm_pixels(dataset):
     for quadrant in dataset.all_quadrants:
         for image_quadrant in quadrant.image_quadrants:
+            filename = dataset.output_path / f"{image_quadrant.name}.png"
+            if filename.exists():
+                continue
+
             # Plot
             plot_warm_pixels(
                 image_quadrant.array(),
                 PixelLineCollection(
                     image_quadrant.warm_pixels(),
                 ),
-                save_path=dataset.output_path / image_quadrant.name,
+                save_path=filename,
             )
 
 
