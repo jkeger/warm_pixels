@@ -79,6 +79,9 @@ class Plot:
         """
         for dataset in self._warm_pixels.datasets:
             filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self.all_quadrants_string}.png"
+            if filename.exists():
+                continue
+                
             plot_warm_pixel_distributions(
                 dataset.all_quadrants,
                 save_path=filename,
@@ -91,6 +94,9 @@ class Plot:
         for dataset in self._warm_pixels.datasets:
             for group in dataset.groups:
                 filename = ut.output_path / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self.all_quadrants_string}.png"
+                if filename.exists():
+                    continue
+
                 plot_stacked_trails(
                     use_corrected=False,
                     save_path=filename,
@@ -102,6 +108,9 @@ class Plot:
         Plot the evolution of trap density over time
         """
         save_path = ut.output_path / f"density_evol_{self.list_name}{self.quadrants_string}.{extension}"
+        if save_path.exists():
+            return
+
         plot_trap_density_evol(
             all_trap_densities=self._warm_pixels.all_trap_densities(),
             use_corrected=self.use_corrected,
