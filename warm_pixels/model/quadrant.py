@@ -5,6 +5,7 @@ from warm_pixels.data import Dataset, Image, CorrectedDataset
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.warm_pixels import find_warm_pixels
 from .cache import cache
+from .cache import persist
 
 
 class ImageQuadrant:
@@ -24,6 +25,10 @@ class ImageQuadrant:
     def name(self):
         return f"{self.image.name}_{self.quadrant}"
 
+    def __str__(self):
+        return self.name
+
+    @persist
     def warm_pixels(self):
         return find_warm_pixels(
             image=self.array(),

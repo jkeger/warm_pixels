@@ -11,4 +11,4 @@ def test_persist_warm_pixels(
     )
     quadrant.warm_pixels()
 
-    assert (output_path / quadrant.name / "warm_pixels.pickle").exists()
+    assert (output_path / "cache" / quadrant.name / "warm_pixels.pickle").exists()

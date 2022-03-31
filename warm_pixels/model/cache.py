@@ -1,4 +1,9 @@
+import os
+import pickle
 from functools import wraps
+from pathlib import Path
+
+from warm_pixels import hst_utilities as hu
 
 
 def cache(func):
@@ -15,3 +20,29 @@ def cache(func):
         return self.__dict__[key]
 
     return wrapper
+
+
+class Persist:
+    def __init__(self, path: Path):
+        self.path = path
+
+    def __call__(self, func):
+        name = f"{func.__name__}.pickle"
+
+        def wrapper(instance):
+            directory = self.path / str(instance)
+            path = directory / name
+            os.makedirs(directory, exist_ok=True)
+
+            if path.exists():
+                with open(path, "b+r") as f:
+                    return pickle.load(f)
+
+            result = func(instance)
+            with open(path, "b+w") as f:
+                pickle.dump(result, f)
+
+        return wrapper
+
+
+persist = Persist(hu.output_path / "cache")
