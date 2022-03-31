@@ -130,6 +130,16 @@ parser.add_argument(
     help="Use the corrected images with CTI removed instead of the originals.",
 )
 
+DAY_ZERO = dt.date(2002, 3, 1)
+
+
+def parse_date(value):
+    try:
+        days = int(value)
+        return DAY_ZERO + dt.timedelta(days=days)
+    except ValueError:
+        return dt.date.fromisoformat(value)
+
 
 def main():
     args = parser.parse_args()
@@ -149,12 +159,12 @@ def main():
     after = args.after
     if after is not None:
         source = source.after(
-            dt.date.fromisoformat(after)
+            parse_date(after)
         )
     before = args.before
     if before is not None:
         source = source.before(
-            dt.date.fromisoformat(before)
+            parse_date(before)
         )
 
     use_corrected = args.use_corrected
