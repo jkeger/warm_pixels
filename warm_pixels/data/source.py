@@ -30,6 +30,9 @@ class AbstractDatasetSource:
         """
         return iter(self.datasets())
 
+    def __len__(self):
+        return len(self.datasets())
+
     def after(
             self,
             date: dt.date

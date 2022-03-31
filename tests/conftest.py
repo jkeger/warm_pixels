@@ -6,10 +6,11 @@ import numpy as np
 import pytest
 from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
-from warm_pixels.data import image
 from matplotlib import pyplot
 
+from warm_pixels import hst_utilities
 from warm_pixels.data import Dataset
+from warm_pixels.data import image
 from warm_pixels.data.dataset import cti
 from warm_pixels.hst_functions import trail_model
 
@@ -19,8 +20,14 @@ directory = Path(__file__).parent
 @pytest.fixture(
     name="output_path"
 )
-def make_output_path():
-    return directory / "output"
+def make_output_path(monkeypatch):
+    path = directory / "output"
+    monkeypatch.setattr(
+        hst_utilities,
+        "output_path",
+        path
+    )
+    return path
 
 
 @pytest.fixture(
@@ -54,7 +61,14 @@ def make_dataset(
 @pytest.fixture(
     name="image"
 )
-def make_image(dataset_path):
+def make_image(dataset):
+    return dataset.images[0]
+
+
+@pytest.fixture(
+    name="array"
+)
+def make_array(dataset_path):
     return np.load(
         str(dataset_path / "array_raw.fits")
     )
@@ -131,10 +145,10 @@ def from_fits(
         bias_file_path=None,
         use_calibrated_gain=True,
 ):
-    image = np.load(file_path)
+    array = np.load(file_path)
     return ImageACS(
         np.load(file_path),
-        image.shape,
+        array.shape,
         header=HeaderACS(
             header_sci_obj={
                 "DATE-OBS": "2020-01-01",

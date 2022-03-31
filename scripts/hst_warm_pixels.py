@@ -144,31 +144,36 @@ def parse_date(value):
 def main():
     args = parser.parse_args()
 
+    directory = args.directory
+
     source = FileDatasetSource(
-        Path(args.directory),
+        Path(directory),
         output_path=output_path,
         quadrants_string=args.quadrants
     )
+    print(f"Found {len(source)} datasets in {directory}")
 
     downsample = args.downsample
     if downsample is not None:
         source = source.downsample(
             step=downsample
         )
+        print(f"Down sampling to every {downsample}th dataset -> {len(source)} datasets")
 
     after = args.after
     if after is not None:
-        source = source.after(
-            parse_date(after)
-        )
+        date = parse_date(after)
+        print(f"Only include images captured after {date}")
+        source = source.after(date)
     before = args.before
     if before is not None:
-        source = source.before(
-            parse_date(before)
-        )
+        date = parse_date(before)
+        print(f"Only include images captured before {date}")
+        source = source.before(date)
 
     use_corrected = args.use_corrected
     if use_corrected:
+        print("Correcting image before analysis")
         source = source.corrected()
 
     warm_pixels = WarmPixels(

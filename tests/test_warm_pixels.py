@@ -3,10 +3,10 @@ from warm_pixels.warm_pixels import find_warm_pixels
 
 
 def test_warm_pixels(
-        image
+        array
 ):
     result = find_warm_pixels(
-        image=image,
+        image=array,
         trail_length=2,
         ignore_bad_columns=False,
     )

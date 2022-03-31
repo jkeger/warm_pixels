@@ -24,7 +24,6 @@ class ImageQuadrant:
     def name(self):
         return f"{self.image.name}_{self.quadrant}"
 
-    @cache
     def warm_pixels(self):
         return find_warm_pixels(
             image=self.array(),
