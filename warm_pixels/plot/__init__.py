@@ -81,7 +81,7 @@ class Plot:
             filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self.all_quadrants_string}.png"
             if filename.exists():
                 continue
-                
+
             plot_warm_pixel_distributions(
                 dataset.all_quadrants,
                 save_path=filename,
