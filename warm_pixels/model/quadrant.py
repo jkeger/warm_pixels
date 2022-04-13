@@ -98,7 +98,7 @@ class Quadrant:
 
         return warm_pixels
 
-    @cache
+    @persist
     def consistent_lines(self) -> PixelLineCollection:
         """
         Warm pixels that are consistent across multiple images and therefore highly unlikely
