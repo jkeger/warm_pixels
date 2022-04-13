@@ -28,7 +28,6 @@ class ImageQuadrant:
     def __str__(self):
         return self.name
 
-    @persist
     def warm_pixels(self):
         return find_warm_pixels(
             image=self.array(),
