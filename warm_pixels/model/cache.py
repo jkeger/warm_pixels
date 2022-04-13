@@ -1,3 +1,4 @@
+import functools
 import os
 import pickle
 from functools import wraps
@@ -24,11 +25,40 @@ def cache(func):
 
 class Persist:
     def __init__(self, path: Path):
+        """
+        Save the output of methods and load it rather than
+        calling the method to avoid re-executing expensive
+        steps in the pipeline.
+
+        Parameters
+        ----------
+        path
+            A path in which cached data is saved.
+        """
         self.path = path
 
     def __call__(self, func):
+        """
+        Decorate the function to persist output.
+
+        Files are saved in a directory named after str(instance); each
+        instance that uses Persist must implement __str__.
+
+        Files are saved with the name of the function.
+
+        Parameters
+        ----------
+        func
+            Some method of a class for which data is saved and loaded to
+            avoid calling the method.
+
+        Returns
+        -------
+        A decorated function.
+        """
         name = f"{func.__name__}.pickle"
 
+        @functools.wraps(func)
         def wrapper(instance):
             directory = self.path / str(instance)
             path = directory / name
@@ -47,4 +77,4 @@ class Persist:
         return wrapper
 
 
-persist = Persist(hu.output_path / "cache")
+persist = Persist(hu.cache_path)

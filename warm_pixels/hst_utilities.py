@@ -7,6 +7,7 @@ import numpy as np
 from astropy.time import Time
 
 output_path = Path("output")
+cache_path = Path("cache")
 
 # ========
 # Input parameters
