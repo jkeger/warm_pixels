@@ -54,13 +54,16 @@ class PixelLine:
         self.location = location
         self.date = date
         self.background = background
-        self.flux = flux
+        self._flux = flux
         self.n_stacked = n_stacked
         self.format = None
 
+    @property
+    def flux(self):
         # Default flux from data
         if self.flux is None and self.data is not None:
-            self.flux = np.amax(self.data)
+            self._flux = np.amax(self.data)
+        return self._flux
 
     @property
     def length(self):
