@@ -162,7 +162,7 @@ def find_warm_pixels(
         return []
 
     # Assemble the list of warm pixel data
-    warm_pixels = PixelLineCollection()
+    warm_pixels = []
     for location in warm_pixel_locations:
         row, column = location
 
