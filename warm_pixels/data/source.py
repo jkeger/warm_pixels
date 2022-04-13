@@ -125,14 +125,16 @@ class FileDatasetSource(AbstractDatasetSource):
         dataset_folders = os.listdir(
             self.directory
         )
-        return [
-            Dataset(
+        datasets = []
+        for folder in dataset_folders:
+            dataset = Dataset(
                 self.directory / folder,
                 output_path=self.output_path,
                 quadrants_string=self.quadrants_string
             )
-            for folder in dataset_folders
-        ]
+            if len(dataset) > 0:
+                datasets.append(dataset)
+        return datasets
 
 
 class DownsampleDatasetSource(AbstractDatasetSource):
