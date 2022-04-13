@@ -61,7 +61,7 @@ class PixelLine:
     @property
     def flux(self):
         # Default flux from data
-        if self.flux is None and self.data is not None:
+        if self._flux is None and self.data is not None:
             self._flux = np.amax(self.data)
         return self._flux
 
