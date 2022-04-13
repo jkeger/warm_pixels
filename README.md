@@ -3,13 +3,20 @@ Warm Pixels Etc
 
 Warm pixels and CTI trails from HST ACS, etc.
 
-This code is hopefully documented well enough for others to understand and work
-on, but since it's intended just for our own use rather than as a public tool
-I'm sure there are plenty of bits that aren't completely clear or immediately
-intuitive, not least with the over-engineered sys arg setup I was playing with.
-It should at least be divided into fairly clean functions and steps.
-
 See also the paper for descriptions/explanations of the methods.
+
+Usage
+-----
+
+```bash
+./scripts/hst_warm_pixels.py data_directory \
+    [--downsample] \
+    [--quadrants quadrants] \
+    [--plot plots] \
+    [--use-corrected]
+```
+
+
 
 Contents
 --------

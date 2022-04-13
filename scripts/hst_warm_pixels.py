@@ -4,8 +4,6 @@
 """
 Find, stack, and plot warm pixels in multiple datasets of HST ACS images.
 
-See functions.py and utilities.py.
-
 Full pipeline:
 + For each dataset of images:
     + For each image (and quadrant), find possible warm pixels
@@ -21,12 +19,6 @@ Then:
 + Repeat the analysis using the corrected images and check the trap density
 
 See hst_utilities.py to set parameters like the trail length and bin edges.
-
-By default, runs all the first-stage functions for the chosen list of image
-datasets, skipping any that have been run before and saved their output.
-Use the optional flags to choose manually which functions to run and to run
-the next-stage functions.
-
 
 Example use
 -----------
@@ -56,13 +48,7 @@ directory
         stacked-trails
         density
 
---prep_density, -d
-    Fit the total trap density across all datasets.
-
---plot_density, -D
-    Plot the evolution of the total trap density.
-
---use_corrected, -u
+--use-corrected, -u
     Use the corrected images with CTI removed instead of the originals for
     the trails etc (keeping the same selected warm pixel locations). Must first
     remove CTI from the images in each dataset (e.g. with `-r .`).
