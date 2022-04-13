@@ -24,6 +24,9 @@ class PixelLineCollection:
             self.lines = np.array(lines)  # RJM: Can you have an array of lines, rather than a list?
             # self.lines = [lines] # RJM: I would have thought it would be better to do this.
 
+    def __getitem__(self, item):
+        return self.lines[item]
+
     def consistent(
             self,
             flux_min=ut.flux_bins[0],
@@ -138,6 +141,17 @@ class PixelLineCollection:
         return len(self.lines)
 
     def append(self, new_lines):
+        if isinstance(
+                new_lines,
+                PixelLineCollection
+        ):
+            new_lines = new_lines.lines
+        elif not isinstance(
+                new_lines,
+                list
+        ):
+            new_lines = [new_lines]
+
         """ Add new lines to the list. """
         if self.lines is None:
             self.lines = np.array(new_lines)

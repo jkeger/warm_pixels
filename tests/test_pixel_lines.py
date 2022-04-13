@@ -90,3 +90,23 @@ def test_sum(
                 pixel_line, pixel_line
             ]) == combined
     ).all()
+
+
+def test_extend(
+        pixel_line_collection
+):
+    pixel_line_collection.append(
+        pixel_line_collection
+    )
+    assert len(pixel_line_collection) == 2
+    assert pixel_line_collection[0] is pixel_line_collection[1]
+
+
+def test_append(
+        pixel_line_collection
+):
+    pixel_line_collection.append(
+        pixel_line_collection[0]
+    )
+    assert len(pixel_line_collection) == 2
+    assert pixel_line_collection[0] is pixel_line_collection[1]
