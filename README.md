@@ -1,5 +1,5 @@
-Warm Pixels Etc
-===============
+Warm Pixels
+===========
 
 Warm pixels and CTI trails from HST ACS, etc.
 
