@@ -26,5 +26,5 @@ command line.
 |--before|Filter datasets to only use images captured before a given date or number of days since launch.|123, 2022-01-01|
 |--downsample|Only include every nth dataset.|3|
 |--quadrants|Specify which quadrants should be included and how they should be grouped.|ABCD, AB, AB_CD|
-|--plot|List which plots to output.|warm_pixels, warm_pixel_distributions, stacked_trails, density|
+|--plot|List which plots to output.|warm-pixels, warm-pixel-distributions, stacked-trails, density|
 |--use-corrected|If this flag is passed the image is corrected before processing.||

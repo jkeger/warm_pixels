@@ -44,7 +44,7 @@ directory
 --plot
     Pass in a list of plots that should be output chosen from:
         warm-pixels
-        warm-pixel_distributions
+        warm-pixel-distributions
         stacked-trails
         density
 
