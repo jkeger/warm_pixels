@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from warm_pixels import hst_utilities as ut
@@ -16,7 +17,7 @@ def plot_all_warm_pixels(dataset):
     for quadrant in dataset.all_quadrants:
         for image_quadrant in quadrant.image_quadrants:
             filename = dataset.output_path / f"{image_quadrant.name}.png"
-            if filename.exists():
+            if _check_path(filename):
                 continue
 
             # Plot
@@ -27,6 +28,18 @@ def plot_all_warm_pixels(dataset):
                 ),
                 save_path=filename,
             )
+
+
+def _check_path(
+        path
+):
+    if path.exists():
+        return True
+    os.makedirs(
+        path.parent,
+        exist_ok=True
+    )
+    return False
 
 
 class Plot:
@@ -79,7 +92,7 @@ class Plot:
         """
         for dataset in self._warm_pixels.datasets:
             filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self.all_quadrants_string}.png"
-            if filename.exists():
+            if _check_path(filename):
                 continue
 
             plot_warm_pixel_distributions(
@@ -94,7 +107,7 @@ class Plot:
         for dataset in self._warm_pixels.datasets:
             for group in dataset.groups:
                 filename = ut.output_path / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self.all_quadrants_string}.png"
-                if filename.exists():
+                if _check_path(filename):
                     continue
 
                 plot_stacked_trails(
@@ -108,7 +121,7 @@ class Plot:
         Plot the evolution of trap density over time
         """
         save_path = ut.output_path / f"density_evol_{self.list_name}{self.quadrants_string}.{extension}"
-        if save_path.exists():
+        if _check_path(save_path):
             return
 
         plot_trap_density_evol(
