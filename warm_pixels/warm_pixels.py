@@ -3,7 +3,7 @@ from typing import Optional
 import numpy as np
 from scipy.ndimage import uniform_filter
 
-from warm_pixels.pixel_lines import PixelLine
+from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 
 
 def find_warm_pixels(
@@ -162,7 +162,7 @@ def find_warm_pixels(
         return []
 
     # Assemble the list of warm pixel data
-    warm_pixels = []
+    warm_pixels = PixelLineCollection()
     for location in warm_pixel_locations:
         row, column = location
 
