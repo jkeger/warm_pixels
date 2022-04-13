@@ -86,14 +86,14 @@ class PixelLineCollection:
         """
         The pixel counts of each line, in units of electrons.
         """
-        return np.array([line.data for line in self.lines])
+        return np.array([line.data for line in self._lines])
 
     @property
     def origins(self):
         """
         The identifiers for the origins (e.g. image name) of each line.
         """
-        return np.array([line.origin for line in self.lines])
+        return np.array([line.origin for line in self._lines])
 
     @property
     def locations(self):
@@ -101,42 +101,42 @@ class PixelLineCollection:
         The row and column indices of the first pixel in the line in the
             image, for each line.
         """
-        return np.array([line.location for line in self.lines])
+        return np.array([line.location for line in self._lines])
 
     @property
     def dates(self):
         """
         The Julian date of each line.
         """
-        return np.array([line.date for line in self.lines])
+        return np.array([line.date for line in self._lines])
 
     @property
     def backgrounds(self):
         """
         The background charge count of each line, in units of electrons.
         """
-        return np.array([line.background for line in self.lines])
+        return np.array([line.background for line in self._lines])
 
     @property
     def fluxes(self):
         """
         The maximum charge in each line, in units of electrons.
         """
-        return np.array([line.flux for line in self.lines])
+        return np.array([line.flux for line in self._lines])
 
     @property
     def lengths(self):
         """
         The number of pixels in the data array of each line.
         """
-        return np.array([line.length for line in self.lines])
+        return np.array([line.length for line in self._lines])
 
     @property
     def n_lines(self):
         """
         The number of lines in the collection.
         """
-        return len(self.lines)
+        return len(self._lines)
 
     @property
     def lines(self):
