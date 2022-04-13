@@ -37,44 +37,59 @@ class Persist:
         """
         self.path = path
 
-    def __call__(self, func):
+    def __call__(self, directory_func=str):
         """
-        Decorate the function to persist output.
-
-        Files are saved in a directory named after str(instance); each
-        instance that uses Persist must implement __str__.
-
-        Files are saved with the name of the function.
+        Create a decorator with a function to convert an object into
+        a directory name
 
         Parameters
         ----------
-        func
-            Some method of a class for which data is saved and loaded to
-            avoid calling the method.
+        directory_func
+            A function that converts an instance into a directory
 
         Returns
         -------
-        A decorated function.
+
         """
-        name = f"{func.__name__}.pickle"
+        def outer(func):
+            """
+            Decorate the function to persist output.
 
-        @functools.wraps(func)
-        def wrapper(instance):
-            directory = self.path / str(instance)
-            path = directory / name
-            os.makedirs(directory, exist_ok=True)
+            Files are saved in a directory named after str(instance); each
+            instance that uses Persist must implement __str__.
 
-            if path.exists():
-                with open(path, "b+r") as f:
-                    return pickle.load(f)
+            Files are saved with the name of the function.
 
-            result = func(instance)
-            with open(path, "b+w") as f:
-                pickle.dump(result, f)
+            Parameters
+            ----------
+            func
+                Some method of a class for which data is saved and loaded to
+                avoid calling the method.
 
-            return result
+            Returns
+            -------
+            A decorated function.
+            """
+            name = f"{func.__name__}.pickle"
 
-        return wrapper
+            @functools.wraps(func)
+            def wrapper(instance):
+                directory = self.path / directory_func(instance)
+                path = directory / name
+                os.makedirs(directory, exist_ok=True)
+
+                if path.exists():
+                    with open(path, "b+r") as f:
+                        return pickle.load(f)
+
+                result = func(instance)
+                with open(path, "b+w") as f:
+                    pickle.dump(result, f)
+
+                return result
+
+            return wrapper
+        return outer
 
 
 persist = Persist(hu.cache_path)

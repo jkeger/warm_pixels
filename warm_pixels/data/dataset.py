@@ -90,6 +90,9 @@ class Dataset:
     def name(self):
         return self.path.name
 
+    def __str__(self):
+        return self.name
+
     @property
     def output_path(self):
         output_path = self._output_path / self.name
@@ -186,3 +189,6 @@ class CorrectedDataset(Dataset):
     @property
     def output_path(self):
         return self.path
+
+    def __str__(self):
+        return f"{self.path.parent.name}_corrected"

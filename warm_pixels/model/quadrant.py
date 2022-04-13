@@ -39,6 +39,12 @@ class ImageQuadrant:
         )
 
 
+def directory_func(
+        quadrant
+):
+    return f"{quadrant.dataset}_{quadrant}"
+
+
 class Quadrant:
     def __new__(
             cls,
@@ -98,6 +104,7 @@ class Quadrant:
 
         return warm_pixels
 
+    @persist(directory_func)
     def consistent_lines(self) -> PixelLineCollection:
         """
         Warm pixels that are consistent across multiple images and therefore highly unlikely
@@ -107,7 +114,7 @@ class Quadrant:
 
 
 class CorrectedQuadrant(Quadrant):
-    @cache
+    @persist(directory_func)
     def consistent_lines(self):
         """Extract the corresponding warm pixels from the corrected images with CTI
         removed, in the same locations as the orignal consistent warm pixels.
