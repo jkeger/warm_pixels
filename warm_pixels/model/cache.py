@@ -42,6 +42,8 @@ class Persist:
             with open(path, "b+w") as f:
                 pickle.dump(result, f)
 
+            return result
+
         return wrapper
 
 
