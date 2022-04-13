@@ -495,9 +495,7 @@ class PixelLineCollection:
             if stacked_lines[index].n_stacked == 0:
                 stacked_lines[index].data = [line.data]
             else:
-                stacked_lines[index].data = np.append(
-                    stacked_lines[index].data, [line.data], axis=0
-                )
+                stacked_lines[index].data.append(line.data)
             stacked_lines[index].n_stacked += 1
 
             # Append the other parameters
@@ -507,6 +505,9 @@ class PixelLineCollection:
             sum_sq_rows[index] += line.location[0] ** 2
             sum_sq_backgrounds[index] += line.background ** 2
             sum_sq_fluxes[index] += line.flux ** 2
+
+        for sl in stacked_lines:
+            sl.data = np.stack(sl.data)
 
         # Take the means and standard errors
         #
