@@ -54,6 +54,9 @@ directory
     remove CTI from the images in each dataset (e.g. with `-r .`).
     Note, mdate_plot_stack defaults to "0" in this mode.
 
+--after
+--before
+
 """
 import argparse
 import datetime as dt
