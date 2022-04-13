@@ -8,6 +8,11 @@ from .trap_density import plot_trap_density_evol
 from .warm_pixels import plot_warm_pixels
 from .warm_pixels import plot_warm_pixels, plot_warm_pixel_distributions
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class OptionException(Exception):
     pass
@@ -95,10 +100,13 @@ class Plot:
             if _check_path(filename):
                 continue
 
-            plot_warm_pixel_distributions(
-                dataset.all_quadrants,
-                save_path=filename,
-            )
+            try:
+                plot_warm_pixel_distributions(
+                    dataset.all_quadrants,
+                    save_path=filename,
+                )
+            except IndexError as e:
+                logger.exception(e)
 
     def stacked_trails(self):
         """

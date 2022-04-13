@@ -206,6 +206,9 @@ class PixelLineCollection:
             The indices of consistently present pixel lines in the attribute
             arrays.
         """
+        if not self._lines:
+            return []
+
         # Number of separate images
         n_images = len(np.unique(self.origins))
 
