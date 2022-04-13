@@ -1,3 +1,5 @@
+from typing import List
+
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
 from warm_pixels.data import Dataset
@@ -12,14 +14,14 @@ from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 class WarmPixels:
     def __init__(
             self,
-            datasets,
+            datasets: List[Dataset],
     ):
         self.datasets = datasets
 
     def all_groups(self):
         return [
-            quadrant_dataset_.groups
-            for quadrant_dataset_
+            dataset.groups
+            for dataset
             in self.datasets
         ]
 

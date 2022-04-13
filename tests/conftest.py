@@ -13,8 +13,23 @@ from warm_pixels.data import Dataset
 from warm_pixels.data import image
 from warm_pixels.data.dataset import cti
 from warm_pixels.hst_functions import trail_model
+from warm_pixels.model.cache import persist
 
 directory = Path(__file__).parent
+
+
+@pytest.fixture(
+    autouse=True
+)
+def patch_cache(
+        monkeypatch,
+        output_path
+):
+    monkeypatch.setattr(
+        persist,
+        "path",
+        output_path,
+    )
 
 
 @pytest.fixture(

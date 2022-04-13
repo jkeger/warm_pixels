@@ -1,21 +1,4 @@
-import pytest
-
 from warm_pixels import Quadrant
-from warm_pixels.model.cache import persist
-
-
-@pytest.fixture(
-    autouse=True
-)
-def patch_cache(
-        monkeypatch,
-        output_path
-):
-    monkeypatch.setattr(
-        persist,
-        "path",
-        output_path,
-    )
 
 
 def test_consistent_lines(dataset, output_path):

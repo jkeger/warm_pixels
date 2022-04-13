@@ -48,13 +48,13 @@ class PixelLine:
         n_stacked : int
             If the line is an averaged stack, the number of stacked lines.
         """
+        self._flux = flux
         self.data = data
         self.noise = noise
         self.origin = origin
         self.location = location
         self.date = date
         self.background = background
-        self._flux = flux
         self.n_stacked = n_stacked
         self.format = None
 
