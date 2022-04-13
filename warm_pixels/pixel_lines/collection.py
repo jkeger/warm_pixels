@@ -19,10 +19,8 @@ class PixelLineCollection:
             A list of the PixelLine objects.
         """
         if lines is None:
-            self.lines = None
-        else:
-            self.lines = np.array(lines)  # RJM: Can you have an array of lines, rather than a list?
-            # self.lines = [lines] # RJM: I would have thought it would be better to do this.
+            lines = []
+        self._lines = lines
 
     def __getitem__(self, item):
         return self.lines[item]
@@ -140,23 +138,23 @@ class PixelLineCollection:
         """
         return len(self.lines)
 
+    @property
+    def lines(self):
+        return np.array(self._lines)
+
     def append(self, new_lines):
         if isinstance(
                 new_lines,
                 PixelLineCollection
         ):
             new_lines = new_lines.lines
-        elif not isinstance(
+        if isinstance(
                 new_lines,
-                list
+                (list, np.ndarray)
         ):
-            new_lines = [new_lines]
-
-        """ Add new lines to the list. """
-        if self.lines is None:
-            self.lines = np.array(new_lines)
+            self._lines.extend(new_lines)
         else:
-            self.lines = np.append(self.lines, new_lines)
+            self._lines.append(new_lines)
 
     def save(self, filename):
         """ Save the lines data. """
