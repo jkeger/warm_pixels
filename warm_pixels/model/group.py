@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List
 
 from warm_pixels import hst_utilities as ut
