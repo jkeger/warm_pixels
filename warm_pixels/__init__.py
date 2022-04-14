@@ -1,4 +1,3 @@
-from hashlib import md5
 from typing import List, Tuple
 
 from warm_pixels import hst_functions as fu
@@ -6,19 +5,10 @@ from warm_pixels import hst_utilities as ut
 from warm_pixels.data import Dataset
 from warm_pixels.hst_functions.fit import TrapDensities
 from warm_pixels.hst_utilities import output_path
-from warm_pixels.model.cache import cache, persist
+from warm_pixels.model.cache import cache
 from warm_pixels.model.group import QuadrantGroup
 from warm_pixels.model.quadrant import Quadrant, CorrectedQuadrant
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
-
-
-def directory_func(
-        warm_pixels
-):
-    return md5(".".join(
-        f"{dataset.name}:{dataset.quadrants_string}"
-        for dataset in warm_pixels.datasets
-    ).encode("utf-8")).hexdigest()
 
 
 class WarmPixels:
@@ -46,7 +36,7 @@ class WarmPixels:
         """
         return list(zip(*self.all_groups()))
 
-    @persist(directory_func)
+    @cache
     def all_trap_densities(self) -> List[TrapDensities]:
         """
         Fit the variation in trap density over time for each group of quadrants.
