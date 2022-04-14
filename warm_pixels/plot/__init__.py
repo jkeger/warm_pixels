@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List
 
@@ -7,9 +8,6 @@ from .stacked_trails import plot_stacked_trails
 from .trap_density import plot_trap_density_evol
 from .warm_pixels import plot_warm_pixels
 from .warm_pixels import plot_warm_pixels, plot_warm_pixel_distributions
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +37,7 @@ def _check_path(
         path
 ):
     if path.exists():
+        print(f"{path} already exists")
         return True
     os.makedirs(
         path.parent,
