@@ -1,7 +1,7 @@
 from typing import List
 
 from warm_pixels import hst_utilities as ut
-from warm_pixels.pixel_lines import PixelLineCollection, StackedPixelLineCollection
+from warm_pixels.pixel_lines import StackedPixelLineCollection
 from .cache import persist
 from .quadrant import Quadrant
 
@@ -41,15 +41,6 @@ class QuadrantGroup:
     def dataset(self):
         return self.quadrants[0].dataset
 
-    def consistent_lines(self) -> List[PixelLineCollection]:
-        """
-        Consistently warm lines for each quadrant
-        """
-        return [
-            quadrant.consistent_lines()
-            for quadrant in self.quadrants
-        ]
-
     @persist(directory_func)
     def stacked_lines(self) -> StackedPixelLineCollection:
         """
@@ -57,7 +48,8 @@ class QuadrantGroup:
         computed by averaging within bins
         """
         return sum(
-            self.consistent_lines()
+            quadrant.consistent_lines()
+            for quadrant in self.quadrants
         ).generate_stacked_lines_from_bins(
             n_row_bins=ut.n_row_bins,
             flux_bins=ut.flux_bins,

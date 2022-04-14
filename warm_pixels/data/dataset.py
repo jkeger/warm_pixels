@@ -39,6 +39,12 @@ class Dataset:
     @property
     @cache
     def groups(self):
+        """
+        Quadrants are combined into groups.
+
+        AB_CD -> two groups, one with quadrants A and B and the other with
+        quadrants C and D.
+        """
         from warm_pixels.model.group import QuadrantGroup
         from warm_pixels.model.quadrant import Quadrant
 
