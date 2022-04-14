@@ -160,7 +160,7 @@ def main():
         print(f"Only include images captured before {date}")
         source = source.before(date)
 
-    use_corrected = args.use_corrected
+    use_corrected = args.corrected
     if use_corrected:
         print("Correcting image before analysis")
         source = source.corrected()

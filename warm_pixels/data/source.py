@@ -86,7 +86,7 @@ class CorrectedDatasetSource(AbstractDatasetSource):
         return [
             dataset.corrected()
             for dataset
-            in self.datasets()
+            in self.source.datasets()
         ]
 
 
