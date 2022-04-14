@@ -27,4 +27,4 @@ command line.
 |--downsample|Only include every nth dataset.|3|
 |--quadrants|Specify which quadrants should be included and how they should be grouped.|ABCD, AB, AB_CD|
 |--plot|List which plots to output.|warm-pixels, warm-pixel-distributions, stacked-trails, density|
-|--use-corrected|If this flag is passed the image is corrected before processing.||
+|--corrected|If this flag is passed the image is corrected before processing.||

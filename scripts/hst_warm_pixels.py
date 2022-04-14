@@ -114,7 +114,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "-u",
-    "--use-corrected",
+    "--corrected",
     action="store_true",
     help="Use the corrected images with CTI removed instead of the originals.",
 )
