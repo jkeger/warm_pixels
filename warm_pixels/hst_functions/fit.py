@@ -1,5 +1,5 @@
 """Primary and plotting functions for hst_warm_pixels.py"""
-from typing import Iterable, Tuple
+from typing import Tuple
 
 import lmfit
 import numpy as np
@@ -249,27 +249,3 @@ class TrapDensities:
         self.days = days
         self.densities = densities
         self.density_errors = density_errors
-
-    def save(self, filename):
-        np.savez(
-            filename,
-            self.quadrants_string,
-            self.days,
-            self.densities,
-            self.density_errors,
-        )
-
-    @classmethod
-    def load(cls, filename):
-        npzfile = np.load(filename)
-        quadrants_string, days, densities, density_errors = [
-            npzfile[var]
-            for var
-            in npzfile.files
-        ]
-        return TrapDensities(
-            quadrants_string=quadrants_string,
-            days=days,
-            densities=densities,
-            density_errors=density_errors,
-        )

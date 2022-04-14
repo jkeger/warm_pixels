@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
@@ -18,17 +18,30 @@ class WarmPixels:
     ):
         self.datasets = datasets
 
-    def all_groups(self):
+    def all_groups(self) -> List[List[QuadrantGroup]]:
+        """
+        A list of lists of quadrant groups with each sub-list containing
+        groups corresponding to a dataset.
+        """
         return [
             dataset.groups
             for dataset
             in self.datasets
         ]
 
+    def all_groups_by_time(self) -> List[Tuple[QuadrantGroup]]:
+        """
+        A list of tuples of quadrant groups with each sub-list containing
+        groups corresponding to some quadrants over time.
+        """
+        return list(zip(*self.all_groups()))
+
     @cache
-    def all_trap_densities(self):
-        # Pivot groups into one list for each quadrant group over time
+    def all_trap_densities(self) -> List[TrapDensities]:
+        """
+        Fit the variation in trap density over time for each group of quadrants.
+        """
         return [
             fu.fit_total_trap_densities(groups)
-            for groups in zip(*self.all_groups())
+            for groups in self.all_groups_by_time()
         ]
