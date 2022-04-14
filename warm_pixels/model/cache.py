@@ -51,6 +51,7 @@ class Persist:
         -------
 
         """
+
         def outer(func):
             """
             Decorate the function to persist output.
@@ -70,6 +71,8 @@ class Persist:
             -------
             A decorated function.
             """
+            func = cache(func)
+
             name = f"{func.__name__}.pickle"
 
             @functools.wraps(func)
@@ -89,6 +92,7 @@ class Persist:
                 return result
 
             return wrapper
+
         return outer
 
 
