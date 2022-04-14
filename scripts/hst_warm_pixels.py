@@ -89,8 +89,8 @@ parser.add_argument(
     type=str
 )
 parser.add_argument(
-    "-w",
     "--downsample",
+    "-w",
     default=None,
     type=int,
     help="Downsample to run 1/N of the datasets",
@@ -98,8 +98,8 @@ parser.add_argument(
 
 # Optional arguments
 parser.add_argument(
-    "-q",
     "--quadrants",
+    "-q",
     default="ABCD",
     type=str,
     help="The image quadrants to use.",
