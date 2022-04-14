@@ -109,7 +109,7 @@ parser.add_argument(
 parser.add_argument(
     '--plot',
     nargs='+',
-    help='Specify plots from {TODO}',
+    help='Specify plots from:\nwarm-pixels\nwarm-pixel-distributions\nstacked-trails\ndensity',
     required=True
 )
 parser.add_argument(
