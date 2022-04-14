@@ -111,22 +111,6 @@ class Dataset:
         """Return the Julian date of the set, taken from the first image."""
         return self.images[0].date()
 
-    # ========
-    # File paths for saved data, including the quadrant(s)
-    # ========
-    def saved_lines(self, quadrant):
-        """Return the file name including the path for saving derived data."""
-        return self.output_path / f"saved_lines_{quadrant}.pickle"
-
-    def saved_consistent_lines(self, quadrant):
-        """Return the file name including the path for saving derived data."""
-        return self.output_path / f"saved_consistent_lines_{quadrant}.pickle"
-
-    def saved_stacked_lines(self, quadrants):
-        """Return the file name including the path for saving derived data."""
-        quadrant_string = "".join(quadrants)
-        return self.output_path / f"saved_stacked_lines_{quadrant_string}"
-
     def corrected(self):
         """
         Remove CTI trails using arctic from all images in the dataset.
