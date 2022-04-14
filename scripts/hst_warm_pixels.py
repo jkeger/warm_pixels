@@ -165,8 +165,17 @@ def main():
         print("Correcting image before analysis")
         source = source.corrected()
 
+    datasets = list(source)
+
+    datasets_string = "\n".join(
+        f"{dataset.name} {dataset.observation_date()}"
+        for dataset in datasets
+    )
+
+    print(f"Included Datasets:\n\n{datasets_string}\n")
+
     warm_pixels = WarmPixels(
-        datasets=list(source),
+        datasets=datasets,
     )
     plot = Plot(
         warm_pixels,

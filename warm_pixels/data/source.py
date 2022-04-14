@@ -134,7 +134,10 @@ class FileDatasetSource(AbstractDatasetSource):
             )
             if len(dataset) > 0:
                 datasets.append(dataset)
-        return datasets
+        return sorted(
+            datasets,
+            key=lambda d: d.observation_date()
+        )
 
 
 class DownsampleDatasetSource(AbstractDatasetSource):
