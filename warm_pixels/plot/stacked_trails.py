@@ -23,12 +23,9 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
     Parameters
     ----------
-    dataset : Dataset
-        The dataset object with a list of image file paths and metadata.
-
-    quadrants : [str]
-        The list of quadrants (A, B, C, D) of the images to load, combined
-        together if more than one provided.
+    group
+        A group of CCD quadrants and a dataset for which stacked and
+        consistent lines are computed for.
 
     use_corrected : bool (opt.)
         If True, then use the corrected images with CTI removed instead.

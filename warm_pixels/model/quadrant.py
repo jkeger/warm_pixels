@@ -42,7 +42,7 @@ class ImageQuadrant:
 def directory_func(
         quadrant
 ):
-    return f"{quadrant.dataset}_{quadrant}"
+    return f"{quadrant.dataset}/{quadrant}"
 
 
 class Quadrant:
