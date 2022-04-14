@@ -126,6 +126,10 @@ class Dataset:
             image_name = image.path.name
             image_path = corrected_dataset.path / image_name
 
+            if image_path.exists():
+                print(f"{image_path} already exists")
+                continue
+
             print(
                 f"  Correcting {image_name} ({i + 1} of {self})... ",
                 end="",
