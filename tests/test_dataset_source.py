@@ -10,11 +10,9 @@ from warm_pixels.data.source import FileDatasetSource
 )
 def make_source(
         dataset_list_path,
-        output_path,
 ):
     return FileDatasetSource(
         dataset_list_path,
-        output_path,
         quadrants_string="A"
     )
 

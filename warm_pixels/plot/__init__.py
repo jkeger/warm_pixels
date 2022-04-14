@@ -16,25 +16,6 @@ class OptionException(Exception):
     pass
 
 
-def plot_all_warm_pixels(dataset):
-    for quadrant in dataset.all_quadrants:
-        for image_quadrant in quadrant.image_quadrants:
-            filename = dataset.output_path / f"{image_quadrant.name}.png"
-            if _check_path(filename):
-                continue
-
-            print(f"Plotting warm pixels for {dataset}/{image_quadrant}")
-
-            # Plot
-            plot_warm_pixels(
-                image_quadrant.array(),
-                PixelLineCollection(
-                    image_quadrant.warm_pixels(),
-                ),
-                save_path=filename,
-            )
-
-
 def _check_path(
         path
 ):
@@ -90,7 +71,25 @@ class Plot:
         Plot warm pixels for each quadrant of each dataset
         """
         for dataset in self._warm_pixels.datasets:
-            plot_all_warm_pixels(dataset)
+            self.plot_all_warm_pixels(dataset)
+
+    def plot_all_warm_pixels(self, dataset):
+        for quadrant in dataset.all_quadrants:
+            for image_quadrant in quadrant.image_quadrants:
+                filename = ut.output_path / dataset.name / f"{image_quadrant.name}.png"
+                if _check_path(filename):
+                    continue
+
+                print(f"Plotting warm pixels for {dataset}/{image_quadrant}")
+
+                # Plot
+                plot_warm_pixels(
+                    image_quadrant.array(),
+                    PixelLineCollection(
+                        image_quadrant.warm_pixels(),
+                    ),
+                    save_path=filename,
+                )
 
     def warm_pixel_distributions(self):
         """

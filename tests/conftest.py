@@ -64,11 +64,9 @@ def make_dataset_path(dataset_list_path):
 )
 def make_dataset(
         dataset_path,
-        output_path,
 ):
     return Dataset(
         dataset_path,
-        output_path,
         quadrants_string="A",
     )
 

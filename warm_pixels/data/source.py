@@ -94,7 +94,6 @@ class FileDatasetSource(AbstractDatasetSource):
     def __init__(
             self,
             directory: Path,
-            output_path: Path,
             quadrants_string: str,
     ):
         """
@@ -105,11 +104,8 @@ class FileDatasetSource(AbstractDatasetSource):
         directory
             A directory containing directories. Each subdirectory contains one
             dataset comprising images observed at a similar time.
-        output_path
-            The path into which output data is put.
         """
         self.directory = directory
-        self.output_path = output_path
         self.quadrants_string = quadrants_string
 
     def __str__(self):
@@ -129,7 +125,6 @@ class FileDatasetSource(AbstractDatasetSource):
         for folder in dataset_folders:
             dataset = Dataset(
                 self.directory / folder,
-                output_path=self.output_path,
                 quadrants_string=self.quadrants_string
             )
             if len(dataset) > 0:

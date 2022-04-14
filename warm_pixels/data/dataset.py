@@ -17,7 +17,6 @@ class Dataset:
     def __init__(
             self,
             path: Path,
-            output_path: Path,
             quadrants_string: str,
     ):
         """Simple class to store a list of image file paths and mild metadata.
@@ -33,7 +32,6 @@ class Dataset:
             File path to the dataset directory.
         """
         self.path = path
-        self._output_path = output_path
         self._images = None
 
         self.quadrants_string = quadrants_string
@@ -93,15 +91,6 @@ class Dataset:
 
     def __str__(self):
         return self.name
-
-    @property
-    def output_path(self):
-        output_path = self._output_path / self.name
-        os.makedirs(
-            output_path,
-            exist_ok=True,
-        )
-        return output_path
 
     def observation_date(self):
         return self.images[0].observation_date()
@@ -171,10 +160,9 @@ class Dataset:
 
 class CorrectedDataset(Dataset):
     def __init__(self, dataset: Dataset):
-        corrected_path = dataset.output_path / "corrected"
+        corrected_path = dataset.path / "corrected"
         super().__init__(
             path=corrected_path,
-            output_path=dataset.output_path,
             quadrants_string=dataset.quadrants_string,
         )
 
@@ -182,5 +170,6 @@ class CorrectedDataset(Dataset):
     def output_path(self):
         return self.path
 
-    def __str__(self):
+    @property
+    def name(self):
         return f"{self.path.parent.name}_corrected"

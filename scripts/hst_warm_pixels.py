@@ -137,7 +137,6 @@ def main():
 
     source = FileDatasetSource(
         Path(directory),
-        output_path=output_path,
         quadrants_string=args.quadrants
     )
     print(f"Found {len(source)} datasets in {directory}")
