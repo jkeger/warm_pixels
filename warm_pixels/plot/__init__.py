@@ -23,6 +23,8 @@ def plot_all_warm_pixels(dataset):
             if _check_path(filename):
                 continue
 
+            print(f"Plotting warm pixels for {dataset}/{image_quadrant}")
+
             # Plot
             plot_warm_pixels(
                 image_quadrant.array(),
@@ -158,6 +160,7 @@ class Plot:
                     f"{name} not a valid plot option. Choose from {self.all_methods}"
                 )
 
-            print(f"Attempting to plot {name}")
-            getattr(self, name)()
-            print(f"Plotted {name}")
+            function = getattr(self, name)
+            print(f"Plotting {name}...")
+            function()
+            print(f"Done.")
