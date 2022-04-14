@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List
 
 import autoarray as aa
+from autoarray.instruments.acs import ImageACS
 
 import arcticpy as cti
 from warm_pixels.hst_functions.cti_model import cti_model_hst
@@ -154,15 +155,18 @@ class Dataset:
             corrected_quadrants = []
 
             for quadrant in image.quadrants():
-                corrected_quadrant = cti.remove_cti(
-                    image=quadrant,
-                    n_iterations=5,
-                    parallel_roe=roe,
-                    parallel_ccd=ccd,
-                    parallel_traps=traps,
-                    parallel_express=5
+                corrected_quadrant = ImageACS(
+                    cti.remove_cti(
+                        image=quadrant,
+                        n_iterations=5,
+                        parallel_roe=roe,
+                        parallel_ccd=ccd,
+                        parallel_traps=traps,
+                        parallel_express=5
+                    ),
+                    mask=quadrant.mask,
+                    header=quadrant.header,
                 )
-                corrected_quadrant.header = quadrant.header
                 corrected_quadrants.append(corrected_quadrant)
 
             # Save the corrected image
