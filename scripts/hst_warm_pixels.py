@@ -122,10 +122,9 @@ parser.add_argument(
 
 def parse_date(value):
     try:
-        days = int(value)
-        return DAY_ZERO + dt.timedelta(days=days)
+        return int(value)
     except ValueError:
-        return dt.date.fromisoformat(value)
+        return (dt.date.fromisoformat(value) - DAY_ZERO).days
 
 
 def main():

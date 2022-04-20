@@ -1,4 +1,3 @@
-import datetime as dt
 import os
 from abc import abstractmethod
 from pathlib import Path
@@ -38,28 +37,28 @@ class AbstractDatasetSource:
 
     def after(
             self,
-            date: dt.date
+            day: int
     ) -> "FilteredDatasetSource":
         """
         Only return datasets with an observation date after a given date.
         """
         return FilteredDatasetSource(
-            f"after_{date}",
+            f"after_{day}",
             self,
-            lambda dataset: date < dataset.observation_date()
+            lambda dataset: day < dataset.days_since_launch()
         )
 
     def before(
             self,
-            date: dt.date
+            day: int
     ) -> "FilteredDatasetSource":
         """
         Only return datasets with an observation date before a given date.
         """
         return FilteredDatasetSource(
-            f"before_{date}",
+            f"before_{day}",
             self,
-            lambda dataset: dataset.observation_date() < date
+            lambda dataset: dataset.days_since_launch() < day
         )
 
     def downsample(

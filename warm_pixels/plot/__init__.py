@@ -33,7 +33,7 @@ class Plot:
             self,
             warm_pixels_,
             list_name,
-            use_corrected,
+            use_corrected=False,
     ):
         """
         Handles plotting of various outputs from the pipeline.
