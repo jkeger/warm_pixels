@@ -34,16 +34,19 @@ class Dataset:
         self._quadrants = {}
 
     def groups(self, quadrants_string):
-        from warm_pixels.model.group import QuadrantGroup
         return [
-            QuadrantGroup(list(
-                map(self.quadrant, group)
-            ))
+            self.group(group)
             for group in tuple(map(
                 tuple,
                 quadrants_string.split("_")
             ))
         ]
+
+    def group(self, quadrants_string):
+        from warm_pixels.model.group import QuadrantGroup
+        return QuadrantGroup(list(
+            map(self.quadrant, quadrants_string)
+        ))
 
     def quadrant(self, quadrant):
         if quadrant not in self._quadrants:
