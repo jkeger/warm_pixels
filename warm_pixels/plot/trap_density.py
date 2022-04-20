@@ -20,8 +20,8 @@ logger = logging.getLogger(
 
 
 def plot_trap_density_evol(
-        save_path,
         all_trap_densities: List[TrapDensities],
+        save_path=None,
         use_corrected=False,
 ):
     """Plot the evolution of the total trap density.
@@ -356,4 +356,7 @@ def plot_trap_density_evol(
     nice_plot(ax)
     nice_plot(ax_yr)
 
-    plt.savefig(save_path, dpi=200)
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path, dpi=200)

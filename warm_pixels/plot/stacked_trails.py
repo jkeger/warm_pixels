@@ -319,8 +319,6 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
     if save_path is None:
         plt.show()
-    elif save_path == "None":
-        return
     else:
         plt.savefig(save_path, dpi=200)
         plt.close()
