@@ -1,4 +1,5 @@
 import numpy as np
+from autoarray.instruments.acs import ImageACS
 
 from warm_pixels import hst_utilities as ut
 from warm_pixels.data import Dataset, Image, CorrectedDataset
@@ -19,7 +20,13 @@ class ImageQuadrant:
 
     @cache
     def array(self):
-        return self.image.load_quadrant(self.quadrant)
+        self.image._check_bia_exists()
+        return ImageACS.from_fits(
+            file_path=str(self.image.path),
+            quadrant_letter=self.quadrant,
+            bias_subtract_via_bias_file=True,
+            bias_subtract_via_prescan=True,
+        ).native
 
     @property
     def name(self):
@@ -132,7 +139,7 @@ class CorrectedQuadrant(Quadrant):
             )
 
             # Load the image
-            array = image.load_quadrant(self.quadrant)
+            array = image[self.quadrant].array()
 
             # Select consistent warm pixels found from this image
             image_name_q = f"{image_name}_{self.quadrant}"

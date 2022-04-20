@@ -4,7 +4,6 @@ from pathlib import Path
 
 import autoarray as aa
 import requests
-from autoarray.instruments.acs import ImageACS
 from autoarray.structures.arrays.two_d.array_2d_util import header_obj_from
 
 from warm_pixels.model.cache import cache
@@ -46,18 +45,15 @@ class Image:
             quadrant_letter="A"
         )
 
-    def load_quadrant(self, quadrant):
-        self._check_bia_exists()
-        return ImageACS.from_fits(
-            file_path=str(self.path),
-            quadrant_letter=quadrant,
-            bias_subtract_via_bias_file=True,
-            bias_subtract_via_prescan=True,
-        ).native
+    def __getitem__(self, item):
+        from warm_pixels.model.quadrant import ImageQuadrant
+        return ImageQuadrant(
+            item, self,
+        )
 
-    def quadrants(self):
+    def __iter__(self):
         for quadrant in ["A", "B", "C", "D"]:
-            yield self.load_quadrant(quadrant)
+            yield self[quadrant]
 
     def date(self):
         return 2400000.5 + self.image().header.modified_julian_date

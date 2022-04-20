@@ -4,10 +4,10 @@ from typing import List
 
 from warm_pixels import hst_utilities as ut
 from warm_pixels.pixel_lines import PixelLineCollection
-from .stacked_trails import plot_stacked_trails
-from .trap_density import plot_trap_density_evol
-from .warm_pixels import plot_warm_pixels
-from .warm_pixels import plot_warm_pixels, plot_warm_pixel_distributions
+from .stacked_trails import plot_stacked_trails as stacked_trails
+from .trap_density import plot_trap_density_evol as trap_density_evol
+from .warm_pixels import plot_warm_pixel_distributions as warm_pixel_distributions
+from .warm_pixels import plot_warm_pixels as warm_pixels
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,8 @@ class Plot:
         for dataset in self._warm_pixels.datasets:
             self.plot_all_warm_pixels(dataset)
 
-    def plot_all_warm_pixels(self, dataset):
+    @staticmethod
+    def plot_all_warm_pixels(dataset):
         for quadrant in dataset.all_quadrants:
             for image_quadrant in quadrant.image_quadrants:
                 filename = ut.output_path / dataset.name / f"{image_quadrant.name}.png"
@@ -83,11 +84,8 @@ class Plot:
                 print(f"Plotting warm pixels for {dataset}/{image_quadrant}")
 
                 # Plot
-                plot_warm_pixels(
-                    image_quadrant.array(),
-                    PixelLineCollection(
-                        image_quadrant.warm_pixels(),
-                    ),
+                warm_pixels(
+                    image_quadrant,
                     save_path=filename,
                 )
 
@@ -101,7 +99,7 @@ class Plot:
                 continue
 
             try:
-                plot_warm_pixel_distributions(
+                warm_pixel_distributions(
                     dataset.all_quadrants,
                     save_path=filename,
                 )
@@ -118,7 +116,7 @@ class Plot:
                 if _check_path(filename):
                     continue
 
-                plot_stacked_trails(
+                stacked_trails(
                     use_corrected=False,
                     save_path=filename,
                     group=group,
@@ -132,7 +130,7 @@ class Plot:
         if _check_path(save_path):
             return
 
-        plot_trap_density_evol(
+        trap_density_evol(
             all_trap_densities=self._warm_pixels.all_trap_densities(),
             use_corrected=self.use_corrected,
             save_path=save_path

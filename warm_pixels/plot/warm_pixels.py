@@ -8,33 +8,34 @@ from matplotlib.gridspec import GridSpec
 from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
 from warm_pixels.misc import plot_hist
+from warm_pixels.model.quadrant import Quadrant
 from warm_pixels.pixel_lines import PixelLineCollection
-
-from warm_pixels.warm_pixels.model.quadrant import Quadrant
 
 logger = logging.getLogger(
     __name__
 )
 
 
-def plot_warm_pixels(image, warm_pixels, save_path=None):
+def plot_warm_pixels(image_quadrant, save_path=None):
     """Plot an image and mark the locations of warm pixels.
 
     stack_dataset_warm_pixels() must first be run for the dataset.
 
     Parameters
     ----------
-    image : [[float]]
-        The 2D image array.
-
-    warm_pixels : PixelLineCollection
-        The set of warm pixel trails.
+    image_quadrant
+        One quadrant of an image
 
     save_path : str (opt.)
         The file path for saving the figure. If None, then show the figure.
     """
     # Plot the image and the found warm pixels
     plt.figure()
+
+    image = image_quadrant.array()
+    warm_pixels = PixelLineCollection(
+        image_quadrant.warm_pixels(),
+    )
 
     im = plt.imshow(
         X=image,

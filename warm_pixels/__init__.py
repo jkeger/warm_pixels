@@ -2,7 +2,8 @@ from typing import List, Tuple
 
 from warm_pixels import hst_functions as fu
 from warm_pixels import hst_utilities as ut
-from warm_pixels.data import Dataset
+from warm_pixels import plot
+from warm_pixels.data import Dataset, Image
 from warm_pixels.hst_functions.fit import TrapDensities
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.model.cache import cache
