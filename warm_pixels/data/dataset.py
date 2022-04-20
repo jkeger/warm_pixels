@@ -92,6 +92,7 @@ class Dataset:
         return self.images[0].observation_date()
 
     @property
+    @cache
     def date(self):
         """Return the Julian date of the set, taken from the first image."""
         return self.images[0].date()
