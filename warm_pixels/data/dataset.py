@@ -129,6 +129,7 @@ class Dataset:
             corrected_quadrants = []
 
             for quadrant in image.quadrants():
+                quadrant = quadrant.array()
                 corrected_quadrant = ImageACS(
                     cti.remove_cti(
                         image=quadrant,
