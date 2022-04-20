@@ -56,7 +56,7 @@ class Image:
             )
         return self._quadrants[item]
 
-    def all_quadrants(self):
+    def quadrants(self):
         for quadrant in ["A", "B", "C", "D"]:
             yield self.quadrant(quadrant)
 

@@ -1,5 +1,3 @@
-import datetime as dt
-
 import pytest
 
 from warm_pixels.data.source import FileDatasetSource
@@ -26,9 +24,9 @@ def test_dataset_source(
 @pytest.mark.parametrize(
     "date, count, name",
     [
-        (dt.date(2019, 12, 30), 1, "dataset_list_after_2019-12-30"),
-        (dt.date(2020, 1, 1), 0, "dataset_list_after_2020-01-01"),
-        (dt.date(2020, 10, 1), 0, "dataset_list_after_2020-10-01"),
+        (6513, 1, "dataset_list_after_6513"),
+        (6515, 0, "dataset_list_after_6515"),
+        (6789, 0, "dataset_list_after_6789"),
     ]
 )
 def test_after(
@@ -45,9 +43,9 @@ def test_after(
 @pytest.mark.parametrize(
     "date, count, name",
     [
-        (dt.date(2019, 12, 30), 0, "dataset_list_before_2019-12-30"),
-        (dt.date(2020, 1, 1), 0, "dataset_list_before_2020-01-01"),
-        (dt.date(2020, 10, 1), 1, "dataset_list_before_2020-10-01"),
+        (6513, 0, "dataset_list_before_6513"),
+        (6515, 0, "dataset_list_before_6515"),
+        (6789, 1, "dataset_list_before_6789"),
     ]
 )
 def test_before(
