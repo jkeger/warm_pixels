@@ -1,13 +1,13 @@
 import pytest
 
-from warm_pixels import Quadrant, QuadrantGroup
+from warm_pixels import DatasetQuadrant, QuadrantGroup
 
 
 @pytest.fixture(
     name="quadrant"
 )
 def make_quadrant(dataset):
-    return Quadrant(
+    return DatasetQuadrant(
         dataset=dataset,
         quadrant="A"
     )
@@ -17,7 +17,7 @@ def make_quadrant(dataset):
     name="corrected_quadrant"
 )
 def make_corrected_quadrant(dataset):
-    return Quadrant(
+    return DatasetQuadrant(
         dataset=dataset.corrected(),
         quadrant="A"
     )

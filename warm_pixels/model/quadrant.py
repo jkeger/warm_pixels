@@ -52,7 +52,7 @@ def directory_func(
     return f"{quadrant.dataset}/{quadrant}"
 
 
-class Quadrant:
+class DatasetQuadrant:
     def __new__(
             cls,
             quadrant: str,
@@ -62,8 +62,8 @@ class Quadrant:
                 dataset,
                 CorrectedDataset
         ):
-            return object.__new__(CorrectedQuadrant)
-        return object.__new__(Quadrant)
+            return object.__new__(CorrectedDatasetQuadrant)
+        return object.__new__(DatasetQuadrant)
 
     def __init__(
             self,
@@ -120,7 +120,7 @@ class Quadrant:
         return self.warm_pixels().consistent()
 
 
-class CorrectedQuadrant(Quadrant):
+class CorrectedDatasetQuadrant(DatasetQuadrant):
     @persist(directory_func)
     def consistent_lines(self):
         """Extract the corresponding warm pixels from the corrected images with CTI

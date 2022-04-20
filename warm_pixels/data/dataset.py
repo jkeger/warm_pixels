@@ -36,6 +36,13 @@ class Dataset:
 
         self.quadrants_string = quadrants_string
 
+    def quadrant(self, quadrant):
+        from warm_pixels.model.quadrant import DatasetQuadrant
+        return DatasetQuadrant(
+            quadrant=quadrant,
+            dataset=self
+        )
+
     @property
     @cache
     def groups(self):
@@ -46,16 +53,11 @@ class Dataset:
         quadrants C and D.
         """
         from warm_pixels.model.group import QuadrantGroup
-        from warm_pixels.model.quadrant import Quadrant
 
         return [
-            QuadrantGroup([
-                Quadrant(
-                    quadrant=quadrant,
-                    dataset=self
-                )
-                for quadrant in group
-            ])
+            QuadrantGroup(list(
+                map(self.quadrant, group)
+            ))
             for group in tuple(map(
                 tuple,
                 self.quadrants_string.split("_")

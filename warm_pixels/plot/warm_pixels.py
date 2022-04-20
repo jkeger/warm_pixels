@@ -8,7 +8,7 @@ from matplotlib.gridspec import GridSpec
 from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
 from warm_pixels.misc import plot_hist
-from warm_pixels.model.quadrant import Quadrant
+from warm_pixels.model.quadrant import DatasetQuadrant
 from warm_pixels.pixel_lines import PixelLineCollection
 
 logger = logging.getLogger(
@@ -66,7 +66,7 @@ def plot_warm_pixels(image_quadrant, save_path=None):
         plt.close()
 
 
-def plot_warm_pixel_distributions(quadrants: List[Quadrant], save_path=None):
+def plot_warm_pixel_distributions(quadrants: List[DatasetQuadrant], save_path=None):
     """Plot histograms of the properties of premade warm pixel trails.
 
     find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be

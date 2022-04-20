@@ -3,7 +3,7 @@ from typing import List
 from warm_pixels import hst_utilities as ut
 from warm_pixels.pixel_lines import StackedPixelLineCollection
 from .cache import persist
-from .quadrant import Quadrant
+from .quadrant import DatasetQuadrant
 
 
 def directory_func(quadrant_group):
@@ -13,7 +13,7 @@ def directory_func(quadrant_group):
 class QuadrantGroup:
     def __init__(
             self,
-            quadrants: List[Quadrant]
+            quadrants: List[DatasetQuadrant]
     ):
         """
         Stacked and consistent lines are computed for a group of CCD quadrants

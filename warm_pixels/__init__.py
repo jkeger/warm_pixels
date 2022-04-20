@@ -8,7 +8,7 @@ from warm_pixels.hst_functions.fit import TrapDensities
 from warm_pixels.hst_utilities import output_path
 from warm_pixels.model.cache import cache
 from warm_pixels.model.group import QuadrantGroup
-from warm_pixels.model.quadrant import Quadrant, CorrectedQuadrant
+from warm_pixels.model.quadrant import DatasetQuadrant, CorrectedDatasetQuadrant
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 
 
