@@ -10,6 +10,8 @@ from warm_pixels.model.cache import cache
 
 HST_DATA_URL = "https://hst-crds.stsci.edu/unchecked_get/references/hst"
 
+DAY_ZERO = dt.date(2002, 3, 1)
+
 
 class Image:
     def __init__(
@@ -60,6 +62,9 @@ class Image:
 
     def date(self):
         return 2400000.5 + self.image().header.modified_julian_date
+
+    def days_since_launch(self):
+        return (self.observation_date() - DAY_ZERO).days
 
     def observation_date(self) -> dt.date:
         """

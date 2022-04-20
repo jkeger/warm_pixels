@@ -4,7 +4,7 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import List, Callable
 
-from warm_pixels import Dataset
+from warm_pixels.data.dataset import Dataset
 
 
 class AbstractDatasetSource:
@@ -29,6 +29,9 @@ class AbstractDatasetSource:
         Convenience method to iterate datasets
         """
         return iter(self.datasets())
+
+    def __getitem__(self, item):
+        return self.datasets()[item]
 
     def __len__(self):
         return len(self.datasets())

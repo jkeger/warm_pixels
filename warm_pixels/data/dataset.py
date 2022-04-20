@@ -57,6 +57,9 @@ class Dataset:
             )
         return self._quadrants[quadrant]
 
+    def days_since_launch(self):
+        return self.images[0].days_since_launch()
+
     @property
     @cache
     def images(self):

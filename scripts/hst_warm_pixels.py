@@ -63,8 +63,8 @@ import datetime as dt
 from pathlib import Path
 
 from warm_pixels import WarmPixels
+from warm_pixels.data.image import DAY_ZERO
 from warm_pixels.data.source import FileDatasetSource
-from warm_pixels.hst_utilities import output_path
 from warm_pixels.plot import Plot
 
 parser = argparse.ArgumentParser()
@@ -119,8 +119,6 @@ parser.add_argument(
     help="Use the corrected images with CTI removed instead of the originals.",
 )
 
-DAY_ZERO = dt.date(2002, 3, 1)
-
 
 def parse_date(value):
     try:
@@ -137,7 +135,6 @@ def main():
 
     source = FileDatasetSource(
         Path(directory),
-        quadrants_string=args.quadrants
     )
     print(f"Found {len(source)} datasets in {directory}")
 
@@ -175,12 +172,12 @@ def main():
 
     warm_pixels = WarmPixels(
         datasets=datasets,
+        quadrants_string=args.quadrants
     )
     plot = Plot(
         warm_pixels,
         list_name=str(source),
         use_corrected=use_corrected,
-        quadrants_string=args.quadrants
     )
     plot.by_name(args.plot)
 
