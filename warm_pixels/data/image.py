@@ -45,15 +45,15 @@ class Image:
             quadrant_letter="A"
         )
 
-    def __getitem__(self, item):
+    def quadrant(self, item):
         from warm_pixels.model.quadrant import ImageQuadrant
         return ImageQuadrant(
             item, self,
         )
 
-    def __iter__(self):
+    def all_quadrants(self):
         for quadrant in ["A", "B", "C", "D"]:
-            yield self[quadrant]
+            yield self.quadrant(quadrant)
 
     def date(self):
         return 2400000.5 + self.image().header.modified_julian_date

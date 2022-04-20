@@ -139,7 +139,7 @@ class CorrectedQuadrant(Quadrant):
             )
 
             # Load the image
-            array = image[self.quadrant].array()
+            array = image.quadrant(self.quadrant).array()
 
             # Select consistent warm pixels found from this image
             image_name_q = f"{image_name}_{self.quadrant}"
