@@ -6,14 +6,14 @@ import autoarray as aa
 import requests
 from autoarray.structures.arrays.two_d.array_2d_util import header_obj_from
 
-from warm_pixels.model.cache import cache
+from warm_pixels.model.cache import cache, CachedObject
 
 HST_DATA_URL = "https://hst-crds.stsci.edu/unchecked_get/references/hst"
 
 DAY_ZERO = dt.date(2002, 3, 1)
 
 
-class Image:
+class Image(CachedObject):
     def __init__(
             self,
             path: Path,
