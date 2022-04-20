@@ -2,7 +2,6 @@
 import os
 from glob import glob
 from pathlib import Path
-from typing import List
 
 import autoarray as aa
 from autoarray.instruments.acs import ImageACS
@@ -17,7 +16,6 @@ class Dataset:
     def __init__(
             self,
             path: Path,
-            quadrants_string: str,
     ):
         """Simple class to store a list of image file paths and mild metadata.
 
@@ -33,47 +31,28 @@ class Dataset:
         """
         self.path = path
         self._images = None
+        self._quadrants = {}
 
-        self.quadrants_string = quadrants_string
-
-    def quadrant(self, quadrant):
-        from warm_pixels.model.quadrant import DatasetQuadrant
-        return DatasetQuadrant(
-            quadrant=quadrant,
-            dataset=self
-        )
-
-    @property
-    @cache
-    def groups(self):
-        """
-        Quadrants are combined into groups.
-
-        AB_CD -> two groups, one with quadrants A and B and the other with
-        quadrants C and D.
-        """
+    def groups(self, quadrants_string):
         from warm_pixels.model.group import QuadrantGroup
-
         return [
             QuadrantGroup(list(
                 map(self.quadrant, group)
             ))
             for group in tuple(map(
                 tuple,
-                self.quadrants_string.split("_")
+                quadrants_string.split("_")
             ))
         ]
 
-    @property
-    def all_quadrants(self) -> List:
-        """
-        A list of all quadrants
-        """
-        return [
-            quadrant
-            for group in self.groups
-            for quadrant in group.quadrants
-        ]
+    def quadrant(self, quadrant):
+        if quadrant not in self._quadrants:
+            from warm_pixels.model.quadrant import DatasetQuadrant
+            self._quadrants[quadrant] = DatasetQuadrant(
+                quadrant=quadrant,
+                dataset=self
+            )
+        return self._quadrants[quadrant]
 
     @property
     @cache
@@ -171,7 +150,6 @@ class CorrectedDataset(Dataset):
         corrected_path = dataset.path / "corrected"
         super().__init__(
             path=corrected_path,
-            quadrants_string=dataset.quadrants_string,
         )
 
     @property

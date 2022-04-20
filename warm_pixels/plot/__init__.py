@@ -34,7 +34,6 @@ class Plot:
             warm_pixels_,
             list_name,
             use_corrected,
-            quadrants_string,
     ):
         """
         Handles plotting of various outputs from the pipeline.
@@ -47,18 +46,10 @@ class Plot:
             A name for the set of data
         use_corrected
             Are images CTI corrected?
-        quadrants_string
-            A string describing the groups of quadrants from HST images included.
-            e.g. AB_CD where AB and CD are groups
         """
         self._warm_pixels = warm_pixels_
         self.list_name = list_name
         self.use_corrected = use_corrected
-
-        self.quadrants_string = quadrants_string
-        self.all_quadrants_string = "".join(
-            quadrants_string.split("_")
-        )
 
         self.all_methods = {
             name for name in dir(self)
@@ -72,9 +63,9 @@ class Plot:
         for dataset in self._warm_pixels.datasets:
             self.plot_all_warm_pixels(dataset)
 
-    @staticmethod
-    def plot_all_warm_pixels(dataset):
-        for quadrant in dataset.all_quadrants:
+    def plot_all_warm_pixels(self, dataset):
+        for quadrant in self._warm_pixels.all_quadrants_string:
+            quadrant = dataset.quadrant(quadrant)
             for image_quadrant in quadrant.image_quadrants:
                 filename = ut.output_path / dataset.name / f"{image_quadrant.name}.png"
                 if _check_path(filename):
@@ -93,13 +84,17 @@ class Plot:
         Plot a histogram of the distribution of warm pixels
         """
         for dataset in self._warm_pixels.datasets:
-            filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self.all_quadrants_string}.png"
+            filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self._warm_pixels.all_quadrants_string}.png"
             if _check_path(filename):
                 continue
 
             try:
                 warm_pixel_distributions(
-                    dataset.all_quadrants,
+                    [
+                        dataset.quadrant(quadrant)
+                        for quadrant
+                        in self._warm_pixels.quadrants_string
+                    ],
                     save_path=filename,
                 )
             except IndexError as e:
@@ -110,8 +105,10 @@ class Plot:
         Plot a tiled set of stacked trails for each dataset
         """
         for dataset in self._warm_pixels.datasets:
-            for group in dataset.groups:
-                filename = ut.output_path / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self.all_quadrants_string}.png"
+            for group in dataset.groups(
+                    self._warm_pixels.quadrants_string
+            ):
+                filename = ut.output_path / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self._warm_pixels.all_quadrants_string}.png"
                 if _check_path(filename):
                     continue
 
@@ -125,7 +122,7 @@ class Plot:
         """
         Plot the evolution of trap density over time
         """
-        save_path = ut.output_path / f"density_evol_{self.list_name}{self.quadrants_string}.{extension}"
+        save_path = ut.output_path / f"density_evol_{self.list_name}{self._warm_pixels.quadrants_string}.{extension}"
         if _check_path(save_path):
             return
 

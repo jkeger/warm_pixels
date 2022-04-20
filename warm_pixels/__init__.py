@@ -16,8 +16,13 @@ class WarmPixels:
     def __init__(
             self,
             datasets: List[Dataset],
+            quadrants_string: str,
     ):
         self.datasets = datasets
+        self.quadrants_string = quadrants_string
+        self.all_quadrants_string = "".join(
+            quadrants_string.split("_")
+        )
 
     def all_groups(self) -> List[List[QuadrantGroup]]:
         """
@@ -25,7 +30,9 @@ class WarmPixels:
         groups corresponding to a dataset.
         """
         return [
-            dataset.groups
+            dataset.groups(
+                self.quadrants_string
+            )
             for dataset
             in self.datasets
         ]

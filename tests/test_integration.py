@@ -18,12 +18,12 @@ def test_integration(
 
     warm_pixels = WarmPixels(
         datasets=[dataset, dataset],
+        quadrants_string="A"
     )
     plot = Plot(
         warm_pixels_=warm_pixels,
         use_corrected=use_corrected,
         list_name="test",
-        quadrants_string="A",
     )
     plot.by_name([
         "warm-pixels",

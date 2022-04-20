@@ -94,7 +94,6 @@ class FileDatasetSource(AbstractDatasetSource):
     def __init__(
             self,
             directory: Path,
-            quadrants_string: str,
     ):
         """
         Load datasets from a directory.
@@ -106,7 +105,6 @@ class FileDatasetSource(AbstractDatasetSource):
             dataset comprising images observed at a similar time.
         """
         self.directory = directory
-        self.quadrants_string = quadrants_string
 
     def __str__(self):
         """
@@ -125,7 +123,6 @@ class FileDatasetSource(AbstractDatasetSource):
         for folder in dataset_folders:
             dataset = Dataset(
                 self.directory / folder,
-                quadrants_string=self.quadrants_string
             )
             if len(dataset) > 0:
                 datasets.append(dataset)

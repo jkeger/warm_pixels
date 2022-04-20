@@ -11,7 +11,6 @@ def make_dataset(
 ):
     return Dataset(
         dataset_path,
-        quadrants_string="A"
     )
 
 

@@ -17,6 +17,7 @@ class Image:
             path: Path,
     ):
         self.path = path
+        self._quadrants = {}
 
     @property
     def name(self):
@@ -46,10 +47,12 @@ class Image:
         )
 
     def quadrant(self, item):
-        from warm_pixels.model.quadrant import ImageQuadrant
-        return ImageQuadrant(
-            item, self,
-        )
+        if item not in self._quadrants:
+            from warm_pixels.model.quadrant import ImageQuadrant
+            self._quadrants[item] = ImageQuadrant(
+                item, self,
+            )
+        return self._quadrants[item]
 
     def all_quadrants(self):
         for quadrant in ["A", "B", "C", "D"]:
