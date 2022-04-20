@@ -7,16 +7,6 @@ from pathlib import Path
 from warm_pixels import hst_utilities as hu
 
 
-class CachedObject:
-    __cache = {}
-
-    def __new__(cls, path):
-        key = (cls, path)
-        if (cls, path) not in cls.__cache:
-            cls.__cache[key] = object.__new__(cls)
-        return cls.__cache[key]
-
-
 def cache(func):
     """
     Cache the results of a method that takes no arguments

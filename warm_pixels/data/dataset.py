@@ -8,11 +8,11 @@ from autoarray.instruments.acs import ImageACS
 
 import arcticpy as cti
 from warm_pixels.hst_functions.cti_model import cti_model_hst
-from warm_pixels.model.cache import cache, CachedObject
+from warm_pixels.model.cache import cache
 from .image import Image
 
 
-class Dataset(CachedObject):
+class Dataset:
     def __init__(
             self,
             path: Path,
