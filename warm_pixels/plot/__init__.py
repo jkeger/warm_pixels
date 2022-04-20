@@ -3,7 +3,6 @@ import os
 from typing import List
 
 from warm_pixels import hst_utilities as ut
-from warm_pixels.pixel_lines import PixelLineCollection
 from .stacked_trails import plot_stacked_trails as stacked_trails
 from .trap_density import plot_trap_density_evol as trap_density_evol
 from .warm_pixels import plot_warm_pixel_distributions as warm_pixel_distributions
