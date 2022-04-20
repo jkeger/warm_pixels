@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -8,6 +9,8 @@ from warm_pixels import hst_utilities as ut
 from warm_pixels import misc
 from warm_pixels.misc import plot_hist
 from warm_pixels.pixel_lines import PixelLineCollection
+
+from warm_pixels.warm_pixels.model.quadrant import Quadrant
 
 logger = logging.getLogger(
     __name__
@@ -62,7 +65,7 @@ def plot_warm_pixels(image, warm_pixels, save_path=None):
         plt.close()
 
 
-def plot_warm_pixel_distributions(quadrants, save_path=None):
+def plot_warm_pixel_distributions(quadrants: List[Quadrant], save_path=None):
     """Plot histograms of the properties of premade warm pixel trails.
 
     find_dataset_warm_pixels() and find_consistent_warm_pixels() must first be
@@ -70,8 +73,8 @@ def plot_warm_pixel_distributions(quadrants, save_path=None):
 
     Parameters
     ----------
-    quadrants : [str]
-        The list of quadrants (A, B, C, D) of the images to plot.
+    quadrants
+        A list of quadrants (A, B, C, D) from the image to plot..
 
     save_path : str (opt.)
         The file path for saving the figure. If None, then show the figure.
