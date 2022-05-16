@@ -359,12 +359,7 @@ class PixelLineCollection:
                 i_background=i_background,
                 n_background_bins=background_bins.number,
             )
-            print(index)
 
-            #
-            # RJM: This is REALLY slow! It loops over all warm pixels, and appends them to bins, rather than just adding them.
-            #      But it does avoid floating point errors when adding LOTS of small numbers.
-            #
             # Append the line data
             if stacked_lines[index].n_stacked == 0:
                 stacked_lines[index].data = [line.data]
