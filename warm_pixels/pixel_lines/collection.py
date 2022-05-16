@@ -50,12 +50,15 @@ class AbstractPixelLineCollection(ABC):
 
     def __add__(self, other):
         collection = PixelLineCollection()
-        collection.append(self.lines)
+        collection.extend(self.lines)
         if isinstance(
                 other, PixelLineCollection
         ):
-            other = other.lines
-        collection.append(other)
+            collection.extend(other.lines)
+        if isinstance(
+                other, PixelLine
+        ):
+            collection.append(other)
         return collection
 
     def __eq__(self, other):
@@ -411,16 +414,13 @@ class PixelLineCollection(AbstractPixelLineCollection):
     def lines(self):
         return np.array(self._lines)
 
-    def append(self, new_lines):
+    def extend(self, new_lines):
         if isinstance(
                 new_lines,
                 PixelLineCollection
         ):
             new_lines = new_lines.lines
-        if isinstance(
-                new_lines,
-                (list, np.ndarray)
-        ):
-            self._lines.extend(new_lines)
-        else:
-            self._lines.append(new_lines)
+        self._lines.extend(new_lines)
+
+    def append(self, new_line):
+        self._lines.append(new_line)

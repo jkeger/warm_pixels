@@ -84,7 +84,7 @@ def test_sum(
 def test_extend(
         pixel_line_collection
 ):
-    pixel_line_collection.append(
+    pixel_line_collection.extend(
         pixel_line_collection
     )
     assert len(pixel_line_collection) == 2

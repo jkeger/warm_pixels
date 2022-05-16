@@ -107,7 +107,7 @@ class DatasetQuadrant:
         # Find the warm pixels in each image
         for image_quadrant in self.image_quadrants:
             # Add them to the collection
-            warm_pixels.append(image_quadrant.warm_pixels())
+            warm_pixels.extend(image_quadrant.warm_pixels())
 
         return warm_pixels
 
