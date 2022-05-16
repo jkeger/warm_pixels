@@ -374,6 +374,7 @@ class PixelLineCollection:
                 i_background=i_background,
                 n_background_bins=background_bins.number,
             )
+            print(index)
 
             #
             # RJM: This is REALLY slow! It loops over all warm pixels, and appends them to bins, rather than just adding them.

@@ -1,4 +1,5 @@
 import os
+import pickle
 import shutil
 from pathlib import Path
 
@@ -57,6 +58,14 @@ def make_dataset_list_path():
 )
 def make_dataset_path(dataset_list_path):
     return dataset_list_path / "dataset"
+
+
+@pytest.fixture(
+    name="combined_lines"
+)
+def make_combined_lines():
+    with open(directory / "combined_lines.pickle", "r+b") as f:
+        return pickle.load(f)
 
 
 @pytest.fixture(
