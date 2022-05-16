@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
@@ -5,21 +7,7 @@ from .pixel_line import PixelLine
 from ..bins import Bins
 
 
-class PixelLineCollection:
-    def __init__(self, lines=None):
-        """A collection of 1D lines of pixels with metadata.
-
-        Enables convenient analysis e.g. binning and stacking of CTI trails.
-
-        Parameters
-        ----------
-        lines : [PixelLine]
-            A list of the PixelLine objects.
-        """
-        if lines is None:
-            lines = []
-        self._lines = lines
-
+class AbstractPixelLineCollection(ABC):
     def __getitem__(self, item):
         return self.lines[item]
 
@@ -84,14 +72,14 @@ class PixelLineCollection:
         """
         The pixel counts of each line, in units of electrons.
         """
-        return np.array([line.data for line in self._lines])
+        return np.array([line.data for line in self.lines])
 
     @property
     def origins(self):
         """
         The identifiers for the origins (e.g. image name) of each line.
         """
-        return np.array([line.origin for line in self._lines])
+        return np.array([line.origin for line in self.lines])
 
     @property
     def locations(self):
@@ -99,60 +87,47 @@ class PixelLineCollection:
         The row and column indices of the first pixel in the line in the
             image, for each line.
         """
-        return np.array([line.location for line in self._lines])
+        return np.array([line.location for line in self.lines])
 
     @property
     def dates(self):
         """
         The Julian date of each line.
         """
-        return np.array([line.date for line in self._lines])
+        return np.array([line.date for line in self.lines])
 
     @property
     def backgrounds(self):
         """
         The background charge count of each line, in units of electrons.
         """
-        return np.array([line.background for line in self._lines])
+        return np.array([line.background for line in self.lines])
 
     @property
     def fluxes(self):
         """
         The maximum charge in each line, in units of electrons.
         """
-        return np.array([line.flux for line in self._lines])
+        return np.array([line.flux for line in self.lines])
 
     @property
     def lengths(self):
         """
         The number of pixels in the data array of each line.
         """
-        return np.array([line.length for line in self._lines])
+        return np.array([line.length for line in self.lines])
 
     @property
     def n_lines(self):
         """
         The number of lines in the collection.
         """
-        return len(self._lines)
+        return len(self.lines)
 
     @property
+    @abstractmethod
     def lines(self):
-        return np.array(self._lines)
-
-    def append(self, new_lines):
-        if isinstance(
-                new_lines,
-                PixelLineCollection
-        ):
-            new_lines = new_lines.lines
-        if isinstance(
-                new_lines,
-                (list, np.ndarray)
-        ):
-            self._lines.extend(new_lines)
-        else:
-            self._lines.append(new_lines)
+        pass
 
     def remove_symmetry(self, n_pixels_used_for_background=5):
         """Convert each line from a format that has a warm pixel in the middle (and background)
@@ -415,3 +390,37 @@ class PixelLineCollection:
             date_bins=date_bins,
             background_bins=background_bins,
         )
+
+
+class PixelLineCollection(AbstractPixelLineCollection):
+    def __init__(self, lines=None):
+        """A collection of 1D lines of pixels with metadata.
+
+        Enables convenient analysis e.g. binning and stacking of CTI trails.
+
+        Parameters
+        ----------
+        lines : [PixelLine]
+            A list of the PixelLine objects.
+        """
+        if lines is None:
+            lines = []
+        self._lines = lines
+
+    @property
+    def lines(self):
+        return np.array(self._lines)
+
+    def append(self, new_lines):
+        if isinstance(
+                new_lines,
+                PixelLineCollection
+        ):
+            new_lines = new_lines.lines
+        if isinstance(
+                new_lines,
+                (list, np.ndarray)
+        ):
+            self._lines.extend(new_lines)
+        else:
+            self._lines.append(new_lines)
