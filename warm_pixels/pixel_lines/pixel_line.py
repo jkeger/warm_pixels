@@ -1,62 +1,20 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 
 
-class PixelLine:
+class AbstractPixelLine(ABC):
     def __init__(
             self,
-            data=None,
-            noise=None,
-            origin=None,
             location=None,
             date=None,
             background=None,
             flux=None,
-            n_stacked=None,
     ):
-        """A 1D line of pixels (e.g. a single CTI trail) with metadata.
-
-        Or could be an averaged stack of many lines, in which case the metadata
-        parameters may be e.g. the average value or the minimum value of a bin.
-
-        Parameters
-        ----------
-        data : [float]
-            The pixel counts, in units of electrons.
-
-        noise : [float]
-            The noise errors on the pixel counts, in units of electrons.
-
-        origin : str
-            An identifier for the origin (e.g. image name) of the data.
-
-        location : [int, int]
-            The row and column indices of the first pixel in the line in the
-            image. The row index is the distance in pixels to the readout
-            register minus one.
-
-        date : float
-            The Julian date.
-
-        background : float
-            The background charge count, in units of electrons. It is assumed
-            that the background has not been subtracted from the data.
-
-        flux : float
-            The maximum charge in the line, or e.g. for a CTI trail the original
-            flux before trailing, in units of electrons.
-
-        n_stacked : int
-            If the line is an averaged stack, the number of stacked lines.
-        """
-        self._flux = flux
-        self.data = data
-        self.noise = noise
-        self.origin = origin
         self.location = location
         self.date = date
         self.background = background
-        self.n_stacked = n_stacked
-        self.format = None
+        self._flux = flux
 
     @property
     def flux(self):
@@ -66,11 +24,19 @@ class PixelLine:
         return self._flux
 
     @property
+    @abstractmethod
+    def data(self):
+        pass
+
+    @property
+    @abstractmethod
+    def noise(self):
+        pass
+
+    @property
+    @abstractmethod
     def length(self):
-        """Number of pixels in the data array"""
-        if self.data is not None:
-            return len(self.data)
-        return None
+        pass
 
     @property
     def trail_length(self):
@@ -165,3 +131,69 @@ class PixelLine:
         full_trail_noise[-self.trail_length:] = self.model_trail_noise
 
         return full_trail_noise
+
+
+class PixelLine(AbstractPixelLine):
+    def __init__(
+            self,
+            data=None,
+            noise=None,
+            origin=None,
+            location=None,
+            date=None,
+            background=None,
+            flux=None,
+    ):
+        """A 1D line of pixels (e.g. a single CTI trail) with metadata.
+
+        Or could be an averaged stack of many lines, in which case the metadata
+        parameters may be e.g. the average value or the minimum value of a bin.
+
+        Parameters
+        ----------
+        data : [float]
+            The pixel counts, in units of electrons.
+
+        noise : [float]
+            The noise errors on the pixel counts, in units of electrons.
+
+        origin : str
+            An identifier for the origin (e.g. image name) of the data.
+
+        location : [int, int]
+            The row and column indices of the first pixel in the line in the
+            image. The row index is the distance in pixels to the readout
+            register minus one.
+
+        date : float
+            The Julian date.
+
+        background : float
+            The background charge count, in units of electrons. It is assumed
+            that the background has not been subtracted from the data.
+
+        flux : float
+            The maximum charge in the line, or e.g. for a CTI trail the original
+            flux before trailing, in units of electrons.
+
+        """
+        self._data = data
+        super().__init__(location, date, background, flux)
+        self._noise = noise
+        self.origin = origin
+        self.format = None
+
+    @property
+    def length(self):
+        """Number of pixels in the data array"""
+        if self.data is not None:
+            return len(self.data)
+        return None
+
+    @property
+    def noise(self):
+        return self._noise
+
+    @property
+    def data(self):
+        return self._data

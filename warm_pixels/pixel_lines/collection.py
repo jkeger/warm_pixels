@@ -278,6 +278,8 @@ class AbstractPixelLineCollection(ABC):
             containing the mean and rms of the parameters in each bin: mean_row,
             rms_row, mean_background, rms_background, mean_flux, rms_flux.
         """
+        from .stacked_collection import StackedPixelLine
+
         row_bins = row_bins or self.row_bins()
         flux_bins = flux_bins or self.flux_bins()
         date_bins = date_bins or self.date_bins()
@@ -289,13 +291,12 @@ class AbstractPixelLineCollection(ABC):
 
         # Initialise the array of empty lines in each bin, as a long 1D array
         stacked_lines = [
-            PixelLine(
-                data=[np.zeros(length)],
+            StackedPixelLine(
+                length=self.lengths[0],
                 location=[row, 0],
                 date=date,
                 background=background,
                 flux=flux,
-                n_stacked=0,
             )
             for row in row_bins[:-1]
             for date in date_bins[:-1]
@@ -339,11 +340,7 @@ class AbstractPixelLineCollection(ABC):
             )
 
             # Append the line data
-            if stacked_lines[index].n_stacked == 0:
-                stacked_lines[index].data = [line.data]
-            else:
-                stacked_lines[index].data.append(line.data)
-            stacked_lines[index].n_stacked += 1
+            stacked_lines[index].append(line)
 
             # Append the other parameters
             sum_rows[index] += line.location[0]
@@ -353,17 +350,12 @@ class AbstractPixelLineCollection(ABC):
             sum_sq_backgrounds[index] += line.background ** 2
             sum_sq_fluxes[index] += line.flux ** 2
 
-        for sl in stacked_lines:
-            sl.data = np.stack(sl.data)
-
         # Take the means and standard errors
         #
         # RJM: adding variables like this, which are not defined in the general class descriptor, seems a bit dodgy
         #
         for index, line in enumerate(stacked_lines):
             if line.n_stacked > 0:
-                line.noise = np.std(line.data, axis=0) / np.sqrt(line.n_stacked)
-
                 line.mean_row = sum_rows[index] / line.n_stacked
                 line.rms_row = np.sqrt(sum_sq_rows[index] / line.n_stacked)
                 line.mean_background = sum_backgrounds[index] / line.n_stacked
@@ -373,16 +365,12 @@ class AbstractPixelLineCollection(ABC):
                 line.mean_flux = sum_fluxes[index] / line.n_stacked
                 line.rms_flux = np.sqrt(sum_sq_fluxes[index] / line.n_stacked)
             else:
-                line.noise = np.zeros(length)
-
                 line.mean_row = None
                 line.rms_row = None
                 line.mean_background = None
                 line.rms_background = None
                 line.mean_flux = None
                 line.rms_flux = None
-
-            line.data = np.mean(line.data, axis=0)
 
         from .stacked_collection import StackedPixelLineCollection
 
