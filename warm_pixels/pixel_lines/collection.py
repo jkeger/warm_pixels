@@ -31,7 +31,7 @@ class AbstractPixelLineCollection(ABC):
             (flux_min < self.fluxes) & (self.fluxes < flux_max)
         )[0]
         within_fluxes = PixelLineCollection(
-            self.lines[sel_flux]
+            np.array(self.lines)[sel_flux]
         )
 
         # Find the warm pixels present in at least e.g. 2/3 of the images
@@ -412,7 +412,7 @@ class PixelLineCollection(AbstractPixelLineCollection):
 
     @property
     def lines(self):
-        return np.array(self._lines)
+        return self._lines
 
     def extend(self, new_lines):
         if isinstance(

@@ -61,11 +61,9 @@ def test_add(
 ):
     combined = pixel_line_collection + pixel_line_collection
     assert isinstance(combined, PixelLineCollection)
-    assert (
-            PixelLineCollection([
-                pixel_line, pixel_line
-            ]) == combined
-    ).all()
+    assert PixelLineCollection([
+        pixel_line, pixel_line
+    ]) == combined
 
 
 def test_sum(
@@ -74,11 +72,9 @@ def test_sum(
 ):
     combined = sum(pixel_line_collection, pixel_line_collection)
     assert isinstance(combined, PixelLineCollection)
-    assert (
-            PixelLineCollection([
-                pixel_line, pixel_line
-            ]) == combined
-    ).all()
+    assert PixelLineCollection([
+        pixel_line, pixel_line
+    ]) == combined
 
 
 def test_extend(

@@ -1,7 +1,7 @@
-from .collection import PixelLineCollection
+from .collection import AbstractPixelLineCollection
 
 
-class StackedPixelLineCollection(PixelLineCollection):
+class StackedPixelLineCollection(AbstractPixelLineCollection):
     def __init__(
             self,
             lines,
@@ -10,7 +10,7 @@ class StackedPixelLineCollection(PixelLineCollection):
             date_bins,
             background_bins,
     ):
-        super().__init__(lines)
+        self._lines = lines
         self.row_bins = row_bins
         self.flux_bins = flux_bins
         self.date_bins = date_bins
@@ -27,3 +27,7 @@ class StackedPixelLineCollection(PixelLineCollection):
     @property
     def n_background_bins(self):
         return self.background_bins.number
+
+    @property
+    def lines(self):
+        return self._lines
