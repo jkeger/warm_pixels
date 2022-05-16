@@ -5,6 +5,7 @@ class Bins:
     def __init__(self, bins):
         self.bins = bins
 
+    @property
     def number(self):
         return len(self.bins) - 1
 
@@ -16,32 +17,49 @@ class Bins:
     def max(self):
         return self.bins[-1]
 
+    def __getitem__(self, item):
+        return self.bins[item]
+
     @classmethod
     def from_values(
             cls,
             values,
-            n_row_bins,
-            row_min=None,
-            row_max=None,
-            row_scale="linear"
+            n_bins,
+            min_value=None,
+            max_value=None,
+            scale="linear"
     ):
-        row_min = row_min or min(values)
-        row_max = row_max or max(values)
+        min_value = min_value or min(values)
+        max_value = max_value or max(values)
 
         # Bin lower edge values
-        if row_scale == "linear":
+        if scale == "linear":
             return Bins(
-                np.linspace(row_min, row_max, n_row_bins + 1)
+                np.linspace(
+                    min_value,
+                    max_value,
+                    n_bins + 1
+                )
             )
-        elif row_scale == "log":
+        elif scale == "log":
             return Bins(
                 np.logspace(
-                    np.log10(row_min),
-                    np.log10(row_max),
-                    n_row_bins + 1
+                    np.log10(min_value),
+                    np.log10(max_value),
+                    n_bins
                 )
             )
         else:
             raise ValueError(
-                "Row scale must be linear or log"
+                "Scale must be linear or log"
             )
+
+    @property
+    def is_single(self):
+        return self.max == self.min or self.number == 1
+
+    def indices(self, values):
+        indices = np.digitize(values, self[:-1]) - 1
+        # Flag if above the max
+        indices[values > self.max] = -1
+        return indices

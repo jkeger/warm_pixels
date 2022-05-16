@@ -47,11 +47,10 @@ class QuadrantGroup:
         A combined collection of stacked lines for every quadrant
         computed by averaging within bins
         """
-        return sum(
+        combined = sum(
             quadrant.consistent_lines()
             for quadrant in self.quadrants
-        ).generate_stacked_lines_from_bins(
-            n_row_bins=ut.n_row_bins,
+        )
+        return combined.generate_stacked_lines_from_bins(
             flux_bins=ut.flux_bins,
-            n_background_bins=ut.n_background_bins,
         )

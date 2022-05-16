@@ -23,15 +23,15 @@ class StackedPixelLineCollection(PixelLineCollection):
 
     @property
     def n_row_bins(self):
-        return len(self.row_bins) - 1
+        return self.row_bins.number
 
     @property
     def n_flux_bins(self):
-        return len(self.flux_bins) - 1
+        return self.flux_bins.number
 
     @property
     def n_background_bins(self):
-        return len(self.background_bins) - 1
+        return self.background_bins.number
 
     def save(self, filename):
         path = Path(filename)

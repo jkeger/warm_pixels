@@ -1,10 +1,11 @@
 """Utility functions etc. for hst_warm_pixels.py"""
 
-import argparse
 from pathlib import Path
 
 import numpy as np
 from astropy.time import Time
+
+from warm_pixels.bins import Bins
 
 output_path = Path("output")
 cache_path = Path("cache")
@@ -23,20 +24,22 @@ n_flux_bins = 10
 n_background_bins = 1
 
 #   Richard bins
-flux_bins = np.array(
-    [
-        100.000,
-        177.475,
-        314.972,
-        558.996,
-        992.075,
-        1760.68,
-        3124.76,
-        5545.66,
-        9842.13,
-        17467.3,
-        58982.4,
-    ]
+flux_bins = Bins(
+    np.array(
+        [
+            100.000,
+            177.475,
+            314.972,
+            558.996,
+            992.075,
+            1760.68,
+            3124.76,
+            5545.66,
+            9842.13,
+            17467.3,
+            58982.4,
+        ]
+    )
 )
 #   Middle flux bins
 # flux_bins = np.logspace(np.log10(2e2), np.log10(1e4), n_flux_bins + 1)
@@ -77,6 +80,3 @@ def dataset_list_saved_density_evol(list_name, quadrants, use_corrected=False):
     else:
         suffix = ""
     return output_path / f"density_evol_{list_name}_{''.join(map(str, quadrants))}{suffix}.npz"
-
-
-
