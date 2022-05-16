@@ -60,5 +60,7 @@ class Bins:
 
     def index(self, value):
         if value > self.max:
-            return -1
+            raise IndexError(
+                f"Value {value} is greater than upper bound of max bin {self.max}"
+            )
         return np.digitize(value, self[:-1]) - 1

@@ -341,12 +341,12 @@ class PixelLineCollection:
         for line in self.lines:
             # Discard lines with values outside of the bins
 
-            i_row = row_bins.index(line.location[0])
-            i_flux = flux_bins.index(line.flux)
-            i_date = date_bins.index(line.date)
-            i_background = background_bins.index(line.background)
-
-            if -1 in [i_row, i_flux, i_date, i_background]:
+            try:
+                i_row = row_bins.index(line.location[0])
+                i_flux = flux_bins.index(line.flux)
+                i_date = date_bins.index(line.date)
+                i_background = background_bins.index(line.background)
+            except IndexError:
                 continue
 
             # Get the index in the 1D array for this bin
