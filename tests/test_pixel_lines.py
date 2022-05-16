@@ -47,17 +47,6 @@ def test_locations(
     assert (pixel_line_collection.locations == np.array([[14, 29]])).all()
 
 
-def test_save_and_load(
-        pixel_line_collection,
-        save_path,
-):
-    pixel_line_collection.save(
-        save_path
-    )
-    loaded = PixelLineCollection.load(save_path)
-    assert (loaded.locations == np.array([[14, 29]])).all()
-
-
 def test_equality(pixel_line):
     assert PixelLineCollection([
         pixel_line

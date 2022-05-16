@@ -1,5 +1,3 @@
-import pickle
-
 import numpy as np
 
 from warm_pixels import hst_utilities as ut
@@ -155,29 +153,6 @@ class PixelLineCollection:
             self._lines.extend(new_lines)
         else:
             self._lines.append(new_lines)
-
-    def save(self, filename):
-        """ Save the lines data. """
-        # Check the file extension
-        filename = str(filename)
-        if filename[-7:] != ".pickle":
-            filename += ".pickle"
-
-        # Save the lines
-        with open(filename, "wb") as f:
-            pickle.dump(self.lines, f)
-
-    @classmethod
-    def load(cls, filename):
-        """ Load and append lines that were previously saved. """
-        # Check the file extension
-        filename = str(filename)
-        if filename[-7:] != ".pickle":
-            filename += ".pickle"
-
-        # Load the lines
-        with open(filename, "rb") as f:
-            return PixelLineCollection(pickle.load(f))
 
     def remove_symmetry(self, n_pixels_used_for_background=5):
         """Convert each line from a format that has a warm pixel in the middle (and background)
