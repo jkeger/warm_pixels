@@ -58,8 +58,7 @@ class Bins:
     def is_single(self):
         return self.max == self.min or self.number == 1
 
-    def indices(self, values):
-        indices = np.digitize(values, self[:-1]) - 1
-        # Flag if above the max
-        indices[values > self.max] = -1
-        return indices
+    def index(self, value):
+        if value > self.max:
+            return -1
+        return np.digitize(value, self[:-1]) - 1

@@ -309,24 +309,6 @@ class PixelLineCollection:
         length = self.lengths[0]
         assert all(self.lengths == length)
 
-        # Find the bin indices for each parameter for each line
-        if row_bins.is_single:
-            row_indices = np.zeros(self.n_lines)
-        else:
-            row_indices = row_bins.indices(self.locations[:, 0])
-        if flux_bins.is_single:
-            flux_indices = np.zeros(self.n_lines)
-        else:
-            flux_indices = flux_bins.indices(self.fluxes)
-        if date_bins.is_single:
-            date_indices = np.zeros(self.n_lines)
-        else:
-            date_indices = date_bins.indices(self.dates)
-        if background_bins.is_single:
-            background_indices = np.zeros(self.n_lines)
-        else:
-            background_indices = background_bins.indices(self.backgrounds)
-
         # Initialise the array of empty lines in each bin, as a long 1D array
         stacked_lines = [
             PixelLine(
@@ -356,11 +338,14 @@ class PixelLineCollection:
         #
         # RJM: Does this loop over each line too many times? Should only need to look at each line once
         #
-        for i_row, i_flux, i_date, i_background, line in zip(
-                row_indices, flux_indices, date_indices, background_indices, self.lines
-        ):
+        for line in self.lines:
             # Discard lines with values outside of the bins
-            # print(i_row, i_flux, i_date, i_background)
+
+            i_row = row_bins.index(line.location[0])
+            i_flux = flux_bins.index(line.flux)
+            i_date = date_bins.index(line.date)
+            i_background = background_bins.index(line.background)
+
             if -1 in [i_row, i_flux, i_date, i_background]:
                 continue
 
