@@ -306,32 +306,14 @@ class PixelLineCollection:
             bin inputs to allow for uneven bin spacings, for example. If this is
             None (default), the other inputs are used to create it.
 
-        n_row_bins : int
-            The number of row bins, if row_bins is not provided.
-
-        row_min : float
-            The minimum value for the row bins, if row_bins is not provided.
-
-        row_max : float
-            The maximum value for the row bins, if row_bins is not provided.
-
-        row_scale : str
-            The spacing (linear or logarithmic) for the row bins, if row_bins is
-            not provided.
-
-        flux_bins, n_flux_bins, flux_min, flux_max, flux_scale
+        flux_bins
             As above, for the bins by flux.
 
-        date_bins, n_date_bins, date_min, date_max, date_scale
+        date_bins
             As above, for the bins by Julian date.
 
-        background_bins, n_background_bins, background_min, background_max,
-        background_scale : [float], int, float, float, str
-            As above, for the bins by background.
-        n_background_bins
-        background_min
-        background_max
         background_bins
+            As above, for the bins by background.
 
         Returns
         -------
