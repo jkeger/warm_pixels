@@ -30,7 +30,7 @@ class Image:
     def bia_path(self):
         return self.path.parent / header_obj_from(
             str(self.path), 0
-        )["BIASFILE"].replace("jref$", "")
+        )["BIASFILE"].replace("jref$", "").replace("iref$", "")
 
     def _check_bia_exists(self):
         if not self.bia_path.exists():
