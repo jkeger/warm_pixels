@@ -111,7 +111,6 @@ class DatasetQuadrant:
 
         return warm_pixels
 
-    @persist(directory_func)
     def consistent_lines(self) -> PixelLineCollection:
         """
         Warm pixels that are consistent across multiple images and therefore highly unlikely
@@ -121,7 +120,6 @@ class DatasetQuadrant:
 
 
 class CorrectedDatasetQuadrant(DatasetQuadrant):
-    @persist(directory_func)
     def consistent_lines(self):
         """Extract the corresponding warm pixels from the corrected images with CTI
         removed, in the same locations as the orignal consistent warm pixels.
