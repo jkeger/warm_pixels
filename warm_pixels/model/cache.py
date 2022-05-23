@@ -1,4 +1,3 @@
-import bz2
 import functools
 import os
 import pickle
@@ -74,7 +73,7 @@ class Persist:
             """
             func = cache(func)
 
-            name = f"{func.__name__}.pbz2"
+            name = f"{func.__name__}.pickle"
 
             @functools.wraps(func)
             def wrapper(instance):
@@ -83,11 +82,11 @@ class Persist:
                 os.makedirs(directory, exist_ok=True)
 
                 if path.exists():
-                    with bz2.BZ2File(path) as f:
+                    with open(path, "b+r") as f:
                         return pickle.load(f)
 
                 result = func(instance)
-                with bz2.BZ2File(path, "w") as f:
+                with open(path, "b+w") as f:
                     pickle.dump(result, f)
 
                 return result

@@ -124,7 +124,7 @@ class CorrectedDatasetQuadrant(DatasetQuadrant):
     @persist(directory_func)
     def consistent_lines(self):
         """Extract the corresponding warm pixels from the corrected images with CTI
-        removed, in the same locations as the original consistent warm pixels.
+        removed, in the same locations as the orignal consistent warm pixels.
         """
         warm_pixels = super().consistent_lines()
 
