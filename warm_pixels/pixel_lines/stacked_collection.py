@@ -27,21 +27,27 @@ class StackedPixelLine(AbstractPixelLine):
             pixel_line
         )
 
+    @property
     def mean_row(self):
         return sum(line.location[0] for line in self.stacked_lines) / self.n_stacked
 
+    @property
     def rms_row(self):
         return np.sqrt(sum(line.location[0] ** 2 for line in self.stacked_lines) / self.n_stacked)
 
+    @property
     def mean_background(self):
         return sum(line.background for line in self.stacked_lines) / self.n_stacked
 
+    @property
     def rms_background(self):
         return np.sqrt(sum(line.background ** 2 for line in self.stacked_lines) / self.n_stacked)
 
+    @property
     def mean_flux(self):
         return sum(line.flux for line in self.stacked_lines) / self.n_stacked
 
+    @property
     def rms_flux(self):
         return np.sqrt(sum(line.flux ** 2 for line in self.stacked_lines) / self.n_stacked)
 
