@@ -1,5 +1,4 @@
 autoarray==2021.10.14.1
-autoconf==2021.10.14.1
 autofit==2021.10.14.1
 pytest==6.2.5
 lmfit==1.0.3
