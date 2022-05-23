@@ -64,3 +64,6 @@ class Bins:
                 f"Value {value} is greater than upper bound of max bin {self.max}"
             )
         return np.digitize(value, self[:-1]) - 1
+
+    # def __getattr__(self, item):
+    #     return self.bins[item]

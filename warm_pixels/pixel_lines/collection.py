@@ -278,40 +278,24 @@ class AbstractPixelLineCollection(ABC):
             containing the mean and rms of the parameters in each bin: mean_row,
             rms_row, mean_background, rms_background, mean_flux, rms_flux.
         """
-        from .stacked_collection import StackedPixelLine
+        from .stacked_collection import StackedPixelLineCollection
 
         row_bins = row_bins or self.row_bins()
         flux_bins = flux_bins or self.flux_bins()
         date_bins = date_bins or self.date_bins()
         background_bins = background_bins or self.background_bins()
 
+        collection = StackedPixelLineCollection(
+            length=self.lengths[0],
+            row_bins=row_bins,
+            flux_bins=flux_bins,
+            date_bins=date_bins,
+            background_bins=background_bins,
+        )
+
         # Line length
         length = self.lengths[0]
         assert all(self.lengths == length)
-
-        # Initialise the array of empty lines in each bin, as a long 1D array
-        stacked_lines = [
-            StackedPixelLine(
-                length=self.lengths[0],
-                location=[row, 0],
-                date=date,
-                background=background,
-                flux=flux,
-            )
-            for row in row_bins[:-1]
-            for date in date_bins[:-1]
-            for background in background_bins[:-1]
-            for flux in flux_bins[:-1]
-        ]
-
-        # Initialise sums of other parameters and other parameters squared
-        n_bins = row_bins.number * flux_bins.number * date_bins.number * background_bins.number
-        sum_rows = np.zeros(n_bins)
-        sum_backgrounds = np.zeros(n_bins)
-        sum_fluxes = np.zeros(n_bins)
-        sum_sq_rows = np.zeros(n_bins)
-        sum_sq_backgrounds = np.zeros(n_bins)
-        sum_sq_fluxes = np.zeros(n_bins)
 
         # Add the line data to each stack
         #
@@ -321,66 +305,11 @@ class AbstractPixelLineCollection(ABC):
             # Discard lines with values outside of the bins
 
             try:
-                i_row = row_bins.index(line.location[0])
-                i_flux = flux_bins.index(line.flux)
-                i_date = date_bins.index(line.date)
-                i_background = background_bins.index(line.background)
+                collection.add_line(line)
             except IndexError:
                 continue
 
-            # Get the index in the 1D array for this bin
-            index = self.stacked_bin_index(
-                i_row=i_row,
-                i_flux=i_flux,
-                n_flux_bins=flux_bins.number,
-                i_date=i_date,
-                n_date_bins=date_bins.number,
-                i_background=i_background,
-                n_background_bins=background_bins.number,
-            )
-
-            # Append the line data
-            stacked_lines[index].append(line)
-
-            # Append the other parameters
-            sum_rows[index] += line.location[0]
-            sum_backgrounds[index] += line.background
-            sum_fluxes[index] += line.flux
-            sum_sq_rows[index] += line.location[0] ** 2
-            sum_sq_backgrounds[index] += line.background ** 2
-            sum_sq_fluxes[index] += line.flux ** 2
-
-        # Take the means and standard errors
-        #
-        # RJM: adding variables like this, which are not defined in the general class descriptor, seems a bit dodgy
-        #
-        for index, line in enumerate(stacked_lines):
-            if line.n_stacked > 0:
-                line.mean_row = sum_rows[index] / line.n_stacked
-                line.rms_row = np.sqrt(sum_sq_rows[index] / line.n_stacked)
-                line.mean_background = sum_backgrounds[index] / line.n_stacked
-                line.rms_background = np.sqrt(
-                    sum_sq_backgrounds[index] / line.n_stacked
-                )
-                line.mean_flux = sum_fluxes[index] / line.n_stacked
-                line.rms_flux = np.sqrt(sum_sq_fluxes[index] / line.n_stacked)
-            else:
-                line.mean_row = None
-                line.rms_row = None
-                line.mean_background = None
-                line.rms_background = None
-                line.mean_flux = None
-                line.rms_flux = None
-
-        from .stacked_collection import StackedPixelLineCollection
-
-        return StackedPixelLineCollection(
-            lines=stacked_lines,
-            row_bins=row_bins,
-            flux_bins=flux_bins,
-            date_bins=date_bins,
-            background_bins=background_bins,
-        )
+        return collection
 
 
 class PixelLineCollection(AbstractPixelLineCollection):

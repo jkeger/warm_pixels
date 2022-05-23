@@ -27,6 +27,24 @@ class StackedPixelLine(AbstractPixelLine):
             pixel_line
         )
 
+    def mean_row(self):
+        return sum(line.location[0] for line in self.stacked_lines) / self.n_stacked
+
+    def rms_row(self):
+        return np.sqrt(sum(line.location[0] ** 2 for line in self.stacked_lines) / self.n_stacked)
+
+    def mean_background(self):
+        return sum(line.background for line in self.stacked_lines) / self.n_stacked
+
+    def rms_background(self):
+        return np.sqrt(sum(line.background ** 2 for line in self.stacked_lines) / self.n_stacked)
+
+    def mean_flux(self):
+        return sum(line.flux for line in self.stacked_lines) / self.n_stacked
+
+    def rms_flux(self):
+        return np.sqrt(sum(line.flux ** 2 for line in self.stacked_lines) / self.n_stacked)
+
     @property
     def n_stacked(self):
         return len(self.stacked_lines)
@@ -55,17 +73,47 @@ class StackedPixelLine(AbstractPixelLine):
 class StackedPixelLineCollection(AbstractPixelLineCollection):
     def __init__(
             self,
-            lines,
+            length,
             row_bins,
             flux_bins,
             date_bins,
             background_bins,
     ):
-        self._lines = lines
+        self._lines = dict()
+        self.length = length
         self.row_bins = row_bins
         self.flux_bins = flux_bins
         self.date_bins = date_bins
         self.background_bins = background_bins
+
+    def stacked_line_for(self, row, flux, date, background):
+        row_index = self.row_bins.index(row)
+        flux_index = self.flux_bins.index(flux)
+        date_index = self.date_bins.index(date)
+        background_index = self.background_bins.index(background)
+        key = (
+            row_index,
+            flux_index,
+            date_index,
+            background_index,
+        )
+        if key not in self._lines:
+            self._lines[key] = StackedPixelLine(
+                length=self.length,
+                location=[self.row_bins[row], 0],
+                date=self.date_bins[date],
+                background=self.background_bins[background],
+                flux=self.flux_bins[flux],
+            )
+        return self._lines[key]
+
+    def add_line(self, line):
+        self.stacked_line_for(
+            line.location[0],
+            line.flux,
+            line.date,
+            line.background
+        ).append(line)
 
     @property
     def n_row_bins(self):
@@ -81,4 +129,4 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
 
     @property
     def lines(self):
-        return self._lines
+        return self._lines.values()
