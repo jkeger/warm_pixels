@@ -1,5 +1,4 @@
-*.ipynb
-*.pbz2
+persist.ipynb
 .DS_Store
 *.fits
 .idea/
