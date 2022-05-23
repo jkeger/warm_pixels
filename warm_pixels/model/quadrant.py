@@ -6,7 +6,6 @@ from warm_pixels.data import Dataset, Image, CorrectedDataset
 from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 from warm_pixels.warm_pixels import find_warm_pixels
 from .cache import cache
-from .cache import persist
 
 
 class ImageQuadrant:
