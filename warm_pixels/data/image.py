@@ -4,6 +4,7 @@ from pathlib import Path
 
 import autoarray as aa
 import requests
+from astropy.io import fits
 from autoarray.structures.arrays.two_d.array_2d_util import header_obj_from
 
 from warm_pixels.model.cache import cache
@@ -30,7 +31,7 @@ class Image:
     def bia_path(self):
         return self.path.parent / header_obj_from(
             str(self.path), 0
-        )["BIASFILE"].replace("jref$", "")
+        )["BIASFILE"].replace("jref$", "").replace("iref$", "")
 
     def _check_bia_exists(self):
         if not self.bia_path.exists():
@@ -66,12 +67,15 @@ class Image:
     def days_since_launch(self):
         return (self.observation_date() - DAY_ZERO).days
 
+    @cache
     def observation_date(self) -> dt.date:
         """
         The date of observation
         """
         return dt.date.fromisoformat(
-            self.image().header.date_of_observation
+            fits.open(self.path)[0].header[
+                "DATE-OBS"
+            ]
         )
 
     def corrected(self):

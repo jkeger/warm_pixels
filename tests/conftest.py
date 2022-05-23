@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from astropy.io import fits
 from autoarray import acs
 from autoarray.instruments.acs import ImageACS, HeaderACS
 from matplotlib import pyplot
@@ -158,6 +159,17 @@ def output_quadrants_to_fits(
     os.rename(f"{file_path}.npy", file_path)
 
 
+header_sci_obj = {
+    "DATE-OBS": "2020-01-01",
+    "TIME-OBS": "15:00:00",
+    "CCDGAIN": 1,
+}
+
+
+class MockFits:
+    header = header_sci_obj
+
+
 def from_fits(
         file_path,
         quadrant_letter,
@@ -171,11 +183,7 @@ def from_fits(
         np.load(file_path),
         array.shape,
         header=HeaderACS(
-            header_sci_obj={
-                "DATE-OBS": "2020-01-01",
-                "TIME-OBS": "15:00:00",
-                "CCDGAIN": 1,
-            },
+            header_sci_obj=header_sci_obj,
             header_hdu_obj={
                 "BSCALE": 1,
                 "BZERO": 1,
@@ -187,6 +195,12 @@ def from_fits(
     )
 
 
+def fits_open(
+        file_path
+):
+    return [MockFits]
+
+
 @pytest.fixture(
     autouse=True
 )
@@ -195,6 +209,11 @@ def patch_fits(monkeypatch):
         ImageACS,
         "from_fits",
         from_fits
+    )
+    monkeypatch.setattr(
+        fits,
+        "open",
+        fits_open
     )
     monkeypatch.setattr(
         acs,

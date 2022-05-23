@@ -33,6 +33,7 @@ def plot_warm_pixels(image_quadrant, save_path=None):
     plt.figure()
 
     image = image_quadrant.array()
+    print(f"Finding warm pixels for {image_quadrant}")
     warm_pixels = PixelLineCollection(
         image_quadrant.warm_pixels(),
     )
@@ -94,6 +95,8 @@ def plot_warm_pixel_distributions(quadrants: List[DatasetQuadrant], save_path=No
         colours = ["k"]
 
     # Load
+    quadrants_string = "\n".join(map(str, quadrants))
+    print(f"Finding warm pixel distributions for quadrants {quadrants_string}")
     warm_pixels = sum(quadrant.consistent_lines() for quadrant in quadrants)
 
     # Set bins for all quadrants

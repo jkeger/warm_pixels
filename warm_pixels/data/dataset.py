@@ -88,6 +88,7 @@ class Dataset:
     def __str__(self):
         return self.name
 
+    @cache
     def observation_date(self):
         return self.images[0].observation_date()
 
