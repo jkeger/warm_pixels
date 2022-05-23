@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -306,7 +307,8 @@ class AbstractPixelLineCollection(ABC):
 
             try:
                 collection.add_line(line)
-            except IndexError:
+            except IndexError as e:
+                logging.exception(e)
                 continue
 
         return collection

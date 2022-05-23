@@ -86,11 +86,7 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         self.date_bins = date_bins
         self.background_bins = background_bins
 
-    def stacked_line_for(self, row, flux, date, background):
-        row_index = self.row_bins.index(row)
-        flux_index = self.flux_bins.index(flux)
-        date_index = self.date_bins.index(date)
-        background_index = self.background_bins.index(background)
+    def stacked_line_for_indices(self, row_index, flux_index, date_index, background_index):
         key = (
             row_index,
             flux_index,
@@ -100,12 +96,24 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         if key not in self._lines:
             self._lines[key] = StackedPixelLine(
                 length=self.length,
-                location=[self.row_bins[row], 0],
-                date=self.date_bins[date],
-                background=self.background_bins[background],
-                flux=self.flux_bins[flux],
+                location=[self.row_bins[row_index], 0],
+                date=self.date_bins[date_index],
+                background=self.background_bins[background_index],
+                flux=self.flux_bins[flux_index],
             )
         return self._lines[key]
+
+    def stacked_line_for(self, row, flux, date, background):
+        row_index = self.row_bins.index(row)
+        flux_index = self.flux_bins.index(flux)
+        date_index = self.date_bins.index(date)
+        background_index = self.background_bins.index(background)
+        return self.stacked_line_for_indices(
+            row_index,
+            flux_index,
+            date_index,
+            background_index
+        )
 
     def add_line(self, line):
         self.stacked_line_for(

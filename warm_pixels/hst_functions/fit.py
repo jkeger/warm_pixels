@@ -139,15 +139,12 @@ def fit_dataset_total_trap_density(
     for i_row in row_bins:
         for i_flux in flux_bins:
             for i_background in background_bins:
-                bin_index = PixelLineCollection.stacked_bin_index(
-                    i_row=i_row,
-                    i_flux=i_flux,
-                    n_flux_bins=stacked_lines.n_flux_bins,
-                    i_background=i_background,
-                    n_background_bins=stacked_lines.n_background_bins,
+                line = stacked_lines.stacked_line_for_indices(
+                    row_index=i_row,
+                    flux_index=i_flux,
+                    background_index=i_background,
+                    date_index=0,
                 )
-
-                line = stacked_lines.lines[bin_index]
 
                 if line.n_stacked >= 3:
 

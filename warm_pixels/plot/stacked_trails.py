@@ -9,7 +9,6 @@ from warm_pixels import misc
 from warm_pixels.hst_functions.fit import fit_dataset_total_trap_density
 from warm_pixels.hst_functions.trail_model import trail_model_hst
 from warm_pixels.model.group import QuadrantGroup
-from warm_pixels.pixel_lines import PixelLineCollection
 
 logger = logging.getLogger(
     __name__
@@ -114,16 +113,12 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
             # Plot each background bin's stack
             for i_background, c in enumerate(colours):
-
-                bin_index = PixelLineCollection.stacked_bin_index(
-                    i_row=i_row,
-                    i_flux=i_flux,
-                    n_flux_bins=n_flux_bins,
-                    i_background=i_background,
-                    n_background_bins=n_background_bins,
+                line = stacked_lines.stacked_line_for_indices(
+                    row_index=i_row,
+                    flux_index=i_flux,
+                    background_index=i_background,
+                    date_index=0
                 )
-
-                line = (stacked_lines.lines[bin_index])
                 # Skip empty and single-entry bins
                 if line.n_stacked <= 1:
                     continue
