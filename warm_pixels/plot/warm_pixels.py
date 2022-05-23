@@ -95,7 +95,7 @@ def plot_warm_pixel_distributions(quadrants: List[DatasetQuadrant], save_path=No
         colours = ["k"]
 
     # Load
-    quadrants_string = "\n".join(map(str, quadrants))
+    quadrants_string = ", ".join(map(str, quadrants))
     print(f"Finding warm pixel distributions for quadrants {quadrants_string}")
     warm_pixels = sum(quadrant.consistent_lines() for quadrant in quadrants)
 
