@@ -1,3 +1,8 @@
+persist.ipynb
+.DS_Store
+*.fits
+.idea/
+*.envr
 # General file types
 *.aux
 *.bbl
@@ -31,4 +36,3 @@ SN_m_tot_V2.0.txt
 # Misc
 *tmp*
 *debug*
-*test*
