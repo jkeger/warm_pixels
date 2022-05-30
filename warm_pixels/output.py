@@ -102,8 +102,8 @@ class Output(AbstractOutput):
                     self._warm_pixels.quadrants_string
             ):
                 for quadrant in group.quadrants:
-                    pixel_lines.append(
-                        quadrant.consistent_lines()
+                    pixel_lines.extend(
+                        quadrant.consistent_lines().lines
                     )
 
         self._save_lines(
@@ -120,8 +120,8 @@ class Output(AbstractOutput):
             for group in dataset.groups(
                     self._warm_pixels.quadrants_string
             ):
-                pixel_lines.append(
-                    group.stacked_lines()
+                pixel_lines.extend(
+                    group.stacked_lines().lines
                 )
 
         self._save_lines(
