@@ -110,13 +110,13 @@ parser.add_argument(
     '--plot',
     nargs='+',
     help='Specify plots from:\nwarm-pixels\nwarm-pixel-distributions\nstacked-trails\ndensity',
-    required=True
+    default=[],
 )
 parser.add_argument(
     '--output',
     nargs='+',
     help='Specify outputs from:\nconsistent-lines\nstacked-lines',
-    required=True
+    default=[],
 )
 parser.add_argument(
     "-u",

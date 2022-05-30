@@ -3,7 +3,7 @@ import logging
 import os
 from typing import List
 
-import hst_utilities as ut
+import warm_pixels.hst_utilities as ut
 
 logger = logging.getLogger(__name__)
 
