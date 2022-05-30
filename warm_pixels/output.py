@@ -81,21 +81,8 @@ class AbstractOutput:
 
 
 class Output(AbstractOutput):
-    def pixel_lines(self):
-        """
-        Output pixel lines to a JSON file
-        """
-        pixel_lines = []
-        for dataset in self._warm_pixels.datasets:
-            for group in dataset.groups(
-                    self._warm_pixels.quadrants_string
-            ):
-                for quadrant in group.quadrants:
-                    pixel_lines.append(
-                        quadrant.consistent_lines()
-                    )
-
-        filename = ut.output_path / f"{self.list_name}_consistent.json"
+    def _save_lines(self, pixel_lines, suffix):
+        filename = ut.output_path / f"{self.list_name}_{suffix}.json"
         if _check_path(filename):
             return
 
@@ -108,3 +95,40 @@ class Output(AbstractOutput):
                 ],
                 f
             )
+
+    def consistent_lines(self):
+        """
+        Output consistent pixel lines to a JSON file
+        """
+        pixel_lines = []
+        for dataset in self._warm_pixels.datasets:
+            for group in dataset.groups(
+                    self._warm_pixels.quadrants_string
+            ):
+                for quadrant in group.quadrants:
+                    pixel_lines.append(
+                        quadrant.consistent_lines()
+                    )
+
+        self._save_lines(
+            pixel_lines=pixel_lines,
+            suffix="consistent"
+        )
+
+    def stacked_lines(self):
+        """
+        Output stacked pixel lines to a JSON file
+        """
+        pixel_lines = []
+        for dataset in self._warm_pixels.datasets:
+            for group in dataset.groups(
+                    self._warm_pixels.quadrants_string
+            ):
+                pixel_lines.append(
+                    group.stacked_lines()
+                )
+
+        self._save_lines(
+            pixel_lines=pixel_lines,
+            suffix="stacked"
+        )
