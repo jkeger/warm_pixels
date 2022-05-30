@@ -12,6 +12,8 @@ def _dump(value):
         return int(value)
     if isinstance(value, np.number):
         return float(value)
+    if isinstance(value, list):
+        return list(map(_dump, value))
     return value
 
 
