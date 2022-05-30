@@ -65,6 +65,7 @@ from pathlib import Path
 from warm_pixels import WarmPixels
 from warm_pixels.data.image import DAY_ZERO
 from warm_pixels.data.source import FileDatasetSource
+from warm_pixels.output import Output
 from warm_pixels.plot import Plot
 
 parser = argparse.ArgumentParser()
@@ -105,12 +106,17 @@ parser.add_argument(
     help="The image quadrants to use.",
 )
 
-# Other functions
 parser.add_argument(
     '--plot',
     nargs='+',
     help='Specify plots from:\nwarm-pixels\nwarm-pixel-distributions\nstacked-trails\ndensity',
-    required=True
+    default=[],
+)
+parser.add_argument(
+    '--output',
+    nargs='+',
+    help='Specify outputs from:\nconsistent-lines\nstacked-lines',
+    default=[],
 )
 parser.add_argument(
     "-u",
@@ -173,12 +179,21 @@ def main():
         datasets=datasets,
         quadrants_string=args.quadrants
     )
+
+    list_name = str(source)
+
     plot = Plot(
         warm_pixels,
-        list_name=str(source),
+        list_name=list_name,
         use_corrected=use_corrected,
     )
     plot.by_name(args.plot)
+
+    output = Output(
+        warm_pixels,
+        list_name=list_name,
+    )
+    output.by_name(args.output)
 
 
 if __name__ == "__main__":

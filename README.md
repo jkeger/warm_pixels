@@ -16,7 +16,8 @@ command line.
     [--downsample] \
     [--quadrants quadrants] \
     [--plot plots] \
-    [--use-corrected]
+    [--ouput outputs] \
+    [--use-corrected] 
 ```
 
 |Argument|Description|Example(s)|
@@ -27,4 +28,5 @@ command line.
 |--downsample|Only include every nth dataset.|3|
 |--quadrants|Specify which quadrants should be included and how they should be grouped.|ABCD, AB, AB_CD|
 |--plot|List which plots to output.|warm-pixels, warm-pixel-distributions, stacked-trails, density|
+|--output|List which outputs to save.|consistent, stacked|
 |--corrected|If this flag is passed the image is corrected before processing.||

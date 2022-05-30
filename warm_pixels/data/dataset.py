@@ -1,7 +1,9 @@
 """Defines where the HST data is located on disc, and a class to read it in/contain it"""
+import logging
 import os
 from glob import glob
 from pathlib import Path
+from typing import Tuple
 
 import autoarray as aa
 from autoarray.instruments.acs import ImageACS
@@ -32,8 +34,25 @@ class Dataset:
         self.path = path
         self._images = None
         self._quadrants = {}
+        self.logger = logging.getLogger(self.name)
 
-    def groups(self, quadrants_string):
+    def groups(self, quadrants_string: str) -> list:
+        """
+        Create or retrieve a list of groups. Each group corresponds
+        to one or more quadrants defined in the quadrant string. For
+        example, AB_CD would give two groups: AB and CD.
+
+        Parameters
+        ----------
+        quadrants_string
+            A string defining which quadrants are processed and how
+            they are grouped.
+
+        Returns
+        -------
+        A list of groups
+        """
+        self.logger.info("Retrieving groups")
         return [
             self.group(group)
             for group in tuple(map(
@@ -42,14 +61,49 @@ class Dataset:
             ))
         ]
 
-    def group(self, quadrants_string):
+    def group(
+            self,
+            quadrants: Tuple[str]
+    ):
+        """
+        Create a group for a collection of quadrants
+
+        Parameters
+        ----------
+        quadrants
+            A tuple with letters defining which quadrants should be included
+            int he group
+
+        Returns
+        -------
+        A group of quadrants
+        """
         from warm_pixels.model.group import QuadrantGroup
         return QuadrantGroup(list(
-            map(self.quadrant, quadrants_string)
+            map(self.quadrant, quadrants)
         ))
 
-    def quadrant(self, quadrant):
+    def quadrant(self, quadrant: str):
+        """
+        Retrieve or create an object representing a particular quadrant
+        for a particular dataset.
+
+        Parameters
+        ----------
+        quadrant
+            The name of a quadrant
+
+        Returns
+        -------
+        An object comprising a quadrant and this dataset
+        """
+        self.logger.debug(
+            f"Recovering dataset quadrant for quadrant {quadrant}..."
+        )
         if quadrant not in self._quadrants:
+            self.logger.debug(
+                f"Not found. Creating..."
+            )
             from warm_pixels.model.quadrant import DatasetQuadrant
             self._quadrants[quadrant] = DatasetQuadrant(
                 quadrant=quadrant,
@@ -57,7 +111,14 @@ class Dataset:
             )
         return self._quadrants[quadrant]
 
-    def days_since_launch(self):
+    def days_since_launch(self) -> int:
+        """
+        The number of days since the start of the mission that images from this
+        dataset were captured.
+
+        Assumes all images were captured on the same date and simply uses the
+        date of the first image.
+        """
         return self.images[0].days_since_launch()
 
     @property

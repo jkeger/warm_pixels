@@ -3,6 +3,20 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
+def _dump(value):
+    if isinstance(value, np.ndarray):
+        if value.shape == ():
+            return float(value)
+        return list(value)
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.number):
+        return float(value)
+    if isinstance(value, list):
+        return list(map(_dump, value))
+    return value
+
+
 class AbstractPixelLine(ABC):
     def __init__(
             self,
@@ -15,6 +29,22 @@ class AbstractPixelLine(ABC):
         self.date = date
         self.background = background
         self._flux = flux
+
+    @property
+    def dict(self):
+        d = {
+            "location": self.location,
+            "date": self.date,
+            "background": self.background,
+            "flux": self.flux,
+            "data": self.data,
+            "noise": self.noise,
+        }
+        return {
+            key: _dump(value)
+            for key, value
+            in d.items()
+        }
 
     @property
     def flux(self):
