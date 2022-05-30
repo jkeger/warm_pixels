@@ -1,61 +1,16 @@
 import logging
-import os
-from typing import List
 
 from warm_pixels import hst_utilities as ut
 from .stacked_trails import plot_stacked_trails as stacked_trails
 from .trap_density import plot_trap_density_evol as trap_density_evol
 from .warm_pixels import plot_warm_pixel_distributions as warm_pixel_distributions
 from .warm_pixels import plot_warm_pixels as warm_pixels
+from ..output import AbstractOutput, _check_path
 
 logger = logging.getLogger(__name__)
 
 
-class OptionException(Exception):
-    pass
-
-
-def _check_path(
-        path
-):
-    if path.exists():
-        print(f"{path} already exists")
-        return True
-    os.makedirs(
-        path.parent,
-        exist_ok=True
-    )
-    return False
-
-
-class Plot:
-    def __init__(
-            self,
-            warm_pixels_,
-            list_name,
-            use_corrected=False,
-    ):
-        """
-        Handles plotting of various outputs from the pipeline.
-
-        Parameters
-        ----------
-        warm_pixels_
-            API to access pipeline output such as warm pixels and fits
-        list_name
-            A name for the set of data
-        use_corrected
-            Are images CTI corrected?
-        """
-        self._warm_pixels = warm_pixels_
-        self.list_name = list_name
-        self.use_corrected = use_corrected
-
-        self.all_methods = {
-            name for name in dir(self)
-            if not name.startswith("__")
-        }
-
+class Plot(AbstractOutput):
     def warm_pixels(self):
         """
         Plot warm pixels for each quadrant of each dataset
@@ -131,29 +86,3 @@ class Plot:
             use_corrected=self.use_corrected,
             save_path=save_path
         )
-
-    def by_name(self, plot_names: List[str]):
-        """
-        Create all plots in the list of plot names.
-
-        This is so plots can be conveniently passed in via the command line.
-
-        Parameters
-        ----------
-        plot_names
-            A list of names of plots. These should match method names from this class
-            but may use hyphens instead of underscores.
-
-            e.g. ["density", "warm-pixel-distributions"]
-        """
-        for name in plot_names:
-            name = name.replace("-", "_")
-            if name not in self.all_methods:
-                raise OptionException(
-                    f"{name} not a valid plot option. Choose from {self.all_methods}"
-                )
-
-            function = getattr(self, name)
-            print(f"Plotting {name}...")
-            function()
-            print(f"Done.")
