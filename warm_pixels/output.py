@@ -1,6 +1,9 @@
+import json
 import logging
 import os
 from typing import List
+
+import hst_utilities as ut
 
 logger = logging.getLogger(__name__)
 
@@ -78,4 +81,30 @@ class AbstractOutput:
 
 
 class Output(AbstractOutput):
-    pass
+    def pixel_lines(self):
+        """
+        Output pixel lines to a JSON file
+        """
+        pixel_lines = []
+        for dataset in self._warm_pixels.datasets:
+            for group in dataset.groups(
+                    self._warm_pixels.quadrants_string
+            ):
+                for quadrant in group.quadrants:
+                    pixel_lines.append(
+                        quadrant.consistent_lines()
+                    )
+
+        filename = ut.output_path / f"{self.list_name}_consistent.json"
+        if _check_path(filename):
+            return
+
+        with open(filename, "w+") as f:
+            json.dump(
+                [
+                    pixel_line.dict
+                    for pixel_line
+                    in pixel_lines
+                ],
+                f
+            )
