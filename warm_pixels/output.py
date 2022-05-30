@@ -30,7 +30,6 @@ class AbstractOutput:
             self,
             warm_pixels_,
             list_name,
-            use_corrected=False,
     ):
         """
         Handles outputting data from the pipeline.
@@ -41,12 +40,9 @@ class AbstractOutput:
             API to access pipeline output such as warm pixels and fits
         list_name
             A name for the set of data
-        use_corrected
-            Are images CTI corrected?
         """
         self._warm_pixels = warm_pixels_
         self.list_name = list_name
-        self.use_corrected = use_corrected
 
         self.all_methods = {
             name for name in dir(self)

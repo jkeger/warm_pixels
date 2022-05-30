@@ -11,6 +11,22 @@ logger = logging.getLogger(__name__)
 
 
 class Plot(AbstractOutput):
+    def __init__(self, warm_pixels_, list_name, use_corrected=False):
+        """
+        Handles outputting plots from the pipeline.
+
+        Parameters
+        ----------
+        warm_pixels_
+            API to access pipeline output such as warm pixels and fits
+        list_name
+            A name for the set of data
+        use_corrected
+            Are images CTI corrected?
+        """
+        super().__init__(warm_pixels_, list_name)
+        self.use_corrected = use_corrected
+
     def warm_pixels(self):
         """
         Plot warm pixels for each quadrant of each dataset
