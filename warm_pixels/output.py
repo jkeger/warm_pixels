@@ -77,11 +77,8 @@ class AbstractOutput:
 
 
 class Output(AbstractOutput):
-    def _save_lines(self, pixel_lines, suffix):
-        filename = ut.output_path / f"{self.list_name}_{suffix}.json"
-        if _check_path(filename):
-            return
-
+    @staticmethod
+    def _save_lines(pixel_lines, filename):
         with open(filename, "w+") as f:
             json.dump(
                 [
@@ -96,6 +93,10 @@ class Output(AbstractOutput):
         """
         Output consistent pixel lines to a JSON file
         """
+        filename = ut.output_path / f"{self.list_name}_consistent.json"
+        if _check_path(filename):
+            return
+
         pixel_lines = []
         for dataset in self._warm_pixels.datasets:
             for group in dataset.groups(
@@ -108,13 +109,17 @@ class Output(AbstractOutput):
 
         self._save_lines(
             pixel_lines=pixel_lines,
-            suffix="consistent"
+            filename=filename,
         )
 
     def stacked_lines(self):
         """
         Output stacked pixel lines to a JSON file
         """
+        filename = ut.output_path / f"{self.list_name}_stacked.json"
+        if _check_path(filename):
+            return
+
         pixel_lines = []
         for dataset in self._warm_pixels.datasets:
             for group in dataset.groups(
@@ -126,5 +131,5 @@ class Output(AbstractOutput):
 
         self._save_lines(
             pixel_lines=pixel_lines,
-            suffix="stacked"
+            filename=filename,
         )
