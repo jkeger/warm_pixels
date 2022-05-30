@@ -8,6 +8,10 @@ def _dump(value):
         if value.shape == ():
             return float(value)
         return list(value)
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.number):
+        return float(value)
     return value
 
 
