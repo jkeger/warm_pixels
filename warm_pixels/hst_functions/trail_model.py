@@ -116,6 +116,10 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
         background_flux = n_bg[i * trail_length]
         model_before_trail = np.full(warm_pixel_position + 1 + trail_length, background_flux)
         model_before_trail[warm_pixel_position] = warm_pixel_flux
+        
+        #print(i,warm_pixel_position,background_flux,warm_pixel_flux)
+        #print(model_before_trail)
+        #junk=input("hello")
 
         # Run arCTIc to produce the output image with EPER trails
         model_after_trail = cti.add_cti(
@@ -123,7 +127,8 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
             parallel_roe=roe,
             parallel_ccd=ccd,
             parallel_traps=traps,
-            parallel_express=5
+            parallel_express=5,
+            verbosity=0
         ).flatten()  # convert back to a 1D array
         # print(model_after_trail[-15:])
         eper = model_after_trail[-trail_length:] - background_flux

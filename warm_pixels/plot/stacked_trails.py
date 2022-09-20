@@ -87,23 +87,28 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
     # Fit the total trap density to the full dataset
     print("Performing global fit")
-    rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
-        group, use_arctic=False
+    rho_q_set, rho_q_std_set, y_fit, result = fit_dataset_total_trap_density(
+        group, use_arctic=False, all_params=False
     )
-    print(rho_q_set, rho_q_std_set, "exponentials")
+    print("Expotl model yields total trap density", rho_q_set, "+/-", rho_q_std_set)
+
 
     # Fit the total trap density to the full dataset using arCTIc
-    # print("Performing global fit")
-    # rho_q_set, rho_q_std_set, y_fit = fit_dataset_total_trap_density(
-    #     dataset, quadrants, use_corrected=use_corrected, use_arctic=True
-    # )
-    # print(rho_q_set, rho_q_std_set, "ArCTIc")
+    print("Performing global fit")
+    rho_q_set_arctic, rho_q_std_set_arctic, y_fit, result = fit_dataset_total_trap_density(
+        group, use_arctic=True, all_params=False
+    )
+    print(rho_q_set_arctic, rho_q_std_set_arctic, "ArCTIc")
+    print("ArCTIc model yields total trap density", rho_q_set_arctic, "+/-", rho_q_std_set_arctic)
 
-    # Fit the total trap density to the full dataset using arCTIc and MCMC
-    # print("Performing global fit using arCTIc")
-    # result = fit_warm_pixels_with_arctic(
-    #    dataset, quadrants, use_corrected=use_corrected
-    # )
+    # Fit a completely flexible trap model to the full dataset
+    print("Performing global fit with all parameters free")
+    rho_q_set_full, rho_q_std_set_full, y_fit, result = fit_dataset_total_trap_density(
+        group, use_arctic=True, all_params=True
+    )
+    
+    
+    name = input("Pausing to check results....")
 
     # Fit to each trail individually, and plot as we go along
     print("Performing individual fits:")
@@ -177,7 +182,7 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
                 # Plot fitted trail
                 # ========
                 # Fit the total trap density to this single stacked trail (dotted line, which has swapped since Jacob's version)
-                rho_q_indiv, rho_q_std_indiv, y_fit_indiv = fit_dataset_total_trap_density(
+                rho_q_indiv, rho_q_std_indiv, y_fit_indiv, result = fit_dataset_total_trap_density(
                     group, use_arctic=True,
                     row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
                 )

@@ -82,10 +82,12 @@ class Persist:
                 os.makedirs(directory, exist_ok=True)
 
                 if path.exists():
+                    print(f"Reading from {path}")
                     with open(path, "b+r") as f:
                         return pickle.load(f)
 
                 result = func(instance)
+                print(f"Writing to {path}")
                 with open(path, "b+w") as f:
                     pickle.dump(result, f)
 

@@ -61,6 +61,7 @@ class Plot:
         Plot warm pixels for each quadrant of each dataset
         """
         for dataset in self._warm_pixels.datasets:
+            print(f"Plotting {dataset}")
             self.plot_all_warm_pixels(dataset)
 
     def plot_all_warm_pixels(self, dataset):

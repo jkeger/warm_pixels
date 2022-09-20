@@ -85,14 +85,136 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
         row=row_all,
         date=date,
     )
-    # print(result.fit_report())  ##
+    #print(result.fit_report())  ##
 
-    return result.params.get("rho_q").value, result.params.get("rho_q").stderr, result.eval()
+    return result.params.get("rho_q").value, result.params.get("rho_q").stderr, result.eval(), result
+
+
+def fit_all_params_trap_model(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date, use_arctic=False):
+    """Fit the total trap density for a trail or a concatenated set of trails.
+
+    Other than the x, y, and noise values, which should cover all pixels in the
+    trail or set of trails, the parameters must be either a single value or an
+    array of the same length. So if the data are a concatenated set of multiple
+    trails, e.g. x_all = [1, 2, ..., n, 1, 2, ..., n, 1, ...], then e.g. row_all
+    should be [row_1, row_1, ..., row_1, row_2, row_2, ... row_2, row_3, ...] to
+    set the correct values for all pixels in each trail. The date is taken as a
+    single value, which only affects the results by being before vs after the
+    change of trap model.
+
+    Parameters
+    ----------
+    x_all : [float]
+        The pixel positions away from the trailed pixel.
+
+    y_all : [float]
+        The charge values.
+
+    noise_all : float or [float]
+        The charge noise error value.
+
+    n_e_all : float or [float]
+        The number of electrons in the trailed pixel's charge cloud (e-).
+
+    n_bg_all : float or [float]
+        The background number of electrons (e-).
+
+    row_all : float or [float]
+        Distance in pixels of the trailed pixel from the readout register.
+
+    date : float
+        The Julian date of the images, used to set the trap model.
+
+    Returns
+    -------
+    rho_q : float
+        The best-fit total number density of traps per pixel.
+
+    rho_q_std : float
+        The standard error on the total trap density.
+
+    eval
+    """
+
+    print("date is ",date)
+
+    # Initialise the fitting model
+    if use_arctic:
+        model = lmfit.models.Model(
+            func=trail_model.trail_model_arctic, independent_vars=["x", "n_e", "n_bg", "row"]
+        )
+    else:
+        model = lmfit.models.Model(
+            func=trail_model.trail_model, independent_vars=["x", "n_e", "n_bg", "row"]
+        )
+
+    # Initialise the fit
+    params = model.make_params()
+    params["rho_q"].value = 1.0
+    params["rho_q"].vary = False
+    params["A"].value = 1.0
+    params["A"].min = 0.0
+    params["B"].expr = 'A * 0.45 / 0.17'
+    params["B"].min = 0.0
+    params["C"].expr = 'A * 0.38 / 0.17'
+    params["C"].min = 0.0
+    if date < ut.date_T_change:
+        params["tau_a"].value = 0.48
+        params["tau_b"].value = 4.86
+        params["tau_c"].value = 20.6
+    else:
+        params["tau_a"].value = 0.74
+        params["tau_b"].value = 7.70
+        params["tau_c"].value = 37.0
+    params["tau_a"].min = 0.01
+    params["tau_a"].max = 1000.
+    params["tau_b"].min = 0.01
+    params["tau_b"].max = 1000.
+    params["tau_c"].min = 0.01
+    params["tau_c"].max = 1000.
+    params["beta"].value = 0.478
+    params["beta"].min = 0.2
+    params["beta"].max = 2.0
+    params["beta"].vary = True
+    params["w"].value = 84700.0
+    params["w"].vary = False
+    params["w"].min = 100.
+    params["C"].vary = True
+    params["tau_a"].vary = False
+    params["tau_b"].vary = False
+    params["tau_c"].vary = False
+    
+    # Weight using the noise
+    weights = 1 / noise_all ** 2
+
+    # Run the fitting
+    result = model.fit(
+        data=y_all,
+        params=params,
+        weights=weights,
+        x=x_all,
+        n_e=n_e_all,
+        n_bg=n_bg_all,
+        row=row_all,
+        date=date,
+    )
+    print(result.fit_report())  ##
+    
+    #rho_q = result.params.get("A").value + result.params.get("B").value + result.params.get("C").value
+    #print("r_q",rho_q)
+    rho_q = 1
+    #rho_q_std
+    #rho_q, rho_q_std, y_fit, result 
+    return rho_q, 1, result.eval(), result
+
+
+
 
 
 def fit_dataset_total_trap_density(
         group: QuadrantGroup,
         use_arctic=False,
+        all_params=False,
         row_bins=None,
         flux_bins=None,
         background_bins=None
@@ -173,11 +295,21 @@ def fit_dataset_total_trap_density(
     row_all = np.repeat(row_each, ut.trail_length)
 
     # Run the fitting
-    rho_q, rho_q_std, y_fit = fit_total_trap_density(
-        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, group.dataset.date, use_arctic=use_arctic
-    )
+    if all_params:
+        rho_q, rho_q_std, y_fit, result = fit_all_params_trap_model(
+            x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, group.dataset.date, use_arctic=use_arctic
+        )
+    else:
+        rho_q, rho_q_std, y_fit, result = fit_total_trap_density(
+            x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, group.dataset.date, use_arctic=use_arctic
+        )
 
-    return rho_q, rho_q_std, y_fit
+    return rho_q, rho_q_std, y_fit, result 
+
+
+
+
+
 
 
 def fit_total_trap_densities(groups: Tuple[QuadrantGroup]):
