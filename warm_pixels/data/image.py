@@ -5,7 +5,7 @@ from pathlib import Path
 import autoarray as aa
 import requests
 from astropy.io import fits
-from autoarray.structures.arrays.two_d.array_2d_util import header_obj_from
+from autoarray.structures.arrays.array_2d_util import header_obj_from
 
 from warm_pixels.model.cache import cache
 
