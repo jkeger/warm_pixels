@@ -1,5 +1,4 @@
-from collections import Iterable
-from typing import Optional
+from typing import Optional, Iterable
 
 import numpy as np
 
