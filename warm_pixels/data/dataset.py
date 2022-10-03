@@ -3,7 +3,7 @@ import logging
 import os
 from glob import glob
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 
 import autoarray as aa
 from autoarray.instruments.acs import ImageACS
@@ -123,7 +123,12 @@ class Dataset:
 
     @property
     @cache
-    def images(self):
+    def images(self) -> List[Image]:
+        """
+        Images found in this dataset. Images for a dataset are stored in the same
+        directory and are assumed to have been take on the same or a similar date
+        meaning that the CTI properties will be similar.
+        """
         return [
             Image(
                 Path(image_path),

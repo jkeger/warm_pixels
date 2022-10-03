@@ -14,11 +14,25 @@ class ImageQuadrant:
             quadrant: str,
             image: Image,
     ):
+        """
+        A quadrant of an image. That is, one quarter of an image which
+        is read into a specific serial
+
+        Parameters
+        ----------
+        quadrant
+            A letter for the quadrant (A, B, C or D)
+        image
+            An object used to load the image
+        """
         self.quadrant = quadrant
         self.image = image
 
     @cache
-    def array(self):
+    def array(self) -> ImageACS:
+        """
+        The image laoded into an array
+        """
         self.image._check_bia_exists()
         return ImageACS.from_fits(
             file_path=str(self.image.path),
