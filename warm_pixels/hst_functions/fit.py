@@ -6,10 +6,11 @@ import numpy as np
 
 from warm_pixels import hst_utilities as ut
 from warm_pixels.model.group import QuadrantGroup
-from warm_pixels.pixel_lines import PixelLineCollection
 from . import trail_model
+from ..func_test import FuncTest
 
 
+@FuncTest
 def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date, use_arctic=False):
     """Fit the total trap density for a trail or a concatenated set of trails.
 
