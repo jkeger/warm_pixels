@@ -193,7 +193,20 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
             background_index
         )
 
-    def add_line(self, line):
+    def add_line(self, line: AbstractPixelLine):
+        """
+        Add a pixel line to the relevant group in the collection.
+
+        The bin is created or retrieved based on the which bins the
+        attributes of the line (row, flux, date and background)
+        correspond to
+
+        Parameters
+        ----------
+        line
+            A line of pixels representing the trail from a warm
+            pixel
+        """
         self.stacked_line_for(
             line.location[0],
             line.flux,
