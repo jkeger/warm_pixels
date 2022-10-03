@@ -1,3 +1,4 @@
+output/
 *_consistent.json
 *_stacked.json
 persist.ipynb
