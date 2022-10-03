@@ -16,7 +16,7 @@ class WarmPixels:
     def __init__(
             self,
             datasets: List[Dataset],
-            quadrants_string: str,
+            quadrants_string: str = "ABCD",
     ):
         self.datasets = datasets
         self.quadrants_string = quadrants_string
