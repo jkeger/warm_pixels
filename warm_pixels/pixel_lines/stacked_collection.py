@@ -2,6 +2,7 @@ import numpy as np
 
 from .collection import AbstractPixelLineCollection
 from .pixel_line import AbstractPixelLine
+from ..bins import Bins
 
 
 class StackedPixelLine(AbstractPixelLine):
@@ -79,12 +80,33 @@ class StackedPixelLine(AbstractPixelLine):
 class StackedPixelLineCollection(AbstractPixelLineCollection):
     def __init__(
             self,
-            length,
-            row_bins,
-            flux_bins,
-            date_bins,
-            background_bins,
+            length: int,
+            row_bins: Bins,
+            flux_bins: Bins,
+            date_bins: Bins,
+            background_bins: Bins,
     ):
+        """
+        A collection where pixel lines are grouped into bins by their attributes.
+
+        For example, two pixel lines in nearby rows on the CCD, with similar flux,
+        similar background and captured on similar dates may be added to the same
+        group in 4D.
+
+        Parameters
+        ----------
+        length
+            The length of the data array containing each pixel line
+        row_bins
+            Bins for rows in the CCD
+        flux_bins
+            Bins for different flux values of each warm pixel
+        date_bins
+            Bins for the data on which warm pixels or pixel lines
+            were observed
+        background_bins
+            Bins for the background when a pixel line was observed
+        """
         self._lines = dict()
         self.length = length
         self.row_bins = row_bins
@@ -109,7 +131,7 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
             )
         return self._lines[key]
 
-    def stacked_line_for(self, row, flux, date, background):
+    def stacked_line_for(self, row: int, flux: float, date, background) -> StackedPixelLine:
         row_index = self.row_bins.index(row)
         flux_index = self.flux_bins.index(flux)
         date_index = self.date_bins.index(date)
