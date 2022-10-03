@@ -114,7 +114,32 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         self.date_bins = date_bins
         self.background_bins = background_bins
 
-    def stacked_line_for_indices(self, row_index, flux_index, date_index, background_index):
+    def stacked_line_for_indices(
+            self,
+            row_index: int,
+            flux_index: int,
+            date_index: int,
+            background_index: int,
+    ) -> "StackedPixelLine":
+        """
+        Retrieve or create a StackedLine for a given hyperbin in 4D parameter
+        space.
+
+        Parameters
+        ----------
+        row_index
+            The index of the bin in the row direction
+        flux_index
+            The index of the bin in the flux direction
+        date_index
+            The index of the bin in the date direction
+        background_index
+            The index of the bin in the background direction
+
+        Returns
+        -------
+        An object comprising zero or more pixel lines with similar attributes
+        """
         key = (
             row_index,
             flux_index,
@@ -131,7 +156,32 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
             )
         return self._lines[key]
 
-    def stacked_line_for(self, row: int, flux: float, date, background) -> StackedPixelLine:
+    def stacked_line_for(
+            self,
+            row: int,
+            flux: float,
+            date: float,
+            background: float,
+    ) -> StackedPixelLine:
+        """
+        Retrieve or create a StackedLine by computing which bin a given combination
+        of attribute values corresponds to.
+
+        Parameters
+        ----------
+        row
+            The value used to determine the index of the bin in the row direction
+        flux
+            The value used to determine the index of the bin in the flux direction
+        date
+            The value used to determine the index of the bin in the date direction
+        background
+            The value used to determine the index of the bin in the background direction
+
+        Returns
+        -------
+        An object comprising zero or more pixel lines with similar attributes
+        """
         row_index = self.row_bins.index(row)
         flux_index = self.flux_bins.index(flux)
         date_index = self.date_bins.index(date)
