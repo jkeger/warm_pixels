@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Tuple, Optional
 
 import numpy as np
 
@@ -20,18 +21,36 @@ def _dump(value):
 class AbstractPixelLine(ABC):
     def __init__(
             self,
-            location=None,
-            date=None,
-            background=None,
-            flux=None,
+            location: Optional[Tuple[int, int]] = None,
+            date: Optional[float] = None,
+            background: Optional[float] = None,
+            flux: Optional[float] = None,
     ):
+        """
+        Represents a trail
+
+        Parameters
+        ----------
+        location
+            The location of the warm pixel in (row, column)
+        date
+            The date on which the image was captured
+        background
+            Background sky in the original image
+        flux
+            The estimated flux of the warm pixel before trailing
+        """
         self.location = location
         self.date = date
         self.background = background
         self._flux = flux
 
     @property
-    def dict(self):
+    def dict(self) -> dict:
+        """
+        A dictionary representation of the pixel line. This can
+        be used to create a Dataset1D in autocti.
+        """
         d = {
             "location": self.location,
             "date": self.date,
