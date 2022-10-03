@@ -71,7 +71,7 @@ def plot_trap_density_evol(
     sunspot_path = "SN_m_tot_V2.0.txt"
     if not os.path.exists(sunspot_path):
         response = requests.get(
-            "https://wwwbis.sidc.be/silso/DATA/SN_ms_tot_V2.0.txt"
+            "https://www.sidc.be/silso/DATA/SN_ms_tot_V2.0.txt"
         )
         response.raise_for_status()
         with open(sunspot_path, "w+b") as f:
