@@ -1,6 +1,7 @@
 import autofit as af
 
 from autoarray.fit.fit_dataset import SimpleFit
+from matplotlib import pyplot as plt
 
 
 class Analysis(af.Analysis):
