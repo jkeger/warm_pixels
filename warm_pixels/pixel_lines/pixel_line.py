@@ -54,10 +54,10 @@ class AbstractPixelLine(ABC):
         d = {
             "location": self.location,
             "date": self.date,
-            "background": self.background,
-            "flux": self.flux,
-            "data": self.data,
-            "noise": self.noise,
+            "background": self.model_background,
+            "flux": self.model_flux,
+            "data": self.model_trail,
+            "noise": self.model_trail_noise,
         }
         return {
             key: _dump(value)
