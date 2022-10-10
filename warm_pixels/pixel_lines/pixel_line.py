@@ -64,12 +64,6 @@ class AbstractPixelLine(ABC):
             "flux": self.flux,
             "data": self.data,
             "noise": self.noise,
-            "trail": {
-                "background": self.model_background,
-                "flux": self.model_flux,
-                "data": self.model_trail,
-                "noise": self.model_trail_noise,
-            }
         }
         return _dump(d)
 
