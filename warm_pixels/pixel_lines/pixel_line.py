@@ -247,6 +247,8 @@ class PixelLine(AbstractPixelLine):
             date=pixel_line_dict["date"],
             background=pixel_line_dict["background"],
             flux=pixel_line_dict["flux"],
+            data=pixel_line_dict["data"],
+            noise=np.array(pixel_line_dict["noise"]),
         )
 
     @property
