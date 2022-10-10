@@ -54,10 +54,16 @@ class AbstractPixelLine(ABC):
         d = {
             "location": self.location,
             "date": self.date,
-            "background": self.model_background,
-            "flux": self.model_flux,
-            "data": self.model_trail,
-            "noise": self.model_trail_noise,
+            "background": self.background,
+            "flux": self.flux,
+            "data": self.data,
+            "noise": self.noise,
+            "trail": {
+                "background": self.model_background,
+                "flux": self.model_flux,
+                "data": self.model_trail,
+                "noise": self.model_trail_noise,
+            }
         }
         return {
             key: _dump(value)
@@ -231,6 +237,15 @@ class PixelLine(AbstractPixelLine):
         self._noise = noise
         self.origin = origin
         self.format = None
+
+    @classmethod
+    def from_dict(cls, pixel_line_dict):
+        return cls(
+            location=pixel_line_dict["location"],
+            date=pixel_line_dict["date"],
+            background=pixel_line_dict["background"],
+            flux=pixel_line_dict["flux"],
+        )
 
     @property
     def length(self):
