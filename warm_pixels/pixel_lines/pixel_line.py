@@ -15,6 +15,12 @@ def _dump(value):
         return float(value)
     if isinstance(value, list):
         return list(map(_dump, value))
+    if isinstance(value, dict):
+        return {
+            key: _dump(value)
+            for key, value
+            in value.items()
+        }
     return value
 
 
@@ -65,11 +71,7 @@ class AbstractPixelLine(ABC):
                 "noise": self.model_trail_noise,
             }
         }
-        return {
-            key: _dump(value)
-            for key, value
-            in d.items()
-        }
+        return _dump(d)
 
     @property
     def flux(self):
