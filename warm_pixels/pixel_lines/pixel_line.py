@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Tuple, Optional
 
 import numpy as np
 
@@ -14,37 +15,57 @@ def _dump(value):
         return float(value)
     if isinstance(value, list):
         return list(map(_dump, value))
+    if isinstance(value, dict):
+        return {
+            key: _dump(value)
+            for key, value
+            in value.items()
+        }
     return value
 
 
 class AbstractPixelLine(ABC):
     def __init__(
             self,
-            location=None,
-            date=None,
-            background=None,
-            flux=None,
+            location: Optional[Tuple[int, int]] = None,
+            date: Optional[float] = None,
+            background: Optional[float] = None,
+            flux: Optional[float] = None,
     ):
+        """
+        Represents a trail
+
+        Parameters
+        ----------
+        location
+            The location of the warm pixel in (row, column)
+        date
+            The date on which the image was captured
+        background
+            Background sky in the original image
+        flux
+            The estimated flux of the warm pixel before trailing
+        """
         self.location = location
         self.date = date
         self.background = background
         self._flux = flux
 
     @property
-    def dict(self):
+    def dict(self) -> dict:
+        """
+        A dictionary representation of the pixel line. This can
+        be used to create a Dataset1D in autocti.
+        """
         d = {
             "location": self.location,
             "date": self.date,
-            "background": self.model_background,
-            "flux": self.model_flux,
-            "data": self.model_trail,
-            "noise": self.model_trail_noise,
+            "background": self.background,
+            "flux": self.flux,
+            "data": self.data,
+            "noise": self.noise,
         }
-        return {
-            key: _dump(value)
-            for key, value
-            in d.items()
-        }
+        return _dump(d)
 
     @property
     def flux(self):
@@ -212,6 +233,17 @@ class PixelLine(AbstractPixelLine):
         self._noise = noise
         self.origin = origin
         self.format = None
+
+    @classmethod
+    def from_dict(cls, pixel_line_dict):
+        return cls(
+            location=pixel_line_dict["location"],
+            date=pixel_line_dict["date"],
+            background=pixel_line_dict["background"],
+            flux=pixel_line_dict["flux"],
+            data=pixel_line_dict["data"],
+            noise=np.array(pixel_line_dict["noise"]),
+        )
 
     @property
     def length(self):

@@ -1,3 +1,5 @@
+from typing import Optional, Iterable
+
 import numpy as np
 
 
@@ -23,12 +25,34 @@ class Bins:
     @classmethod
     def from_values(
             cls,
-            values,
-            n_bins,
-            min_value=None,
-            max_value=None,
-            scale="linear"
-    ):
+            values: Iterable[float],
+            n_bins: int,
+            min_value: Optional[float] = None,
+            max_value: Optional[float] = None,
+            scale: str = "linear"
+    ) -> "Bins":
+        """
+        Constructs a collection of bins either between the minimum and maximum
+        values from some collection or between explicitly set minimum and maximum
+        values.
+
+        Parameters
+        ----------
+        values
+            A collection of values
+        n_bins
+            The number of bins
+        min_value
+            The minimum bound of the lowest bin
+        max_value
+            The maximum bound of the highest bin
+        scale
+            The scale (linear or log)
+
+        Returns
+        -------
+        An object representing value bins
+        """
         min_value = min_value or min(values)
         max_value = max_value or max(values)
 

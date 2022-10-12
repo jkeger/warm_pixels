@@ -19,6 +19,14 @@ class Image:
             self,
             path: Path,
     ):
+        """
+        An image found in the directory of a given dataset
+
+        Parameters
+        ----------
+        path
+            The path to the image
+        """
         self.path = path
         self._quadrants = {}
 
@@ -42,14 +50,29 @@ class Image:
             with open(self.bia_path, "w+b") as f:
                 f.write(response.content)
 
-    def image(self):
+    def image(self) -> aa.acs.ImageACS:
+        """
+        Load the image from file for the first quadrant
+        """
         self._check_bia_exists()
         return aa.acs.ImageACS.from_fits(
             file_path=str(self.path),
             quadrant_letter="A"
         )
 
-    def quadrant(self, item):
+    def quadrant(self, item: str):
+        """
+        Load or retrieve a specific quadrant of the image
+
+        Parameters
+        ----------
+        item
+            A letter for the quadrant (A, B, C or D)
+
+        Returns
+        -------
+        An object representing that quadrant
+        """
         if item not in self._quadrants:
             from warm_pixels.model.quadrant import ImageQuadrant
             self._quadrants[item] = ImageQuadrant(

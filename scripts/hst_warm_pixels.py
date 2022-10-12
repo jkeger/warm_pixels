@@ -48,6 +48,13 @@ directory
         stacked-trails
         density
 
+--output
+    Pass in a list of data that should be output chosen from:
+        consistent_lines
+            Lines that occur consistently over several images
+        stacked_lines
+            Consistent lines averaged over bins in parameter space
+
 --use-corrected, -u
     Use the corrected images with CTI removed instead of the originals for
     the trails etc (keeping the same selected warm pixel locations). Must first
