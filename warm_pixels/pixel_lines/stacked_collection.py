@@ -13,6 +13,10 @@ class StackedPixelLine(AbstractPixelLine):
             date=None,
             background=None,
             flux=None,
+            row_index=None,
+            flux_index=None,
+            date_index=None,
+            background_index=None,
     ):
         self._length = length
         super().__init__(
@@ -22,6 +26,10 @@ class StackedPixelLine(AbstractPixelLine):
             flux=flux,
         )
         self.stacked_lines = []
+        self.row_index = row_index
+        self.flux_index = flux_index
+        self.date_index = date_index
+        self.background_index = background_index
 
     def append(self, pixel_line):
         self.stacked_lines.append(
@@ -42,6 +50,10 @@ class StackedPixelLine(AbstractPixelLine):
             "rms_background": self.rms_background,
             "mean_flux": self.mean_flux,
             "rms_flux": self.rms_flux,
+            "row_index": self.row_index,
+            "flux_index": self.flux_index,
+            "date_index": self.date_index,
+            "background_index": self.background_index,
         })
 
     @property
@@ -169,6 +181,10 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
                 date=self.date_bins[date_index],
                 background=self.background_bins[background_index],
                 flux=self.flux_bins[flux_index],
+                row_index=row_index,
+                flux_index=flux_index,
+                date_index=date_index,
+                background_index=background_index,
             )
         return self._lines[key]
 

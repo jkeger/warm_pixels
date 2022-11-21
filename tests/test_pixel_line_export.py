@@ -36,15 +36,22 @@ def test_stacked_pixel_line(pixel_line):
         background=10,
         date=1000,
         location=(0, 30),
+        row_index=1,
+        flux_index=2,
+        date_index=3,
+        background_index=4,
     )
     stacked.append(pixel_line)
     stacked.append(pixel_line)
 
     assert stacked.dict == {
         'background': 10,
+        'background_index': 4,
         'data': [1.0, 4.0, 5.0],
         'date': 1000,
+        'date_index': 3,
         'flux': 5.0,
+        'flux_index': 2,
         'location': (0, 30),
         'mean_background': 23.0,
         'mean_flux': 150.0,
@@ -52,5 +59,6 @@ def test_stacked_pixel_line(pixel_line):
         'noise': [0.0, 0.0, 0.0],
         'rms_background': 23.0,
         'rms_flux': 150.0,
-        'rms_row': 26.0
+        'rms_row': 26.0,
+        'row_index': 1
     }
