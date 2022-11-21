@@ -46,5 +46,11 @@ def test_stacked_pixel_line(pixel_line):
         'date': 1000,
         'flux': 5.0,
         'location': (0, 30),
-        'noise': [0.0, 0.0, 0.0]
+        'mean_background': 23.0,
+        'mean_flux': 150.0,
+        'mean_row': 26.0,
+        'noise': [0.0, 0.0, 0.0],
+        'rms_background': 23.0,
+        'rms_flux': 150.0,
+        'rms_row': 26.0
     }
