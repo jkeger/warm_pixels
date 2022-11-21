@@ -165,7 +165,7 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         if key not in self._lines:
             self._lines[key] = StackedPixelLine(
                 length=self.length,
-                location=[self.row_bins[row_index], 0],
+                location=(self.row_bins[row_index], 0),
                 date=self.date_bins[date_index],
                 background=self.background_bins[background_index],
                 flux=self.flux_bins[flux_index],
