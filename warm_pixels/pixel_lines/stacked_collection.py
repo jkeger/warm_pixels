@@ -1,7 +1,7 @@
 import numpy as np
 
 from .collection import AbstractPixelLineCollection
-from .pixel_line import AbstractPixelLine
+from .pixel_line import AbstractPixelLine, _dump
 from ..bins import Bins
 
 
@@ -13,6 +13,10 @@ class StackedPixelLine(AbstractPixelLine):
             date=None,
             background=None,
             flux=None,
+            row_index=None,
+            flux_index=None,
+            date_index=None,
+            background_index=None,
     ):
         self._length = length
         super().__init__(
@@ -22,11 +26,35 @@ class StackedPixelLine(AbstractPixelLine):
             flux=flux,
         )
         self.stacked_lines = []
+        self.row_index = row_index
+        self.flux_index = flux_index
+        self.date_index = date_index
+        self.background_index = background_index
 
     def append(self, pixel_line):
         self.stacked_lines.append(
             pixel_line
         )
+
+    @property
+    def dict(self) -> dict:
+        """
+        A dictionary representation of the pixel line. This can
+        be used to create a Dataset1D in autocti.
+        """
+        return _dump({
+            **super().dict,
+            "mean_row": self.mean_row,
+            "rms_row": self.rms_row,
+            "mean_background": self.mean_background,
+            "rms_background": self.rms_background,
+            "mean_flux": self.mean_flux,
+            "rms_flux": self.rms_flux,
+            "row_index": self.row_index,
+            "flux_index": self.flux_index,
+            "date_index": self.date_index,
+            "background_index": self.background_index,
+        })
 
     @property
     def mean_row(self):
@@ -149,10 +177,14 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         if key not in self._lines:
             self._lines[key] = StackedPixelLine(
                 length=self.length,
-                location=[self.row_bins[row_index], 0],
-                date=self.date_bins[date_index],
-                background=self.background_bins[background_index],
-                flux=self.flux_bins[flux_index],
+                location=(self.row_bins.mean(row_index), 0),
+                date=self.date_bins.mean(date_index),
+                background=self.background_bins.mean(background_index),
+                flux=self.flux_bins.mean(flux_index),
+                row_index=row_index,
+                flux_index=flux_index,
+                date_index=date_index,
+                background_index=background_index,
             )
         return self._lines[key]
 

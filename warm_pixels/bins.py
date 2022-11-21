@@ -78,10 +78,6 @@ class Bins:
                 "Scale must be linear or log"
             )
 
-    @property
-    def is_single(self):
-        return self.max == self.min or self.number == 1
-
     def index(self, value):
         if value > self.max:
             raise IndexError(
@@ -89,5 +85,5 @@ class Bins:
             )
         return np.digitize(value, self[:-1]) - 1
 
-    # def __getattr__(self, item):
-    #     return self.bins[item]
+    def mean(self, index):
+        return (self.bins[index] + self.bins[index + 1]) / 2

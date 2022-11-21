@@ -22,17 +22,11 @@ def make_pixel_line():
 def test_to_dict(pixel_line):
     assert pixel_line.dict == {
         'background': 23,
-        'data': [1., 4., 5.],
+        'data': [1.0, 4.0, 5.0],
         'date': 20.5,
         'flux': 150,
         'location': [26, 25],
-        'noise': [2., 3., 4.],
-        'trail': {
-            'background': 1.0,
-            'data': [4.0],
-            'flux': 4.0,
-            'noise': [4.47213595499958]
-        }
+        'noise': [2.0, 3.0, 4.0]
     }
 
 
@@ -42,16 +36,29 @@ def test_stacked_pixel_line(pixel_line):
         background=10,
         date=1000,
         location=(0, 30),
+        row_index=1,
+        flux_index=2,
+        date_index=3,
+        background_index=4,
     )
     stacked.append(pixel_line)
     stacked.append(pixel_line)
 
     assert stacked.dict == {
         'background': 10,
+        'background_index': 4,
         'data': [1.0, 4.0, 5.0],
         'date': 1000,
+        'date_index': 3,
         'flux': 5.0,
+        'flux_index': 2,
         'location': (0, 30),
+        'mean_background': 23.0,
+        'mean_flux': 150.0,
+        'mean_row': 26.0,
         'noise': [0.0, 0.0, 0.0],
-        'trail': {'background': 1.0, 'data': [4.0], 'flux': 4.0, 'noise': [0.0]}
+        'rms_background': 23.0,
+        'rms_flux': 150.0,
+        'rms_row': 26.0,
+        'row_index': 1
     }
