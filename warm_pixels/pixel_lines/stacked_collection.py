@@ -34,23 +34,14 @@ class StackedPixelLine(AbstractPixelLine):
         A dictionary representation of the pixel line. This can
         be used to create a Dataset1D in autocti.
         """
-        d = {
-            "location": self.location,
-            "date": self.date,
-            "background": self.background,
-            "flux": self.flux,
-            "data": self.data,
-            "noise": self.noise,
+        return _dump({
+            **super().dict,
             "mean_row": self.mean_row,
             "rms_row": self.rms_row,
             "mean_background": self.mean_background,
             "rms_background": self.rms_background,
             "mean_flux": self.mean_flux,
             "rms_flux": self.rms_flux,
-        }
-        return _dump({
-            **super().dict,
-
         })
 
     @property
