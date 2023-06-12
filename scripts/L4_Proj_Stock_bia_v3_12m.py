@@ -1307,6 +1307,24 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     negatives = np.array([])
    #x_one=np.array(np.arange(ut.trail_length)+1)
 
+    # Find the negative values in the plots
+    for i_row in range(n_row_bins):
+        for i_flux in range(n_flux_bins):
+            #ax = axes[n_row_bins - 1 - i_row][i_flux]
+            for i_background, c in enumerate(colours):
+                line = stacked_lines.stacked_line_for_indices(
+                    row_index=i_row,
+                    flux_index=i_flux,
+                    background_index=i_background,
+                    date_index=0)
+                
+                if line.n_stacked >= 3:
+                    local_min=min(line.model_trail) # identify least value in each subplot
+                    if local_min<0: # add only if negative
+                        negatives = np.append(negatives, abs(local_min))
+                        
+    # Find the most negative value
+    most_neg = max(negatives)
                         
     # Find the noise, bg, row for each subplot
     for i_row in range(n_row_bins):
@@ -1323,7 +1341,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
 
                     #
                     # Compile data into easy form to fit
-                    y_all = np.append(y_all, np.array(line.model_trail)) 
+                    y_all = np.append(y_all, np.array(line.model_trail)+most_neg) # Add the most negative value to all plots
                     N_each = np.append(N_each, 0)
                     noise_all_temp = np.append(noise_all_temp, np.array(line.model_trail_noise))
                     n_e_each = np.append(n_e_each, line.mean_flux)
@@ -1441,7 +1459,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
                 
                 
                 
-                trail = np.array(line.model_trail)  # + line.model_background
+                trail = np.array(line.model_trail)+most_neg  # + line.model_background
                 noise = np.sqrt(np.square(line.model_trail_noise)+const_fix**2)  # + line.model_background
                 #noise_small = line.model_trail_noise
                 
@@ -1644,7 +1662,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print("Total fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_stock_bia_v3" 
+    writefilename=f"{dataset_date}_stock_bia_v3_12m" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"Log likelihood = {result.log_likelihood}"])
@@ -1671,11 +1689,11 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v3" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v3_12m" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3_12m", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -1692,7 +1710,7 @@ cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
 #dataset_name="03_2020"
 
 cosma_dataset_path = path.join(cosma_path, "hst", "cte", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo","stock_bia_v3")
+cosma_output_path = path.join(cosma_path, "paolo","stock_bia_v3_12m")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -1704,12 +1722,12 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3",
-                 f"{dataset_date}_stock_bia_v3")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3_12m",
+                 f"{dataset_date}_stock_bia_v3_12m")
 if not os.path.exists(dir):
     os.mkdir(dir)
     
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3",
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3_12m",
                  "csv_files")
 if not os.path.exists(dir):
     os.mkdir(dir)
@@ -1719,8 +1737,8 @@ if not os.path.exists(dir):
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3",
-                     f"{dataset_date}_stock_bia_v3"))/f"{dataset_date}_stock_bia_v3.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3_12m",
+                     f"{dataset_date}_stock_bia_v3_12m"))/f"{dataset_date}_stock_bia_v3_12m.png"
 )
  
 
@@ -1793,8 +1811,8 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v3", 
-                            f"{dataset_date}_stock_bia_v3", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v3_12m", 
+                            f"{dataset_date}_stock_bia_v3_12m", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -1834,8 +1852,8 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v3", 
-                                    f"{dataset_date}_stock_bia_v3")
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v3_12m", 
+                                    f"{dataset_date}_stock_bia_v3_12m")
         ).native
         for quadrant in ["A", "B", "C", "D"]
     ]
@@ -1866,8 +1884,8 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v3", 
-                            f"{dataset_date}_stock_bia_v3", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v3_12m", 
+                            f"{dataset_date}_stock_bia_v3_12m", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2388,7 +2406,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print("Total post correction fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_stock_bia_v3_corrected"
+    writefilename=f"{dataset_date}_stock_bia_v3_12m_corrected"
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"Log likelihood = {result.log_likelihood}"])
@@ -2416,17 +2434,17 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v3_corrected" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v3_12m_corrected" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo","stock_bia_v3",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo","stock_bia_v3_12m",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo","stock_bia_v3",
-                               f"{dataset_date}_stock_bia_v3")
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo","stock_bia_v3_12m",
+                               f"{dataset_date}_stock_bia_v3_12m")
 cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
@@ -2442,7 +2460,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3",
-                     f"{dataset_date}_stock_bia_v3"))/f"{dataset_date}_stock_bia_v3_corrected.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v3_12m",
+                     f"{dataset_date}_stock_bia_v3_12m"))/f"{dataset_date}_stock_bia_v3_12m_corrected.png"
 )
 
