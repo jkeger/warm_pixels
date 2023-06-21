@@ -1402,6 +1402,9 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print(f"log likelihood = {result.log_likelihood}")
     
     best_trail_model = result.instance
+    
+    global result_info_pre
+    result_info_pre=result.info
     print(result.info)
 
     print(f"beta = {best_trail_model.beta}")
@@ -2433,6 +2436,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
         writer.writerow([f"rho_q reduction = {rho_q_reduction}"])
         writer.writerow([f"CCDGAIN = {CCDGAIN_var}"])
         writer.writerow([result.info])
+        writer.writerow([result_info_pre])
             
     print("Data file written!")
     
