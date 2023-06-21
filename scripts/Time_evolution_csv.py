@@ -23,6 +23,14 @@ def find_between( s, first, last ):
         return s[start:end]
     except ValueError:
         return ""
+    
+def extract_characters(string, specific_character):
+    index = string.find(specific_character)  # Find the index of the specific character
+    if index != -1 and index + 1 < len(string):
+        extracted_chars = string[index + 1:index + 10]  # Extract the first 9 characters after the specific character
+        return extracted_chars
+    else:
+        return None  # Return None if the specific character is not found or there are no characters after it
 
 # Define some important MJD values
 launch_date_JD=2452334.5
@@ -76,6 +84,23 @@ ccdgains=[]
 # Lists for the errors
 rho_q_post_upper=[]
 rho_q_post_lower=[]
+rho_q_pre_upper=[]
+rho_q_pre_lower=[]
+beta_upper=[]
+beta_lower=[]
+a_upper=[]
+a_lower=[]
+b_upper=[]
+b_lower=[]
+tau_a_upper=[]
+tau_a_lower=[]
+tau_b_upper=[]
+tau_b_lower=[]
+tau_c_upper=[]
+tau_c_lower=[]
+notch_upper=[]
+notch_lower=[]
+
 
 # Read each csv file
 for file in files_corrected:
@@ -137,7 +162,7 @@ for file in files_corrected:
     ccdval=ccdstring.partition("= ")[2]
     ccdgains.append(float(ccdval))
     
-    # Extract errors
+    # Extract post rho_q error
     with open(file, 'r') as named_file:
         reader = csv.reader(named_file)
         
@@ -153,9 +178,78 @@ for file in files_corrected:
     rho_q_post_lower.append(float(rho_q_postval)-lower_range)
     upper_range=float(find_between(rho_q_region_long, ', ', ')' ))
     rho_q_post_upper.append(upper_range-float(rho_q_postval))
-                
-                
     
+# Now look for the errors from the uncorrected files 
+print('Now locating uncorrected csv files')
+files_string_uncorrected=[x for x in files_string if 'corrected' not in x]
+files_uncorrected=[]
+for stuff in files_string_uncorrected:
+    files_uncorrected.append(Path(stuff))
+    
+file_counter=0
+for file in files_uncorrected:
+    with open(file, 'r') as file:
+        reader = csv.reader(file)
+        
+        # Iterate over each row in the CSV file
+        for row in reader:
+            # Access the long string in the desired row
+            long_string = row[0]  # Assuming the long string is in the third column (0-indexed)
+            # Process the long string as needed
+            #print("Long string:", long_string)
+            if 'Bayesian Evidence' in long_string:
+                info_file=long_string
+                
+    # Rho q before correction
+    rho_q_region_long=find_between( info_file, 'Summary (3.0 sigma limits):', 'Summary (1.0 sigma limits):' )
+    rho_q_lower_range=float(find_between(rho_q_region_long, '(', ',' ))
+    rho_q_pre_lower.append(float(rho_q_pres[file_counter]-rho_q_lower_range))
+    rho_q_upper_range=float(find_between(rho_q_region_long, ', ', ')' ))
+    rho_q_pre_upper.append(float(rho_q_upper_range-rho_q_pres[file_counter]))
+    # Beta
+    beta_region_long=find_between(rho_q_region_long, 'beta', 'c' )
+    beta_lower_range=float(find_between(beta_region_long, '(', ',' ))
+    beta_lower.append(float(betas[file_counter]-beta_lower_range))
+    beta_upper_range=float(find_between(beta_region_long, ', ', ')' ))
+    beta_upper.append(float(beta_upper_range-betas[file_counter]))
+    # a
+    a_region_long=find_between(rho_q_region_long, ' a ', ' b ' )
+    a_lower_range=float(find_between(a_region_long, '(', ',' ))
+    a_lower.append(float(a_vals[file_counter]-a_lower_range))
+    a_upper_range=float(find_between(a_region_long, ', ', ')' ))
+    a_upper.append(float(a_upper_range-a_vals[file_counter]))
+    # b
+    b_region_long=find_between(rho_q_region_long, ' b ', 'tau_a ' )
+    b_lower_range=float(find_between(b_region_long, '(', ',' ))
+    b_lower.append(float(b_vals[file_counter]-b_lower_range))
+    b_upper_range=float(find_between(b_region_long, ', ', ')' ))
+    b_upper.append(float(b_upper_range-b_vals[file_counter]))
+    # tau_a
+    tau_a_region_long=find_between(rho_q_region_long, 'tau_a ', 'tau_b ' )
+    tau_a_lower_range=float(find_between(tau_a_region_long, '(', ',' ))
+    tau_a_lower.append(float(tau_a_vals[file_counter]-tau_a_lower_range))
+    tau_a_upper_range=float(find_between(tau_a_region_long, ', ', ')' ))
+    tau_a_upper.append(float(tau_a_upper_range-tau_a_vals[file_counter]))
+    # tau_b
+    tau_b_region_long=find_between(rho_q_region_long, 'tau_b ', 'tau_c ' )
+    tau_b_lower_range=float(find_between(tau_b_region_long, '(', ',' ))
+    tau_b_lower.append(float(tau_b_vals[file_counter]-tau_b_lower_range))
+    tau_b_upper_range=float(find_between(tau_b_region_long, ', ', ')' ))
+    tau_b_upper.append(float(tau_b_upper_range-tau_b_vals[file_counter]))
+    # tau_c
+    tau_c_region_long=find_between(rho_q_region_long, 'tau_c ', 'notch ' )
+    tau_c_lower_range=float(find_between(tau_c_region_long, '(', ',' ))
+    tau_c_lower.append(float(tau_c_vals[file_counter]-tau_c_lower_range))
+    tau_c_upper_range=float(find_between(tau_c_region_long, ', ', ')' ))
+    tau_c_upper.append(float(tau_c_upper_range-tau_c_vals[file_counter]))
+    # notch
+    notch_region_long=find_between(rho_q_region_long, 'notch ', ')' )
+    notch_lower_range=float(find_between(notch_region_long, '(', ',' ))
+    notch_lower.append(float(notches[file_counter]-notch_lower_range))
+    specific_char = ","
+    notch_upper_range = float(extract_characters(notch_region_long, specific_char))
+    notch_upper.append(float(notch_upper_range-notches[file_counter]))
+    file_counter=file_counter+1
     
 # Convert MJD to JD
 for MJDdates in MJDs:
@@ -172,7 +266,7 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.errorbar(MJDs[i],betas[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],betas[i], yerr=[[beta_lower[i]], [beta_upper[i]]], color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 #ax.set_ylim(0, 1)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
@@ -197,7 +291,8 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.plot(MJDs[i],rho_q_pres[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],rho_q_pres[i],yerr=[[rho_q_pre_lower[i]], [rho_q_pre_upper[i]]],
+                color=color,marker="o", linestyle='none')
 for i in range(len(ccdgains)):
     color='red'
     if ccdgains[i] == 1.0: color='lightcoral'
@@ -226,11 +321,13 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='red'
     if ccdgains[i] == 1.0: color='lightcoral'
-    ax.plot(MJDs[i],a_vals[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],a_vals[i],yerr=[[a_lower[i]], [a_upper[i]]],
+                color=color,marker="o", linestyle='none')
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.plot(MJDs[i],b_vals[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],b_vals[i],yerr=[[b_lower[i]], [b_upper[i]]],
+                color=color,marker="o", linestyle='none')
 for i in range(len(ccdgains)):
     color='green'
     if ccdgains[i] == 1.0: color='lightgreen'
@@ -258,15 +355,18 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='red'
     if ccdgains[i] == 1.0: color='lightcoral'
-    ax.plot(MJDs[i],tau_a_vals[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],tau_a_vals[i], yerr=[[tau_a_lower[i]], [tau_a_upper[i]]],
+                color=color,marker="o", linestyle='none')
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.plot(MJDs[i],tau_b_vals[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],tau_b_vals[i],yerr=[[tau_b_lower[i]], [tau_b_upper[i]]],
+                color=color,marker="o", linestyle='none')
 for i in range(len(ccdgains)):
     color='green'
     if ccdgains[i] == 1.0: color='lightgreen'
-    ax.plot(MJDs[i],tau_c_vals[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],tau_c_vals[i],yerr=[[tau_c_lower[i]], [tau_c_upper[i]]],
+                color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
 plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
@@ -290,7 +390,8 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='red'
     if ccdgains[i] == 1.0: color='lightcoral'
-    ax.plot(MJDs[i],notches[i], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],notches[i],yerr=[[notch_lower[i]], [notch_upper[i]]],
+                color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
 plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
