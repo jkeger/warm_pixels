@@ -538,6 +538,13 @@ class ImageACS(Array2DACS):
         global MJD_var
         MJD_var = header.MJD
         print('MJD_var is', MJD_var)
+        
+        global CCDGAIN_var
+        CCDGAIN_var = header.gain
+        print('CCDGAIN_var is', CCDGAIN_var)
+        
+        
+        
 
         if header.header_sci_obj["TELESCOP"] != "HST":
             raise exc.ArrayException(
@@ -2424,6 +2431,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
         writer.writerow([f"mean height = {mean_height}"])
         writer.writerow([f"mean height reduction = {mean_height_reduction}"])
         writer.writerow([f"rho_q reduction = {rho_q_reduction}"])
+        writer.writerow([f"CCDGAIN = {CCDGAIN_var}"])
         writer.writerow([result.info])
             
     print("Data file written!")
