@@ -282,7 +282,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('Beta(MJD)', bbox_inches="tight")
+plt.savefig('latest_plots/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
 # rho_q plot
@@ -292,12 +292,16 @@ for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
     ax.errorbar(MJDs[i],rho_q_pres[i],yerr=[[rho_q_pre_lower[i]], [rho_q_pre_upper[i]]],
-                color=color,marker="o", linestyle='none')
+                color=color,marker="o",label='pre-correction', linestyle='none')
 for i in range(len(ccdgains)):
-    color='red'
-    if ccdgains[i] == 1.0: color='lightcoral'
+    color2='red'
+    if ccdgains[i] == 1.0: color2='lightcoral'
+# =============================================================================
+#     ax.errorbar(MJDs[i],rho_q_posts[i],yerr=0,
+#                 color=color2,marker="o", label='post-correction', linestyle='none', alpha=1)
+# =============================================================================
     ax.errorbar(MJDs[i],rho_q_posts[i],yerr=[[rho_q_post_lower[i]], [rho_q_post_upper[i]]],
-                color=color,marker="o", label='post-correction', linestyle='none') 
+                color=color2,marker="o", label='post-correction', linestyle='none', alpha=1) 
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
 plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
@@ -312,7 +316,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,rho_q_pres,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('latest_plots/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # relative densities plot
@@ -346,7 +350,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('latest_plots/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -381,7 +385,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('latest_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
 # notch plot
@@ -406,7 +410,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,notches,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('Notch(MJD)', bbox_inches="tight")
+plt.savefig('latest_plots/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -430,7 +434,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('latest_plots/CCDGAIN(MJD)', bbox_inches="tight")
 plt.show()
 
 # correction metric plots
@@ -461,5 +465,5 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('latest_plots/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
