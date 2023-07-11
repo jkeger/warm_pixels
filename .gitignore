@@ -42,3 +42,6 @@ SN_m_tot_V2.0.txt
 *debug*
 scripts/L4_Proj_Stock.py
 scripts/time_evolution_csv_test.py
+scripts/time_evo_test2.py
+scripts/conf1.conf
+scripts/interpolation.py

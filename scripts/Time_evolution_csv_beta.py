@@ -282,7 +282,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('latest_plots/Beta(MJD)', bbox_inches="tight")
+plt.savefig('fixed_beta_plots/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
 # rho_q plot
@@ -316,7 +316,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,rho_q_pres,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('latest_plots/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('fixed_beta_plots/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # relative densities plot
@@ -350,7 +350,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('latest_plots/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('fixed_beta_plots/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -385,7 +385,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('latest_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('fixed_beta_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
 # notch plot
@@ -410,7 +410,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,notches,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('latest_plots/Notch(MJD)', bbox_inches="tight")
+plt.savefig('fixed_beta_plots/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -434,7 +434,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('latest_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('fixed_beta_plots/CCDGAIN(MJD)', bbox_inches="tight")
 plt.show()
 
 # correction metric plots
@@ -465,7 +465,7 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('latest_plots/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('fixed_beta_plots/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
 
 # Look for datasets with days > 3000 to find the average beta value 
