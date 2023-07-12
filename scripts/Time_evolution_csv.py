@@ -397,6 +397,7 @@ for i in range(len(ccdgains)):
     ax.errorbar(MJDs[i],notches[i],yerr=[[notch_lower[i]], [notch_upper[i]]],
                 color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
+ax.set_ylim(-500, 500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
 plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
 plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
@@ -473,12 +474,7 @@ late_days=[]
 late_days_index=[]
 betas_to_average=[]
 for i in range(len(days)):
-    if days[i] > 3000:
-        late_days.append(days[i])
-        late_days_index.append(i)
-        betas_to_average.append(betas[i])
-        
-avg_beta=np.mean(betas_to_average)
-print(avg_beta)
+    if days[i] > 2500 and days[i] < 3500:
+        print(i, days[i], mean_height_reductions[i])
         
         

@@ -8,6 +8,8 @@ import sys
 import os
 import pathlib
 from astropy.time import Time
+import scipy.optimize as scpo
+import scipy.stats
 
 
 def jd_to_dec_yr(dates):
@@ -45,7 +47,7 @@ temp_switch_date=2453921-2400000.5
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files")
+csv_path = path.join("csv_files_beta")
 
 # Find all the csv files
 print('Finding csv files')
@@ -206,12 +208,14 @@ for file in files_uncorrected:
     rho_q_pre_lower.append(float(rho_q_pres[file_counter]-rho_q_lower_range))
     rho_q_upper_range=float(find_between(rho_q_region_long, ', ', ')' ))
     rho_q_pre_upper.append(float(rho_q_upper_range-rho_q_pres[file_counter]))
-    # Beta
-    beta_region_long=find_between(rho_q_region_long, 'beta', 'c' )
-    beta_lower_range=float(find_between(beta_region_long, '(', ',' ))
-    beta_lower.append(float(betas[file_counter]-beta_lower_range))
-    beta_upper_range=float(find_between(beta_region_long, ', ', ')' ))
-    beta_upper.append(float(beta_upper_range-betas[file_counter]))
+# =============================================================================
+#     # Beta
+#     beta_region_long=find_between(rho_q_region_long, 'beta', 'c' )
+#     beta_lower_range=float(find_between(beta_region_long, '(', ',' ))
+#     beta_lower.append(float(betas[file_counter]-beta_lower_range))
+#     beta_upper_range=float(find_between(beta_region_long, ', ', ')' ))
+#     beta_upper.append(float(beta_upper_range-betas[file_counter]))
+# =============================================================================
     # a
     a_region_long=find_between(rho_q_region_long, ' a ', ' b ' )
     a_lower_range=float(find_between(a_region_long, '(', ',' ))
@@ -266,7 +270,7 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.errorbar(MJDs[i],betas[i], yerr=[[beta_lower[i]], [beta_upper[i]]], color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],betas[i], yerr=0, color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 #ax.set_ylim(0, 1)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
@@ -388,31 +392,6 @@ ax_day.tick_params(axis='both', which='major', labelsize=12)
 plt.savefig('fixed_beta_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
-# notch plot
-fig = plt.figure()
-ax = fig.add_axes((0,0,1,1))
-for i in range(len(ccdgains)):
-    color='red'
-    if ccdgains[i] == 1.0: color='lightcoral'
-    ax.errorbar(MJDs[i],notches[i],yerr=[[notch_lower[i]], [notch_upper[i]]],
-                color=color,marker="o", linestyle='none')
-ax.set_xlim(launch_date-500, max(MJDs)+500)
-plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
-plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
-plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
-plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
-plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
-ax.set_ylabel('Notch Depth', fontsize=12)
-ax.set_xlabel("MJD", fontsize = 12)
-ax_day = ax.twiny()
-ax_day.set_xlabel("Days since launch", fontsize=12)
-ax_day.set_xlim(-500, max(days)+500)
-ax_day.plot(days,notches,marker="None", linestyle='none') 
-ax.tick_params(axis='both', which='major', labelsize=12)
-ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('fixed_beta_plots/Notch(MJD)', bbox_inches="tight")
-plt.show()
-
 # ccdgain plot
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
@@ -472,13 +451,157 @@ plt.show()
 late_days=[]
 late_days_index=[]
 betas_to_average=[]
+excel_notches=[]
 for i in range(len(days)):
     if days[i] > 3000:
         late_days.append(days[i])
         late_days_index.append(i)
         betas_to_average.append(betas[i])
+        excel_notches.append(notches[i])
         
 avg_beta=np.mean(betas_to_average)
-print(avg_beta)
+print('mean beta is', avg_beta)
         
+# Look for datasets with days > 4000 to find the average best fit values
+later_days=[]
+later_days_index=[]
+a_to_average=[]
+b_to_average=[]
+c_to_average=[]
+tau_a_to_average=[]
+tau_b_to_average=[]
+tau_c_to_average=[]
+notch_to_average=[]
+for i in range(len(days)):
+    if days[i] > 4000:
+        later_days.append(days[i])
+        later_days_index.append(i)
+        a_to_average.append(a_vals[i])
+        b_to_average.append(b_vals[i])
+        c_to_average.append(c_vals[i])
+        tau_a_to_average.append(tau_a_vals[i])
+        tau_b_to_average.append(tau_b_vals[i])
+        tau_c_to_average.append(tau_c_vals[i])
+        notch_to_average.append(notches[i])
         
+avg_a=np.mean(a_to_average)
+print('mean a is ',avg_a)
+avg_b=np.mean(b_to_average)
+print('mean b is ',avg_b)
+avg_c=np.mean(c_to_average)
+print('mean c is ',avg_c)
+avg_tau_a=np.mean(tau_a_to_average)
+print('mean tau_a is ',avg_tau_a)
+avg_tau_b=np.mean(tau_b_to_average)
+print('mean tau_b is ',avg_tau_b)
+avg_tau_c=np.mean(tau_c_to_average)
+print('mean tau_c is ',avg_tau_c)
+avg_notch=np.mean(notch_to_average)
+print('mean notch for t>4000 is ',avg_notch)
+
+# Find average notch at early times
+notch_early_to_average=[]
+for i in range(len(days)):
+    if days[i] < 4000:
+        notch_early_to_average.append(notches[i])
+avg_notch_early=np.mean(notch_early_to_average)
+print('mean notch for t<4000 is ',avg_notch_early)
+        
+# Find average notch at all times
+notch_all_to_average=[]
+for i in range(len(days)):
+    notch_all_to_average.append(notches[i])
+avg_notch_all=np.mean(notch_all_to_average)
+print('mean notch all t is ',avg_notch_all)
+
+# Do the linear fit for the notch plot
+def linear_fit(x, param_vals):
+    #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
+    #return (param_vals[0]*x**3+param_vals[1]*x**2+param_vals[2]*x+param_vals[3])
+    return (param_vals[0]*x+param_vals[1]*50)
+
+def chi_squared(model_params, model, x_data, y_data, y_err):
+    return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
+
+days_array=np.array(days)
+notches_array=np.array(notches)
+print('LINEAR FIT RESULTS')
+initial_values=np.array([0,1])
+deg_freedom = len(notches) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, days_array, notches_array, 
+                                                                 notch_lower))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+fit_line = linear_fit(days_array, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+linear_coef1=sol0
+linear_coef1_err=zero_err
+linear_coef2=sol1
+linear_coef2_err=one_err
+
+# notch plot with swapped x-axes
+fig = plt.figure()
+ax = fig.add_axes((0,0,1,1))
+ax.plot(days_array, fit_line, linestyle='solid')
+for i in range(len(ccdgains)):
+    color='red'
+    if ccdgains[i] == 1.0: color='lightcoral'
+    ax.errorbar(days_array[i],notches_array[i],yerr=notch_lower[i],
+                color=color,marker="o", linestyle='none')
+ax.set_xlim(-500, max(days)+800) 
+ax.set_ylabel('Notch Depth', fontsize=12)
+ax.set_xlabel("Days since launch", fontsize = 12)
+ax.tick_params(axis='both', which='major', labelsize=12)
+ax.set_ylim(-500, 500)
+ax_MJD = ax.twiny()
+ax_MJD.set_xlim(launch_date-500, max(MJDs)+500)
+ax_MJD.plot(MJDs,notches,marker="None", linestyle='none')
+plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
+plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
+plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
+ax_MJD.set_xlabel("MJD", fontsize=12)
+ax.tick_params(axis='both', which='major', labelsize=12)
+
+# Plot norm residuals
+ax3=fig.add_axes((0,-0.3,1,0.3))
+norm_residuals = (notches_array - fit_line)/notch_lower
+plt.xlabel("Days since launch", fontsize=14)
+plt.ylabel("Norm. Residuals", fontsize=14)
+plt.axhline(3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+plt.axhline(-3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+plt.ylim(-50,50)
+plt.xlim(-500, max(days)+800) 
+plt.scatter(days_array, norm_residuals,zorder=100)
+#ax3.tick_params(axis='both', which='major', labelsize=14)
+# Plot norm residuals histogram
+ax4=fig.add_axes((1,-0.3,0.3,0.3))
+ax4.tick_params(axis='both', which='major', labelsize=14)
+plt.hist(norm_residuals, np.linspace(-50,50,50), orientation = 'horizontal',alpha=1, zorder=100)
+plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+plt.ylim(-50,50)
+plt.gca().axes.get_yaxis().set_ticks([])
+plt.savefig('fixed_beta_plots/Notch(MJD)', bbox_inches="tight")
+plt.show()
+                
