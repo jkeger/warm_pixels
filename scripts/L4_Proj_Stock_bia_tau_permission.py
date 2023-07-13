@@ -485,6 +485,30 @@ class ImageACS(Array2DACS):
     """
 
     @classmethod
+    def get_MJD(
+        cls,
+        file_path,
+        quadrant_letter,
+    ):
+        hdu = fits_hdu_via_quadrant_letter_from(quadrant_letter=quadrant_letter)
+
+        header_sci_obj = array_2d_util.header_obj_from(file_path=file_path, hdu=0)
+        header_hdu_obj = array_2d_util.header_obj_from(file_path=file_path, hdu=hdu)
+        
+        
+        header = HeaderACS(
+            header_sci_obj=header_sci_obj,
+            header_hdu_obj=header_hdu_obj,
+            hdu=hdu,
+            quadrant_letter=quadrant_letter,
+        )
+        
+        global MJD_var
+        MJD_var = header.MJD
+        print('MJD_var is', MJD_var)
+        
+        
+    @classmethod
     def from_fits(
         cls,
         file_path,
@@ -1751,8 +1775,31 @@ dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_
 if not os.path.exists(dir):
     os.mkdir(dir)
     
+data_directory = dataset_directory
+
+# Find all the fits files.
+temp_files_all=list(pathlib.Path(data_directory).glob('*.fits'))
+temp_files_string=[]
+for stuff in temp_files_all:
+    temp_files_string.append(str(stuff))
+    
+temp_files_string_short=[x for x in temp_files_string if not 'bia' in x]
+temp_files=[]
+for stuff in temp_files_string_short:
+    temp_files.append(Path(stuff))
 
 
+for file in temp_files:
+    print(file)
+    temp_image_path=file
+    
+    # Load each quadrant of the image  (see pypi.org/project/autoarray)
+    print('Loading image: ', temp_image_path)
+    ImageACS.get_MJD(
+            file_path=temp_image_path,
+            quadrant_letter="D",
+        )
+    
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
