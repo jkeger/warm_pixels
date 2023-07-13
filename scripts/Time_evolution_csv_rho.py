@@ -566,7 +566,7 @@ plt.show()
 def linear_fit(x, param_vals):
     #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
     #return (param_vals[0]*x**3+param_vals[1]*x**2+param_vals[2]*x+param_vals[3])
-    return (param_vals[0]*x+param_vals[1]*5)
+    return (param_vals[0]*x+param_vals[1])
 
 def chi_squared(model_params, model, x_data, y_data, y_err):
     return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
@@ -574,7 +574,7 @@ def chi_squared(model_params, model, x_data, y_data, y_err):
 days_array=np.array(days)
 rho_q_pres_array=np.array(rho_q_pres)
 print('LINEAR FIT RESULTS')
-initial_values=np.array([0,1])
+initial_values=np.array([0.0004,0.0446])
 deg_freedom = len(notches) - initial_values.size
 print('DoF = {}'.format(deg_freedom))
 fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, days_array, rho_q_pres_array, 
@@ -619,7 +619,7 @@ for i in range(len(ccdgains)):
     if ccdgains[i] == 1.0: color2='lightcoral'
     ax.errorbar(days[i],rho_q_posts[i],yerr=[[rho_q_post_lower[i]], [rho_q_post_upper[i]]],
                 color=color2,marker="o", label='post-correction', linestyle='none', alpha=1) 
-ax.plot(days_array, fit_line, linestyle='solid')
+ax.plot(days_array, fit_line, linestyle='solid', color='orange')
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
 ax.set_ylabel('Rho_q', fontsize=12)
