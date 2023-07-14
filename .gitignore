@@ -45,3 +45,6 @@ scripts/time_evolution_csv_test.py
 scripts/time_evo_test2.py
 scripts/conf1.conf
 scripts/interpolation.py
+scripts/L4_Proj_Stock_bia_tau1.py
+scripts/L4_Proj_Stock_bia_tau1_permission.py
+scripts/L4_Proj_Stock_bia_tau_permission1.py
