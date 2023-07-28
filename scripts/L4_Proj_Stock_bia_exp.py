@@ -88,45 +88,72 @@ def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, ta
         The model charge values at each pixel in the trail (e-).
     """
     # print(n_bg,n_e)
-    print('first term =', ((n_e - notch) / (w - notch)) ** beta)
-    print('first term numerator =' ,(n_e - notch))
+    
     print('first term denominator =', (w - notch))
-    print('second term numerator =', (n_bg - notch))
     local_counter=0
     local_array=[]
     print('len n_bg is', len(n_bg))
     while local_counter<len(n_bg):
-        if (n_bg[local_counter] > notch):
+        term1=np.abs(n_e[local_counter]) - notch
+        print('term1 is', term1)
+        term2=np.abs(n_bg[local_counter]) - notch
+        print('term2 is', term2)
+        if term1 > 0 and term2 > 0:
             local_array.append(
                     rho_q
-                    * (((n_e[local_counter] - notch) / (w - notch)) ** beta - ((n_bg[local_counter] - notch) / (w - notch)) ** beta)
-                    * row[local_counter]
-                    * (
-                            A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                            + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                            + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-                    ) 
+            * (((term1) / (w - notch)) ** beta - ((term2) / (w - notch)) ** beta)
+            * row[local_counter]
+            * (
+                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
+                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
+                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
+            )  
             )
             local_counter=local_counter+1
-            print('n_bg > notch')
+            print('both terms positive')
             print(local_array)
-        elif (n_bg[local_counter] < -notch):
+        elif term1 > 0 and term2 < 0:
             local_array.append(
                     rho_q
-                    * (((n_e[local_counter] - notch) / (w - notch)) ** beta - -1*((-n_bg[local_counter] - notch) / (w - notch)) ** beta)
-                    * row[local_counter]
-                    * (
-                            A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                            + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                            + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-                    ) 
+            * (((term1) / (w - notch)) ** beta - ((0) / (w - notch)) ** beta)
+            * row[local_counter]
+            * (
+                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
+                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
+                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
+            )  
             )
             local_counter=local_counter+1
-            print('n_bg < -notch')
+            print('term2 is negative')
             print(local_array)
-        else: 
-            local_array.append(0)
+        elif term1 < 0 and term2 > 0:
+            local_array.append(
+                    rho_q
+            * (((0) / (w - notch)) ** beta - ((term2) / (w - notch)) ** beta)
+            * row[local_counter]
+            * (
+                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
+                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
+                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
+            )  
+            )
             local_counter=local_counter+1
+            print('term1 is negative')
+            print(local_array)
+        elif term1 < 0 and term2 < 0:
+            local_array.append(
+                    rho_q
+            * (((0) / (w - notch)) ** beta - ((0) / (w - notch)) ** beta)
+            * row[local_counter]
+            * (
+                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
+                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
+                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
+            )  
+            )
+            local_counter=local_counter+1
+            print('both terms negative')
+            print(local_array)
     return (local_array)
 # Define classes 
 class Analysis(af.Analysis):
