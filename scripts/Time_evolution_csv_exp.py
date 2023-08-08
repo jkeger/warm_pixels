@@ -47,7 +47,7 @@ temp_switch_date=2453921-2400000.5
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files_exp")
+csv_path = path.join("csv_files_exp_free_0.90")
 
 # Find all the csv files
 print('Finding csv files')
@@ -213,14 +213,12 @@ for file in files_uncorrected:
     rho_q_upper_ranges.append(rho_q_upper_range)
     rho_q_pre_upper.append(float(rho_q_upper_range-rho_q_pres[file_counter]))
     #file_counter=file_counter+1
-# =============================================================================
-#     # Beta
-#     beta_region_long=find_between(rho_q_region_long, 'beta', 'c' )
-#     beta_lower_range=float(find_between(beta_region_long, '(', ',' ))
-#     beta_lower.append(float(betas[file_counter]-beta_lower_range))
-#     beta_upper_range=float(find_between(beta_region_long, ', ', ')' ))
-#     beta_upper.append(float(beta_upper_range-betas[file_counter]))
-# =============================================================================
+    # Beta
+    beta_region_long=find_between(rho_q_region_long, 'beta', 'c' )
+    beta_lower_range=float(find_between(beta_region_long, '(', ',' ))
+    beta_lower.append(float(betas[file_counter]-beta_lower_range))
+    beta_upper_range=float(find_between(beta_region_long, ', ', ')' ))
+    beta_upper.append(float(beta_upper_range-betas[file_counter]))
     # a
     a_region_long=find_between(rho_q_region_long, ' a ', ' b ' )
     a_lower_range=float(find_between(a_region_long, '(', ',' ))
@@ -233,35 +231,31 @@ for file in files_uncorrected:
     b_lower.append(float(b_vals[file_counter]-b_lower_range))
     b_upper_range=float(find_between(b_region_long, ', ', ')' ))
     b_upper.append(float(b_upper_range-b_vals[file_counter]))
-# =============================================================================
-#     # tau_a
-#     tau_a_region_long=find_between(rho_q_region_long, 'tau_a ', 'tau_b ' )
-#     tau_a_lower_range=float(find_between(tau_a_region_long, '(', ',' ))
-#     tau_a_lower.append(float(tau_a_vals[file_counter]-tau_a_lower_range))
-#     tau_a_upper_range=float(find_between(tau_a_region_long, ', ', ')' ))
-#     tau_a_upper.append(float(tau_a_upper_range-tau_a_vals[file_counter]))
-#     # tau_b
-#     tau_b_region_long=find_between(rho_q_region_long, 'tau_b ', 'tau_c ' )
-#     tau_b_lower_range=float(find_between(tau_b_region_long, '(', ',' ))
-#     tau_b_lower.append(float(tau_b_vals[file_counter]-tau_b_lower_range))
-#     tau_b_upper_range=float(find_between(tau_b_region_long, ', ', ')' ))
-#     tau_b_upper.append(float(tau_b_upper_range-tau_b_vals[file_counter]))
-#     # tau_c
-#     tau_c_region_long=find_between(rho_q_region_long, 'tau_c ', 'S' )
-#     tau_c_lower_range=float(find_between(tau_c_region_long, '(', ',' ))
-#     tau_c_lower.append(float(tau_c_vals[file_counter]-tau_c_lower_range))
-#     tau_c_upper_range=float(find_between(tau_c_region_long, ', ', ')' ))
-#     tau_c_upper.append(float(tau_c_upper_range-tau_c_vals[file_counter]))
-# =============================================================================
-# =============================================================================
-#     # notch
-#     notch_region_long=find_between(rho_q_region_long, 'notch ', ')' )
-#     notch_lower_range=float(find_between(notch_region_long, '(', ',' ))
-#     notch_lower.append(float(notches[file_counter]-notch_lower_range))
-#     specific_char = ","
-#     notch_upper_range = float(extract_characters(notch_region_long, specific_char))
-#     notch_upper.append(float(notch_upper_range-notches[file_counter]))
-# =============================================================================
+    # tau_a
+    tau_a_region_long=find_between(rho_q_region_long, 'tau_a ', 'tau_b ' )
+    tau_a_lower_range=float(find_between(tau_a_region_long, '(', ',' ))
+    tau_a_lower.append(float(tau_a_vals[file_counter]-tau_a_lower_range))
+    tau_a_upper_range=float(find_between(tau_a_region_long, ', ', ')' ))
+    tau_a_upper.append(float(tau_a_upper_range-tau_a_vals[file_counter]))
+    # tau_b
+    tau_b_region_long=find_between(rho_q_region_long, 'tau_b ', 'tau_c ' )
+    tau_b_lower_range=float(find_between(tau_b_region_long, '(', ',' ))
+    tau_b_lower.append(float(tau_b_vals[file_counter]-tau_b_lower_range))
+    tau_b_upper_range=float(find_between(tau_b_region_long, ', ', ')' ))
+    tau_b_upper.append(float(tau_b_upper_range-tau_b_vals[file_counter]))
+    # tau_c
+    tau_c_region_long=find_between(rho_q_region_long, 'tau_c ', 'S' )
+    tau_c_lower_range=float(find_between(tau_c_region_long, '(', ',' ))
+    tau_c_lower.append(float(tau_c_vals[file_counter]-tau_c_lower_range))
+    tau_c_upper_range=float(find_between(tau_c_region_long, ', ', ')' ))
+    tau_c_upper.append(float(tau_c_upper_range-tau_c_vals[file_counter]))
+    # notch
+    notch_region_long=find_between(rho_q_region_long, 'notch ', ')' )
+    notch_lower_range=float(find_between(notch_region_long, '(', ',' ))
+    notch_lower.append(float(notches[file_counter]-notch_lower_range))
+    specific_char = ","
+    notch_upper_range = float(extract_characters(notch_region_long, specific_char))
+    notch_upper.append(float(notch_upper_range-notches[file_counter]))
     file_counter=file_counter+1
     
 # Convert MJD to JD
@@ -279,7 +273,7 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.errorbar(MJDs[i],betas[i], yerr=0, color=color,marker="o", linestyle='none')
+    ax.errorbar(MJDs[i],betas[i], yerr=[[beta_lower[i]], [beta_upper[i]]], color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 #ax.set_ylim(0, 1)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
@@ -295,7 +289,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_plots/Beta(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -330,7 +324,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_plots/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -339,17 +333,17 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='red'
     if ccdgains[i] == 1.0: color='lightcoral'
-    ax.errorbar(MJDs[i],tau_a_vals[i], yerr=0,
+    ax.errorbar(MJDs[i],tau_a_vals[i], yerr=[[tau_a_lower[i]], [tau_a_upper[i]]],
                 color=color,marker="o", linestyle='none')
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.errorbar(MJDs[i],tau_b_vals[i],yerr=0,
+    ax.errorbar(MJDs[i],tau_b_vals[i],yerr=[[tau_b_lower[i]], [tau_b_upper[i]]],
                 color=color,marker="o", linestyle='none')
 for i in range(len(ccdgains)):
     color='green'
     if ccdgains[i] == 1.0: color='lightgreen'
-    ax.errorbar(MJDs[i],tau_c_vals[i],yerr=0,
+    ax.errorbar(MJDs[i],tau_c_vals[i],yerr=[[tau_c_lower[i]], [tau_c_upper[i]]],
                 color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
@@ -366,7 +360,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -390,7 +384,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/CCDGAIN(MJD)', bbox_inches="tight")
 plt.show()
 
 # correction metric plots
@@ -421,7 +415,7 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('exp_plots/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
 
 # =============================================================================
@@ -544,7 +538,7 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='red'
     if ccdgains[i] == 1.0: color='lightcoral'
-    ax.errorbar(days[i],notches[i],yerr=0,
+    ax.errorbar(days[i],notches[i],yerr=[[notch_lower[i]], [notch_upper[i]]],
                 color=color,marker="o", linestyle='none')
 ax.set_xlim(-500, max(days)+800) 
 ax.set_ylabel('Notch Depth', fontsize=12)
@@ -561,7 +555,7 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_plots/Notch(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -658,7 +652,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_plots/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # rho_q plot with swapped x-axes
@@ -710,7 +704,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_0.90/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 plt.show()
                 
 # Find the mean value of the taus before and after temp switch date
