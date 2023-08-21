@@ -89,71 +89,32 @@ def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, ta
     """
     # print(n_bg,n_e)
     
+    
     #print('first term denominator =', (w - notch))
     local_counter=0
     local_array=[]
+    
     #print('len n_bg is', len(n_bg))
     while local_counter<len(n_bg):
-        term1=np.abs(n_e[local_counter]) - notch
-        #print('term1 is', term1)
-        term2=np.abs(n_bg[local_counter]) - notch
-        #print('term2 is', term2)
-        if term1 > 0 and term2 > 0:
-            local_array.append(
-                    rho_q
-            * (((term1) / (w - notch)) ** beta - ((term2) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            print('both terms positive')
-            #print(local_array)
-        elif term1 > 0 and term2 < 0:
-            local_array.append(
-                    rho_q
-            * (((term1) / (w - notch)) ** beta - ((0) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            print('term2 is negative')
-            #print(local_array)
-        elif term1 < 0 and term2 > 0:
-            local_array.append(
-                    rho_q
-            * (((0) / (w - notch)) ** beta - ((term2) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            print('term1 is negative')
-            #print(local_array)
-        elif term1 < 0 and term2 < 0:
-            local_array.append(
-                    rho_q
-            * (((0) / (w - notch)) ** beta - ((0) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            print('both terms negative')
-            #print(local_array)
+# =============================================================================
+#         term1=np.abs(n_e[local_counter]) - notch
+#         #print('term1 is', term1)
+#         term2=np.abs(n_bg[local_counter]) - notch
+#         #print('term2 is', term2)
+# =============================================================================
+        volume1 = np.sign(n_e[local_counter]) * np.clip((abs(n_e[local_counter]) - notch) / (w - notch), 0, 1) ** beta
+        volume2 = np.sign(n_bg[local_counter]) * np.clip((abs(n_bg[local_counter]) - notch) / (w - notch), 0, 1) ** beta
+        local_array.append(
+                rho_q
+        * (volume1 - volume2)
+        * row[local_counter]
+        * (
+                A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
+                + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
+                + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
+        )  
+        )
+        local_counter=local_counter+1
     return (local_array)
 # Define classes 
 class Analysis(af.Analysis):
@@ -224,8 +185,8 @@ class Analysis2(af.Analysis):
                 noise_map=self.noise,
             )
             #print('x =', self.x)
-            print('modelled_trail= ', modelled_trail)
-            print('log likelihood = ', fit.log_likelihood)        
+            #print('modelled_trail= ', modelled_trail)
+            #print('log likelihood = ', fit.log_likelihood)        
             return fit.log_likelihood
 class TrailModel:
         def __init__(
@@ -296,31 +257,33 @@ class TrailModelPrint:
             self.notch=notch
     
         def __call__(self, x, n_e, n_bg, row):
-            print('rho_q=',self.rho_q)
-            print('beta=',self.beta)
-            print('a=',self.a)
-            print('b=',self.b)
-            print('c=',self.c)
-            print('tau_a=',self.tau_a)
-            print('tau_b=',self.tau_b)
-            print('tau_c=',self.tau_c)
-            print('notch=',self.notch)
-            print('trail value=', trail_model_exp(
-                x=x,
-                rho_q=self.rho_q,
-                n_e=n_e,
-                n_bg=n_bg,
-                row=row,
-                beta=self.beta,
-                w=self.w,
-                A=self.a,
-                B=self.b,
-                C=self.c,
-                tau_a=self.tau_a,
-                tau_b=self.tau_b,
-                tau_c=self.tau_c,
-                notch=self.notch,
-            ) )
+# =============================================================================
+#             print('rho_q=',self.rho_q)
+#             print('beta=',self.beta)
+#             print('a=',self.a)
+#             print('b=',self.b)
+#             print('c=',self.c)
+#             print('tau_a=',self.tau_a)
+#             print('tau_b=',self.tau_b)
+#             print('tau_c=',self.tau_c)
+#             print('notch=',self.notch)
+#             print('trail value=', trail_model_exp(
+#                 x=x,
+#                 rho_q=self.rho_q,
+#                 n_e=n_e,
+#                 n_bg=n_bg,
+#                 row=row,
+#                 beta=self.beta,
+#                 w=self.w,
+#                 A=self.a,
+#                 B=self.b,
+#                 C=self.c,
+#                 tau_a=self.tau_a,
+#                 tau_b=self.tau_b,
+#                 tau_c=self.tau_c,
+#                 notch=self.notch,
+#             ) )
+# =============================================================================
             return trail_model_exp(
                 x=x,
                 rho_q=self.rho_q,
@@ -1479,7 +1442,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     )
     
     model = af.Model(
-        TrailModel,
+        TrailModelPrint,
         rho_q=rho_q,
         beta=beta,
         w=w,
@@ -1624,7 +1587,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
     
     # Load our optimiser
-    dynesty = af.DynestyStatic(number_of_cores=16, sample="rwalk", walks=10, nlive=500,
+    dynesty = af.DynestyStatic(name="uncorrected_dynesty",number_of_cores=16, sample="rwalk", walks=10, nlive=500,
                                iterations_per_update=10000000)#, #force_x1_cpu=True)
     
     print(dynesty.config_dict_run)
@@ -1770,7 +1733,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
 #                     )
 # =============================================================================
                 print('Plotting one autofit subplot...')
-                global_autofit=trail_model_arctic_notch(x=pixels, 
+                global_autofit=trail_model_exp(x=pixels, 
                                            rho_q=float(best_trail_model.rho_q), 
                                            n_e=np.repeat(line.mean_flux, ut.trail_length), 
                                            n_bg=np.repeat(line.mean_background, ut.trail_length),
@@ -1905,7 +1868,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print("Total fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_stock_exp_free_r_{const_fix}" 
+    writefilename=f"{dataset_date}_stock_exp_free_v2_{const_fix}" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"Log likelihood = {result.log_likelihood}"])
@@ -1932,11 +1895,11 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_exp_free_r_{const_fix}" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_exp_free_v2_{const_fix}" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_r_{const_fix}", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_v2_{const_fix}", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -1953,7 +1916,7 @@ cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
 #dataset_name="03_2020"
 
 cosma_dataset_path = path.join(cosma_path, "paolo", "datasets", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo",f"stock_exp_free_r_{const_fix}")
+cosma_output_path = path.join(cosma_path, "paolo",f"stock_exp_free_v2_{const_fix}")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -1965,16 +1928,16 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_r_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_v2_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_r_{const_fix}",
-                 f"{dataset_date}_stock_exp_free_r_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_v2_{const_fix}",
+                 f"{dataset_date}_stock_exp_free_v2_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
     
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_r_{const_fix}",
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_v2_{const_fix}",
                  "csv_files")
 if not os.path.exists(dir):
     os.mkdir(dir)
@@ -2007,8 +1970,8 @@ for file in temp_files:
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_r_{const_fix}",
-                     f"{dataset_date}_stock_exp_free_r_{const_fix}"))/f"{dataset_date}_stock_exp_free_r_{const_fix}.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_v2_{const_fix}",
+                     f"{dataset_date}_stock_exp_free_v2_{const_fix}"))/f"{dataset_date}_stock_exp_free_v2_{const_fix}.png"
 )
  
 
@@ -2081,8 +2044,8 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_exp_free_r_{const_fix}", 
-                            f"{dataset_date}_stock_exp_free_r_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_exp_free_v2_{const_fix}", 
+                            f"{dataset_date}_stock_exp_free_v2_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2122,8 +2085,8 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_exp_free_r_{const_fix}", 
-                                    f"{dataset_date}_stock_exp_free_r_{const_fix}")
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_exp_free_v2_{const_fix}", 
+                                    f"{dataset_date}_stock_exp_free_v2_{const_fix}")
         ).native
         for quadrant in ["A", "B", "C", "D"]
     ]
@@ -2154,8 +2117,8 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_exp_free_r_{const_fix}", 
-                            f"{dataset_date}_stock_exp_free_r_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_exp_free_v2_{const_fix}", 
+                            f"{dataset_date}_stock_exp_free_v2_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2422,7 +2385,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
     
     # Load our optimiser
-    dynesty = af.DynestyStatic(number_of_cores=16, sample="rwalk", walks=10, nlive=500, 
+    dynesty = af.DynestyStatic(name="corrected_dynesty",number_of_cores=16, sample="rwalk", walks=10, nlive=500, 
                                iterations_per_update=10000000)#, #force_x1_cpu=True)
     
     print(dynesty.config_dict_run)
@@ -2538,7 +2501,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 
 
                 print('Plotting one autofit subplot...')
-                global_autofit=trail_model_arctic_notch(x=pixels, 
+                global_autofit=trail_model_exp(x=pixels, 
                                            rho_q=float(best_trail_model.rho_q), 
                                            n_e=np.repeat(line.mean_flux, ut.trail_length), 
                                            n_bg=np.repeat(line.mean_background, ut.trail_length),
@@ -2673,7 +2636,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print("Total post correction fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_stock_exp_free_r_{const_fix}_corrected"
+    writefilename=f"{dataset_date}_stock_exp_free_v2_{const_fix}_corrected"
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"MJD = {MJD_var}"])
@@ -2705,22 +2668,23 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_exp_free_r_{const_fix}_corrected" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_exp_free_v2_{const_fix}_corrected" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_exp_free_r_{const_fix}",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_exp_free_v2_{const_fix}",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-
-cosma_dataset_path = path.join(cosma_path, "paolo", "datasets", dataset_date)
-cosma_output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_exp_free_r_{const_fix}",
-                               f"{dataset_date}_stock_exp_free_r_{const_fix}")
-#cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_exp_free_r_{const_fix}",
-                               #f"{dataset_date}_stock_exp_free_r_{const_fix}")
-#cosma_output_path = cosma_dataset_path
+# =============================================================================
+# cosma_dataset_path = path.join(cosma_path, "paolo", "datasets", dataset_date)
+# cosma_output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_exp_free_v2_{const_fix}",
+#                                f"{dataset_date}_stock_exp_free_v2_{const_fix}")
+# =============================================================================
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_exp_free_v2_{const_fix}",
+                               f"{dataset_date}_stock_exp_free_v2_{const_fix}")
+cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -2735,7 +2699,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_r_{const_fix}",
-                     f"{dataset_date}_stock_exp_free_r_{const_fix}"))/f"{dataset_date}_stock_exp_free_r_{const_fix}_corrected.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_exp_free_v2_{const_fix}",
+                     f"{dataset_date}_stock_exp_free_v2_{const_fix}"))/f"{dataset_date}_stock_exp_free_v2_{const_fix}_corrected.png"
 )
 

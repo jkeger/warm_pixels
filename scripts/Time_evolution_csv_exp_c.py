@@ -47,7 +47,7 @@ temp_switch_date=2453921-2400000.5
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files_exp_free_c")
+csv_path = path.join("csv_files_exp_free_c2")
 
 # Find all the csv files
 print('Finding csv files')
@@ -78,6 +78,9 @@ c_vals=[]
 tau_a_vals=[]
 tau_b_vals=[]
 tau_c_vals=[]
+sigma_a_vals=[]
+sigma_b_vals=[]
+sigma_c_vals=[]
 notches=[]
 mean_height_reductions=[]
 rho_q_reductions=[]
@@ -100,6 +103,12 @@ tau_b_upper=[]
 tau_b_lower=[]
 tau_c_upper=[]
 tau_c_lower=[]
+sigma_a_upper=[]
+sigma_a_lower=[]
+sigma_b_upper=[]
+sigma_b_lower=[]
+sigma_c_upper=[]
+sigma_c_lower=[]
 notch_upper=[]
 notch_lower=[]
 
@@ -159,7 +168,7 @@ for file in files_corrected:
     rqrstring=str(data.loc[[15],:])
     rqrval=rqrstring.partition("= ")[2]
     rho_q_reductions.append(float(rqrval))
-    # Extract rho_q reduction values
+    # Extract CCD gain values
     ccdstring=str(data.loc[[16],:])
     ccdval=ccdstring.partition("= ")[2]
     ccdgains.append(float(ccdval))
@@ -187,6 +196,22 @@ files_string_uncorrected=[x for x in files_string if 'corrected' not in x]
 files_uncorrected=[]
 for stuff in files_string_uncorrected:
     files_uncorrected.append(Path(stuff))
+    
+# Plot values for the sigmas, which are in the uncorrected files    
+for file in files_uncorrected:
+    data = pd.read_csv(f"{file}", header=None)
+    # Extract sigma values
+    sigma_a_string=str(data.loc[[9],:])
+    sigma_a_val=sigma_a_string.partition("= ")[2]
+    sigma_a_vals.append(float(sigma_a_val))
+    
+    sigma_b_string=str(data.loc[[10],:])
+    sigma_b_val=sigma_b_string.partition("= ")[2]
+    sigma_b_vals.append(float(sigma_b_val))
+    
+    sigma_c_string=str(data.loc[[11],:])
+    sigma_c_val=sigma_c_string.partition("= ")[2]
+    sigma_c_vals.append(float(sigma_c_val))
     
 rho_q_lower_ranges=[]
 rho_q_upper_ranges=[]
@@ -249,6 +274,24 @@ for file in files_uncorrected:
     tau_c_lower.append(float(tau_c_vals[file_counter]-tau_c_lower_range))
     tau_c_upper_range=float(find_between(tau_c_region_long, ', ', ')' ))
     tau_c_upper.append(float(tau_c_upper_range-tau_c_vals[file_counter]))
+    # sigma_a
+    sigma_a_region_long=find_between(rho_q_region_long, 'sigma_a ', 'sigma_b ' )
+    sigma_a_lower_range=float(find_between(sigma_a_region_long, '(', ',' ))
+    sigma_a_lower.append(float(sigma_a_vals[file_counter]-sigma_a_lower_range))
+    sigma_a_upper_range=float(find_between(sigma_a_region_long, ', ', ')' ))
+    sigma_a_upper.append(float(sigma_a_upper_range-sigma_a_vals[file_counter]))
+    # sigma_b
+    sigma_b_region_long=find_between(rho_q_region_long, 'sigma_b ', 'sigma_c ' )
+    sigma_b_lower_range=float(find_between(sigma_b_region_long, '(', ',' ))
+    sigma_b_lower.append(float(sigma_b_vals[file_counter]-sigma_b_lower_range))
+    sigma_b_upper_range=float(find_between(sigma_b_region_long, ', ', ')' ))
+    sigma_b_upper.append(float(sigma_b_upper_range-sigma_b_vals[file_counter]))
+    # sigma_c
+    sigma_c_region_long=find_between(rho_q_region_long, 'sigma_c ', 'notch ' )
+    sigma_c_lower_range=float(find_between(sigma_c_region_long, '(', ',' ))
+    sigma_c_lower.append(float(sigma_c_vals[file_counter]-sigma_c_lower_range))
+    sigma_c_upper_range=float(find_between(sigma_c_region_long, ', ', ')' ))
+    sigma_c_upper.append(float(sigma_c_upper_range-sigma_c_vals[file_counter]))
     # notch
     notch_region_long=find_between(rho_q_region_long, 'notch ', ')' )
     notch_lower_range=float(find_between(notch_region_long, '(', ',' ))
@@ -289,7 +332,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/Beta(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -324,7 +367,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -360,7 +403,81 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.show()
+
+# sigma's plot
+fig = plt.figure()
+ax = fig.add_axes((0,0,1,1))
+for i in range(len(ccdgains)):
+    color='red'
+    if ccdgains[i] == 1.0: color='lightcoral'
+    ax.errorbar(MJDs[i],sigma_a_vals[i], yerr=[[sigma_a_lower[i]], [sigma_a_upper[i]]],
+                color=color,marker="o", linestyle='none',zorder=500)
+for i in range(len(ccdgains)):
+    color='blue'
+    if ccdgains[i] == 1.0: color='darkturquoise'
+    ax.errorbar(MJDs[i],sigma_b_vals[i],yerr=[[sigma_b_lower[i]], [sigma_b_upper[i]]],
+                color=color,marker="o", linestyle='none',zorder=10000)
+for i in range(len(ccdgains)):
+    color='green'
+    if ccdgains[i] == 1.0: color='lightgreen'
+    ax.errorbar(MJDs[i],sigma_c_vals[i],yerr=[[sigma_c_lower[i]], [sigma_c_upper[i]]],
+                color=color,marker="o", linestyle='none',zorder=5)
+ax.set_xlim(launch_date-500, max(MJDs)+500)
+plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
+plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
+plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
+ax.set_ylabel('Release Timescale Sigmas', fontsize=12)
+ax.set_xlabel("MJD", fontsize = 12)
+#ax.set_ylim(0,5) #Zoom into the sigma_a values
+ax_day = ax.twiny()
+ax_day.set_xlabel("Days since launch", fontsize=12)
+ax_day.set_xlim(-500, max(days)+500)
+ax_day.plot(days,sigma_c_vals,color="red",marker="None", linestyle='none') 
+ax.tick_params(axis='both', which='major', labelsize=12)
+ax_day.tick_params(axis='both', which='major', labelsize=12)
+plt.savefig('exp_free_plots_c2/sigma_a,sigma_b,sigma_c(MJD)', bbox_inches="tight")
+plt.show()
+
+# sigma's plot zoomed
+fig = plt.figure()
+ax = fig.add_axes((0,0,1,1))
+for i in range(len(ccdgains)):
+    color='red'
+    if ccdgains[i] == 1.0: color='lightcoral'
+    ax.errorbar(MJDs[i],sigma_a_vals[i], yerr=[[sigma_a_lower[i]], [sigma_a_upper[i]]],
+                color=color,marker="o", linestyle='none',zorder=500)
+for i in range(len(ccdgains)):
+    color='blue'
+    if ccdgains[i] == 1.0: color='darkturquoise'
+    ax.errorbar(MJDs[i],sigma_b_vals[i],yerr=[[sigma_b_lower[i]], [sigma_b_upper[i]]],
+                color=color,marker="o", linestyle='none',zorder=10000)
+for i in range(len(ccdgains)):
+    color='green'
+    if ccdgains[i] == 1.0: color='lightgreen'
+    ax.errorbar(MJDs[i],sigma_c_vals[i],yerr=[[sigma_c_lower[i]], [sigma_c_upper[i]]],
+                color=color,marker="o", linestyle='none',zorder=5)
+ax.set_xlim(launch_date-500, max(MJDs)+500)
+plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
+plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
+plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
+ax.set_ylabel('Release Timescale Sigmas', fontsize=12)
+ax.set_xlabel("MJD", fontsize = 12)
+ax.set_ylim(-1,10)
+#ax.set_ylim(0,5) #Zoom into the sigma_a values
+ax_day = ax.twiny()
+ax_day.set_xlabel("Days since launch", fontsize=12)
+ax_day.set_xlim(-500, max(days)+500)
+ax_day.set_ylim(-1,10)
+ax_day.plot(days,sigma_c_vals,color="red",marker="None", linestyle='none') 
+ax.tick_params(axis='both', which='major', labelsize=12)
+ax_day.tick_params(axis='both', which='major', labelsize=12)
+plt.savefig('exp_free_plots_c2/sigma_a,sigma_b,sigma_c(MJD)zoomed', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -384,7 +501,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/CCDGAIN(MJD)', bbox_inches="tight")
 plt.show()
 
 # correction metric plots
@@ -415,7 +532,7 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('exp_free_plots_c/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
 
 # =============================================================================
@@ -555,7 +672,7 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/Notch(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -652,7 +769,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_free_plots_c/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # rho_q plot with swapped x-axes
@@ -704,7 +821,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_free_plots_c/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_plots_c2/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 plt.show()
                 
 # Find the mean value of the taus before and after temp switch date

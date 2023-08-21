@@ -110,7 +110,7 @@ def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, ta
             )  
             )
             local_counter=local_counter+1
-            print('both terms positive')
+            #print('both terms positive')
             #print(local_array)
         elif term1 > 0 and term2 < 0:
             local_array.append(
@@ -124,7 +124,7 @@ def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, ta
             )  
             )
             local_counter=local_counter+1
-            print('term2 is negative')
+            #print('term2 is negative')
             #print(local_array)
         elif term1 < 0 and term2 > 0:
             local_array.append(
@@ -138,7 +138,7 @@ def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, ta
             )  
             )
             local_counter=local_counter+1
-            print('term1 is negative')
+            #print('term1 is negative')
             #print(local_array)
         elif term1 < 0 and term2 < 0:
             local_array.append(
@@ -152,7 +152,7 @@ def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, ta
             )  
             )
             local_counter=local_counter+1
-            print('both terms negative')
+            #print('both terms negative')
             #print(local_array)
     return (local_array)
 # Define classes 
@@ -188,7 +188,7 @@ class Analysis(af.Analysis):
                 model_data=modelled_trail,
                 noise_map=self.noise,
             )
-            print('log likelihood = ', fit.log_likelihood)
+            #print('log likelihood = ', fit.log_likelihood)
             return fit.log_likelihood
         
 class Analysis2(af.Analysis):
@@ -224,8 +224,8 @@ class Analysis2(af.Analysis):
                 noise_map=self.noise,
             )
             #print('x =', self.x)
-            print('modelled_trail= ', modelled_trail)
-            print('log likelihood = ', fit.log_likelihood)        
+            #print('modelled_trail= ', modelled_trail)
+            #print('log likelihood = ', fit.log_likelihood)        
             return fit.log_likelihood
 class TrailModel:
         def __init__(
@@ -305,31 +305,33 @@ class TrailModelPrint:
             self.notch=notch
     
         def __call__(self, x, n_e, n_bg, row):
-            print('rho_q=',self.rho_q)
-            print('beta=',self.beta)
-            print('a=',self.a)
-            print('b=',self.b)
-            print('c=',self.c)
-            print('tau_a=',self.tau_a)
-            print('tau_b=',self.tau_b)
-            print('tau_c=',self.tau_c)
-            print('notch=',self.notch)
-            print('trail value=', trail_model_exp(
-                x=x,
-                rho_q=self.rho_q,
-                n_e=n_e,
-                n_bg=n_bg,
-                row=row,
-                beta=self.beta,
-                w=self.w,
-                A=self.a,
-                B=self.b,
-                C=self.c,
-                tau_a=self.tau_a,
-                tau_b=self.tau_b,
-                tau_c=self.tau_c,
-                notch=self.notch,
-            ) )
+# =============================================================================
+#             print('rho_q=',self.rho_q)
+#             print('beta=',self.beta)
+#             print('a=',self.a)
+#             print('b=',self.b)
+#             print('c=',self.c)
+#             print('tau_a=',self.tau_a)
+#             print('tau_b=',self.tau_b)
+#             print('tau_c=',self.tau_c)
+#             print('notch=',self.notch)
+#             print('trail value=', trail_model_exp(
+#                 x=x,
+#                 rho_q=self.rho_q,
+#                 n_e=n_e,
+#                 n_bg=n_bg,
+#                 row=row,
+#                 beta=self.beta,
+#                 w=self.w,
+#                 A=self.a,
+#                 B=self.b,
+#                 C=self.c,
+#                 tau_a=self.tau_a,
+#                 tau_b=self.tau_b,
+#                 tau_c=self.tau_c,
+#                 notch=self.notch,
+#             ) )
+# =============================================================================
             return trail_model_exp(
                 x=x,
                 rho_q=self.rho_q,
@@ -1451,9 +1453,9 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     
     # CCD
     rho_q = af.UniformPrior(
-        lower_limit=-10,
+        lower_limit=0,
         #lower_limit=0.0,
-        upper_limit=10,
+        upper_limit=5,
     )
   
     beta = af.GaussianPrior(
@@ -1488,9 +1490,9 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     sigma_b = af.LogUniformPrior(lower_limit=0.0001, upper_limit=100.0)
     sigma_c = af.LogUniformPrior(lower_limit=0.0001, upper_limit=100.0)
     notch = af.UniformPrior(
-        lower_limit=-10000.0,
+        lower_limit=-500,
         #lower_limit=0.0,
-        upper_limit=10000.0,
+        upper_limit=500,
     )
     
     model = af.Model(
@@ -2254,9 +2256,9 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     
     # CCD
     rho_q = af.UniformPrior(
-        lower_limit=-10,
+        lower_limit=-5,
         #lower_limit=0.0,
-        upper_limit=10,
+        upper_limit=5,
     )
 # =============================================================================
 #     beta = af.GaussianPrior(
