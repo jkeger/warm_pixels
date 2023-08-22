@@ -1400,6 +1400,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     notch=0.0
     
     # Convert MJD to days since launch for notch time evolution
+    global days_var
     JD_var=float(MJD_var)+2400000.5
     days_var=JD_var-2452334.5
     #notch=0.013468157265719103*days_var-0.13793219313191085
