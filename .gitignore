@@ -52,3 +52,11 @@ scripts/L4_Proj_Stock_bia_exp_test.py
 scripts/if_behaviour.py
 scripts/L4_Proj_Stock_bia_neg_test_permission.py
 scripts/L4_Proj_Stock_bia_neg_test_small_permission.py
+scripts/L4_Proj_Stock_bia_exp_free_v2_push.py
+scripts/interpolate_test.py
+scripts/continuum_compare.py
+scripts/continuum_compare.py
+warm_pixels/.ipynb_checkpoints/Untitled-checkpoint.ipynb
+warm_pixels/hst_warm_pixels.py
+warm_pixels/paper_plots.py
+warm_pixels/Untitled.ipynb

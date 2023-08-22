@@ -89,71 +89,32 @@ def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, ta
     """
     # print(n_bg,n_e)
     
+    
     #print('first term denominator =', (w - notch))
     local_counter=0
     local_array=[]
+    
     #print('len n_bg is', len(n_bg))
     while local_counter<len(n_bg):
-        term1=np.abs(n_e[local_counter]) - notch
-        #print('term1 is', term1)
-        term2=np.abs(n_bg[local_counter]) - notch
-        #print('term2 is', term2)
-        if term1 > 0 and term2 > 0:
-            local_array.append(
-                    rho_q
-            * (((term1) / (w - notch)) ** beta - ((term2) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            #print('both terms positive')
-            #print(local_array)
-        elif term1 > 0 and term2 < 0:
-            local_array.append(
-                    rho_q
-            * (((term1) / (w - notch)) ** beta - ((0) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            #print('term2 is negative')
-            #print(local_array)
-        elif term1 < 0 and term2 > 0:
-            local_array.append(
-                    rho_q
-            * (((0) / (w - notch)) ** beta - ((term2) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            #print('term1 is negative')
-            #print(local_array)
-        elif term1 < 0 and term2 < 0:
-            local_array.append(
-                    rho_q
-            * (((0) / (w - notch)) ** beta - ((0) / (w - notch)) ** beta)
-            * row[local_counter]
-            * (
-                    A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )  
-            )
-            local_counter=local_counter+1
-            #print('both terms negative')
-            #print(local_array)
+# =============================================================================
+#         term1=np.abs(n_e[local_counter]) - notch
+#         #print('term1 is', term1)
+#         term2=np.abs(n_bg[local_counter]) - notch
+#         #print('term2 is', term2)
+# =============================================================================
+        volume1 = np.sign(n_e[local_counter]) * np.clip((abs(n_e[local_counter]) - notch) / (w - notch), 0, 1) ** beta
+        volume2 = np.sign(n_bg[local_counter]) * np.clip((abs(n_bg[local_counter]) - notch) / (w - notch), 0, 1) ** beta
+        local_array.append(
+                rho_q
+        * (volume1 - volume2)
+        * row[local_counter]
+        * (
+                A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
+                + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
+                + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
+        )  
+        )
+        local_counter=local_counter+1
     return (local_array)
 # Define classes 
 class Analysis(af.Analysis):
@@ -1459,7 +1420,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     )
   
     beta = af.GaussianPrior(
-              mean=0.478,
+              mean=0.556,
               sigma=0.1,
        )
     

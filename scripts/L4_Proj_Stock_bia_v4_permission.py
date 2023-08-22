@@ -47,7 +47,74 @@ logger = logging.getLogger(
 )
 
 start_time = time.time()
+# Sum of exponentials model to fit negative rho_q after correction
+def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c, notch):
+    
+    """Calculate the model shape of a CTI trail.
 
+    Parameters
+    ----------
+    x : [float]
+        The pixel positions away from the trailed pixel.
+
+    rho_q : float
+        The total trap number density per pixel.
+
+    n_e : float
+        The number of electrons in the trailed pixel's charge cloud (e-).
+
+    n_bg : float
+        The background number of electrons (e-).
+
+    row : float
+        The distance in pixels of the trailed pixel from the readout register.
+
+    beta : float
+        The CCD well fill power.
+
+    w : float
+        The CCD full well depth (e-).
+
+    A, B, C : float
+        The relative density of each trap species.
+
+    tau_a, tau_b, tau_c : float
+        The release timescale of each trap species (s).
+
+    Returns
+    -------
+    trail : [float]
+        The model charge values at each pixel in the trail (e-).
+    """
+    # print(n_bg,n_e)
+    
+    
+    #print('first term denominator =', (w - notch))
+    local_counter=0
+    local_array=[]
+    
+    #print('len n_bg is', len(n_bg))
+    while local_counter<len(n_bg):
+# =============================================================================
+#         term1=np.abs(n_e[local_counter]) - notch
+#         #print('term1 is', term1)
+#         term2=np.abs(n_bg[local_counter]) - notch
+#         #print('term2 is', term2)
+# =============================================================================
+        volume1 = np.sign(n_e[local_counter]) * np.clip((abs(n_e[local_counter]) - notch) / (w - notch), 0, 1) ** beta
+        volume2 = np.sign(n_bg[local_counter]) * np.clip((abs(n_bg[local_counter]) - notch) / (w - notch), 0, 1) ** beta
+        local_array.append(
+                rho_q
+        * (volume1 - volume2)
+        * row[local_counter]
+        * (
+                A * np.exp((1 - x[local_counter]) / tau_a) * (1 - np.exp(-1 / tau_a))
+                + B * np.exp((1 - x[local_counter]) / tau_b) * (1 - np.exp(-1 / tau_b))
+                + C * np.exp((1 - x[local_counter]) / tau_c) * (1 - np.exp(-1 / tau_c))
+        )  
+        )
+        local_counter=local_counter+1
+    return (local_array)
 # Define classes 
 class Analysis(af.Analysis):
         def __init__(self, x, y, noise, n_e, n_bg, row):
@@ -84,9 +151,46 @@ class Analysis(af.Analysis):
             print('log likelihood = ', fit.log_likelihood)
             return fit.log_likelihood
         
+class Analysis2(af.Analysis):
+        def __init__(self, x, y, noise, n_e, n_bg, row):
+            self.x = x
+            self.y = y
+            self.noise = noise
+            self.n_e = n_e
+            self.n_bg = n_bg
+            self.row = row
+    
+        def visualize(self, paths, instance, during_analysis):
+            #plt.plot(self.x, self.y)
+            #plt.plot(self.x, instance(
+            #    x=self.x,
+            #    n_e=self.n_e,
+            #    n_bg=self.n_bg,
+            #    row=self.row,
+            #)
+            #)
+            print('Visualising')
+    
+        def log_likelihood_function(self, instance):
+            modelled_trail = instance(
+                x=self.x,
+                n_e=self.n_e,
+                n_bg=self.n_bg,
+                row=self.row,
+            )
+            fit = SimpleFit(
+                data=self.y,
+                model_data=modelled_trail,
+                noise_map=self.noise,
+            )
+            #print('x =', self.x)
+            #print('modelled_trail= ', modelled_trail)
+            #print('log likelihood = ', fit.log_likelihood)        
+            return fit.log_likelihood
 class TrailModel:
         def __init__(
                 self,
+                days_var,
                 rho_q,
                 beta,
                 w,
@@ -99,6 +203,7 @@ class TrailModel:
                 notch
         ):
             self.rho_q = rho_q
+            self.days_var=days_var
             self.beta = beta
             self.w = w
             self.a = a
@@ -110,16 +215,89 @@ class TrailModel:
             self.notch=notch
     
         def __call__(self, x, n_e, n_bg, row):
-            print('rho_q=',self.rho_q)
-            print('beta=',self.beta)
-            print('a=',self.a)
-            print('b=',self.b)
-            print('c=',self.c)
-            print('tau_a=',self.tau_a)
-            print('tau_b=',self.tau_b)
-            print('tau_c=',self.tau_c)
-            print('notch=',self.notch)
+# =============================================================================
+#             print('rho_q=',self.rho_q)
+#             print('beta=',self.beta)
+#             print('a=',self.a)
+#             print('b=',self.b)
+#             print('c=',self.c)
+#             print('tau_a=',self.tau_a)
+#             print('tau_b=',self.tau_b)
+#             print('tau_c=',self.tau_c)
+#             print('notch=',self.notch)
+# =============================================================================
             return trail_model_arctic_notch(
+                x=x,
+                rho_q=self.rho_q,
+                n_e=n_e,
+                n_bg=n_bg,
+                row=row,
+                beta=self.beta,
+                w=self.w,
+                A=self.a,
+                B=self.b,
+                C=self.c,
+                tau_a=self.tau_a,
+                tau_b=self.tau_b,
+                tau_c=self.tau_c,
+                notch=self.notch,
+            )
+class TrailModelPrint:
+        def __init__(
+                self,
+                days_var,
+                rho_q,
+                beta,
+                w,
+                a,
+                b,
+                c,
+                tau_a,
+                tau_b,
+                tau_c,
+                notch
+        ):
+            self.rho_q = rho_q
+            self.days_var=days_var
+            self.beta = beta
+            self.w = w
+            self.a = a
+            self.b = b
+            self.c = c
+            self.tau_a = tau_a
+            self.tau_b = tau_b
+            self.tau_c = tau_c
+            self.notch=notch
+    
+        def __call__(self, x, n_e, n_bg, row):
+# =============================================================================
+#             print('rho_q=',self.rho_q)
+#             print('beta=',self.beta)
+#             print('a=',self.a)
+#             print('b=',self.b)
+#             print('c=',self.c)
+#             print('tau_a=',self.tau_a)
+#             print('tau_b=',self.tau_b)
+#             print('tau_c=',self.tau_c)
+#             print('notch=',self.notch)
+#             print('trail value=', trail_model_exp(
+#                 x=x,
+#                 rho_q=self.rho_q,
+#                 n_e=n_e,
+#                 n_bg=n_bg,
+#                 row=row,
+#                 beta=self.beta,
+#                 w=self.w,
+#                 A=self.a,
+#                 B=self.b,
+#                 C=self.c,
+#                 tau_a=self.tau_a,
+#                 tau_b=self.tau_b,
+#                 tau_c=self.tau_c,
+#                 notch=self.notch,
+#             ) )
+# =============================================================================
+            return trail_model_exp(
                 x=x,
                 rho_q=self.rho_q,
                 n_e=n_e,
@@ -484,6 +662,30 @@ class ImageACS(Array2DACS):
     header info.
     """
 
+    @classmethod
+    def get_MJD(
+        cls,
+        file_path,
+        quadrant_letter,
+    ):
+        hdu = fits_hdu_via_quadrant_letter_from(quadrant_letter=quadrant_letter)
+
+        header_sci_obj = array_2d_util.header_obj_from(file_path=file_path, hdu=0)
+        header_hdu_obj = array_2d_util.header_obj_from(file_path=file_path, hdu=hdu)
+        
+        
+        header = HeaderACS(
+            header_sci_obj=header_sci_obj,
+            header_hdu_obj=header_hdu_obj,
+            hdu=hdu,
+            quadrant_letter=quadrant_letter,
+        )
+        
+        global MJD_var
+        MJD_var = header.MJD
+        print('MJD_var is', MJD_var)
+        
+        
     @classmethod
     def from_fits(
         cls,
@@ -1174,12 +1376,12 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     
     # Define constants and free variables
     # CCD
-    beta = 0.478
+    beta = 0.556
     w = 84700.0
     # Trap species
-    a = 0.17
-    b = 0.45
-    c = 0.38
+    a = 0.180
+    b = 0.789
+    c = 0.032
     # Trap lifetimes before or after the temperature change
 # =============================================================================
 #     if date < ut.date_T_change:
@@ -1197,6 +1399,21 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     tau_c = 37.0
     notch=0.0
     
+    # Convert MJD to days since launch for notch time evolution
+    JD_var=float(MJD_var)+2400000.5
+    days_var=JD_var-2452334.5
+    #notch=0.013468157265719103*days_var-0.13793219313191085
+    notch=96.33892681649918
+    
+    if days_var < 1586.5:
+        tau_a=0.354
+        tau_b=4.082
+        tau_c=31.8176
+    else:
+        tau_a=0.541
+        tau_b=6.466
+        tau_c=57.004
+    
 
     
     # CCD
@@ -1207,7 +1424,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     )
   
     beta = af.GaussianPrior(
-              mean=0.478,
+              mean=0.556,
               sigma=0.1,
        )
     
@@ -1242,6 +1459,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     
     model = af.Model(
         TrailModel,
+        days_var=days_var,
         rho_q=rho_q,
         beta=beta,
         w=w,
@@ -1667,7 +1885,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print("Total fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_stock_bia_v4" 
+    writefilename=f"{dataset_date}_stock_bia_v4_{const_fix}" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"Log likelihood = {result.log_likelihood}"])
@@ -1694,11 +1912,11 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v4" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v4_{const_fix}" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v4", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_bia_v4_{const_fix}", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -1715,7 +1933,7 @@ cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
 #dataset_name="03_2020"
 
 cosma_dataset_path = path.join(cosma_path, "paolo", "datasets", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo","stock_bia_v4")
+cosma_output_path = path.join(cosma_path, "paolo",f"stock_bia_v4_{const_fix}")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -1727,27 +1945,50 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v4")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_bia_v4_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v4",
-                 f"{dataset_date}_stock_bia_v4")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_bia_v4_{const_fix}",
+                 f"{dataset_date}_stock_bia_v4_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
     
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v4",
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_bia_v4_{const_fix}",
                  "csv_files")
 if not os.path.exists(dir):
     os.mkdir(dir)
     
+data_directory = dataset_directory
 
+# Find all the fits files.
+temp_files_all=list(pathlib.Path(data_directory).glob('*.fits'))
+temp_files_string=[]
+for stuff in temp_files_all:
+    temp_files_string.append(str(stuff))
+    
+temp_files_string_short=[x for x in temp_files_string if not 'bia' in x]
+temp_files=[]
+for stuff in temp_files_string_short:
+    temp_files.append(Path(stuff))
+
+
+for file in temp_files:
+    print(file)
+    temp_image_path=file
+    
+    # Load each quadrant of the image  (see pypi.org/project/autoarray)
+    print('Loading image: ', temp_image_path)
+    ImageACS.get_MJD(
+            file_path=temp_image_path,
+            quadrant_letter="D",
+        )
 
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v4",
-                     f"{dataset_date}_stock_bia_v4"))/f"{dataset_date}_stock_bia_v4.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_bia_v4_{const_fix}",
+                     f"{dataset_date}_stock_bia_v4_{const_fix}"))/f"{dataset_date}_stock_bia_v4_{const_fix}.png"
 )
  
 
@@ -1820,8 +2061,8 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v4", 
-                            f"{dataset_date}_stock_bia_v4", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_bia_v4_{const_fix}", 
+                            f"{dataset_date}_stock_bia_v4_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -1861,8 +2102,8 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v4", 
-                                    f"{dataset_date}_stock_bia_v4")
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_bia_v4_{const_fix}", 
+                                    f"{dataset_date}_stock_bia_v4_{const_fix}")
         ).native
         for quadrant in ["A", "B", "C", "D"]
     ]
@@ -1893,8 +2134,8 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", "stock_bia_v4", 
-                            f"{dataset_date}_stock_bia_v4", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"stock_bia_v4_{const_fix}", 
+                            f"{dataset_date}_stock_bia_v4_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -1927,12 +2168,12 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     
     # Define constants and free variables
     # CCD
-    beta = 0.478
+    beta = 0.556
     w = 84700.0
     # Trap species
-    a = 0.17
-    b = 0.45
-    c = 0.38
+    a = 0.180
+    b = 0.789
+    c = 0.032
     # Trap lifetimes before or after the temperature change
 # =============================================================================
 #     if date < ut.date_T_change:
@@ -2019,7 +2260,8 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 
 
     model = af.Model(
-        TrailModel,
+        TrailModelPrint,
+        days_var=days_var,
         rho_q=rho_q,
         beta=beta,
         w=w,
@@ -2280,7 +2522,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 
 
                 print('Plotting one autofit subplot...')
-                global_autofit=trail_model_arctic_notch(x=pixels, 
+                global_autofit=trail_model_exp(x=pixels, 
                                            rho_q=float(best_trail_model.rho_q), 
                                            n_e=np.repeat(line.mean_flux, ut.trail_length), 
                                            n_bg=np.repeat(line.mean_background, ut.trail_length),
@@ -2415,7 +2657,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print("Total post correction fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_stock_bia_v4_corrected"
+    writefilename=f"{dataset_date}_stock_bia_v4_{const_fix}_corrected"
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"MJD = {MJD_var}"])
@@ -2447,17 +2689,17 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v4_corrected" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_stock_bia_v4_{const_fix}_corrected" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo","stock_bia_v4",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_bia_v4_{const_fix}",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo","stock_bia_v4",
-                               f"{dataset_date}_stock_bia_v4")
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"stock_bia_v4_{const_fix}",
+                               f"{dataset_date}_stock_bia_v4_{const_fix}")
 cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
@@ -2473,7 +2715,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_bia_v4",
-                     f"{dataset_date}_stock_bia_v4"))/f"{dataset_date}_stock_bia_v4_corrected.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"stock_bia_v4_{const_fix}",
+                     f"{dataset_date}_stock_bia_v4_{const_fix}"))/f"{dataset_date}_stock_bia_v4_{const_fix}_corrected.png"
 )
 
