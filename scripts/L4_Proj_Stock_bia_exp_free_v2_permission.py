@@ -234,6 +234,7 @@ class TrailModel:
 class TrailModelPrint:
         def __init__(
                 self,
+                days_var,
                 rho_q,
                 beta,
                 w,
@@ -246,6 +247,7 @@ class TrailModelPrint:
                 notch
         ):
             self.rho_q = rho_q
+            self.days_var=days_var
             self.beta = beta
             self.w = w
             self.a = a
@@ -1408,7 +1410,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     )
   
     beta = af.GaussianPrior(
-              mean=0.478,
+              mean=0.556,
               sigma=0.1,
        )
     
@@ -1443,6 +1445,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     
     model = af.Model(
         TrailModelPrint,
+        days_var=days_var,
         rho_q=rho_q,
         beta=beta,
         w=w,
@@ -1587,7 +1590,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
     
     # Load our optimiser
-    dynesty = af.DynestyStatic(name="uncorrected_dynesty",number_of_cores=16, sample="rwalk", walks=10, nlive=500,
+    dynesty = af.DynestyStatic(path_prefix='uncorrected',name="uncorrected_dynesty",unique_tag=dataset_date+'_uncorrected',number_of_cores=16, sample="rwalk", walks=10, nlive=500,
                                iterations_per_update=10000000)#, #force_x1_cpu=True)
     
     print(dynesty.config_dict_run)
@@ -2154,6 +2157,10 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     
     w = 84700.0
     
+    # Convert MJD to days since launch for notch time evolution
+    JD_var=float(MJD_var)+2400000.5
+    days_var=JD_var-2452334.5
+    
     # Trap lifetimes before or after the temperature change
 # =============================================================================
 #     if date < ut.date_T_change:
@@ -2241,6 +2248,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 
     model = af.Model(
         TrailModelPrint,
+        days_var=days_var,
         rho_q=rho_q,
         beta=beta,
         w=w,
@@ -2385,7 +2393,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
     
     # Load our optimiser
-    dynesty = af.DynestyStatic(name="corrected_dynesty",number_of_cores=16, sample="rwalk", walks=10, nlive=500, 
+    dynesty = af.DynestyStatic(path_prefix='corrected',name="corrected_dynesty",unique_tag=dataset_date+'_corrected',number_of_cores=16, sample="rwalk", walks=10, nlive=500, 
                                iterations_per_update=10000000)#, #force_x1_cpu=True)
     
     print(dynesty.config_dict_run)
