@@ -97,7 +97,7 @@ class AbstractPixelLine(ABC):
         return (self.length - 1) // 2
 
     @property
-    def model_background(self, n_pixels_used_for_background=5):
+    def model_background(self, n_pixels_used_for_background=12):
         """Re-estimate the background, locally"""
         if self.data is None:
             return None
@@ -165,6 +165,23 @@ class AbstractPixelLine(ABC):
         full_trail_untrailed = np.full(self.model_full_trail_length, self.model_background)
         # Add warm pixel itself
         full_trail_untrailed[-self.trail_length - 1] = self.model_flux + sum(self.model_trail)
+
+        return full_trail_untrailed
+    
+    @property
+    def model_full_trail_untrailed_abs(self):
+        """Convert a line with a warm pixel in the middle to the entire relevant part of a column
+        (with background), suitable for passing to arCTIc.
+        Ideally wouldn't ever use this, but would iterate to find this during fitting. This is
+        because the pushing back of trailed electrons into the warm pixel is noisy and truncated
+        (any trailed electrons past the original line.data have been lost, creating a biased
+        underestimate).
+        """
+
+        # Constant background level
+        full_trail_untrailed = np.full(self.model_full_trail_length, self.model_background)
+        # Add warm pixel itself
+        full_trail_untrailed[-self.trail_length - 1] = self.model_flux + abs(sum(self.model_trail))
 
         return full_trail_untrailed
 
