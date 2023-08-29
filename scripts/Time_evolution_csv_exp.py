@@ -47,7 +47,7 @@ temp_switch_date=2453921-2400000.5
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files_exp_free_c")
+csv_path = path.join("csv_files_exp_free_final")
 
 # Find all the csv files
 print('Finding csv files')
@@ -289,7 +289,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/Beta(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -324,7 +324,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -360,7 +360,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -384,7 +384,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/CCDGAIN(MJD)', bbox_inches="tight")
 plt.show()
 
 # correction metric plots
@@ -415,7 +415,7 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('exp_free_plots_c/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
 
 # =============================================================================
@@ -555,7 +555,7 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_plots_c/Notch(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -652,7 +652,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_free_plots_c/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # rho_q plot with swapped x-axes
@@ -704,7 +704,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_free_plots_c/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('exp_free_final_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 plt.show()
                 
 # Find the mean value of the taus before and after temp switch date

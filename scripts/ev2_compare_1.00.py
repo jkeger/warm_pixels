@@ -517,21 +517,21 @@ def Paolo_autofit_global_50_after(group1: QuadrantGroup, group2: QuadrantGroup, 
                 
                 print('Plotting one autofit subplot...')
                 global_autofit1=trail_model_exp(x=pixels, 
-                                           rho_q=float(5.02768683814913), 
+                                           rho_q=float(4.5086266608123), 
                                            n_e=np.repeat(line1.mean_flux, ut.trail_length), 
                                            n_bg=np.repeat(line1.mean_background, ut.trail_length),
                                           # n_e=line.model_flux, 
                                            #n_bg=line.model_background, 
                                            row=np.repeat(line1.mean_row, ut.trail_length), 
-                                           beta=float(0.5820576410146364), 
+                                           beta=float(0.5806647640774846), 
                                            w=w, 
-                                           A=float(0.07863076365117), 
-                                           B=float(0.34308682099194), 
-                                           C=float(0.57828241535689), 
-                                           tau_a=float(0.4349355066218243), 
-                                           tau_b=float(4.226760909886746), 
-                                           tau_c=float(62.19197151983098),
-                                           notch=float(111.12435567491411)
+                                           A=float(0.08713784880439), 
+                                           B=float(0.37154539646447), 
+                                           C=float(0.5413167547311399), 
+                                           tau_a=float(0.43111396579663186), 
+                                           tau_b=float(4.152382346051436), 
+                                           tau_c=float(46.95887796124966),
+                                           notch=float(110.18379427450782)
                                           )
                 print('Done!')
 
@@ -540,21 +540,21 @@ def Paolo_autofit_global_50_after(group1: QuadrantGroup, group2: QuadrantGroup, 
                 
                 print('Plotting one autofit subplot...')
                 global_autofit2=trail_model_exp(x=pixels, 
-                                           rho_q=float(0.49858495834948), 
+                                           rho_q=float(0.44712134621389), 
                                            n_e=np.repeat(line1.mean_flux, ut.trail_length), 
                                            n_bg=np.repeat(line1.mean_background, ut.trail_length),
                                           # n_e=line.model_flux, 
                                            #n_bg=line.model_background, 
                                            row=np.repeat(line1.mean_row, ut.trail_length), 
-                                           beta=float(0.5820576410146364), 
+                                           beta=float(0.5806647640774846), 
                                            w=w, 
-                                           A=float(0.07863076365117), 
-                                           B=float(0.34308682099194), 
-                                           C=float(0.57828241535689), 
-                                           tau_a=float(0.4349355066218243), 
-                                           tau_b=float(4.226760909886746), 
-                                           tau_c=float(62.19197151983098),
-                                           notch=float(111.12435567491411)
+                                           A=float(0.08713784880439), 
+                                           B=float(0.37154539646447), 
+                                           C=float(0.5413167547311399), 
+                                           tau_a=float(0.43111396579663186), 
+                                           tau_b=float(4.152382346051436), 
+                                           tau_c=float(46.95887796124966),
+                                           notch=float(110.18379427450782)
                                           )
                 print('Done!')
 
@@ -696,7 +696,7 @@ dataset = wp.Dataset(dataset_directory)
 
 group1 = dataset.group("ABCD")
 
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_exp_free_v2_{const_fix}", "02_2023_stock_exp_free_v2_{const_fix}")
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_exp_free_v2_1.0", "02_2023_stock_exp_free_v2_1.0")
 cosma_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6")
 cosma_output_path = path.join(cosma_path, "output")
 workspace_path = "/cosma/home/durham/dc-barr6/warm_pixels_workspace/"

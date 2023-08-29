@@ -9,7 +9,7 @@ from warm_pixels import hst_utilities as ut#, PixelLine
 from warm_pixels import misc
 from warm_pixels.hst_functions.fit import fit_dataset_total_trap_density
 from warm_pixels.hst_functions.trail_model import trail_model_hst
-#from warm_pixels.hst_functions.trail_model_k_fastest import trail_model_arctic_continuum_notch 
+from warm_pixels.hst_functions.trail_model_k_fastest import trail_model_arctic_continuum_notch 
 #from warm_pixels.fit.model import TrailModel
 #from warm_pixels.fit.analysis import Analysis
 from warm_pixels.model.group import QuadrantGroup
@@ -516,22 +516,25 @@ def Paolo_autofit_global_50_after(group1: QuadrantGroup, group2: QuadrantGroup, 
                 )
                 
                 print('Plotting one autofit subplot...')
-                global_autofit1=trail_model_exp(x=pixels, 
-                                           rho_q=float(5.95869797508027), 
+                global_autofit1=trail_model_arctic_continuum_notch(x=pixels, 
+                                           rho_q=float(3.33736947999583), 
                                            n_e=np.repeat(line1.mean_flux, ut.trail_length), 
                                            n_bg=np.repeat(line1.mean_background, ut.trail_length),
                                           # n_e=line.model_flux, 
                                            #n_bg=line.model_background, 
                                            row=np.repeat(line1.mean_row, ut.trail_length), 
-                                           beta=float(0.5842334318517097), 
+                                           beta=float(0.5844057727290449), 
                                            w=w, 
-                                           A=float(0.06224535579702), 
-                                           B=float(0.25720220489014), 
-                                           C=float(0.6805524393128399), 
-                                           tau_a=float(0.38924441872368193), 
-                                           tau_b=float(3.9121866165687713), 
-                                           tau_c=float(56.41621406803264),
-                                           notch=float(111.95468206492478)
+                                           A=float(0.08916026717034), 
+                                           B=float(0.74688879201079), 
+                                           C=float(0.16395094081887007), 
+                                           tau_a=float(1.0497943522763482), 
+                                           tau_b=float(7.66197712878277), 
+                                           tau_c=float(65.18607840934204),
+                                           sigma_a=float(0.00044446045819284075),
+                                           sigma_b=float(0.30649048333374074),
+                                           sigma_c=float(5.031998820708878),
+                                           notch=float(179.6666604700032)
                                           )
                 print('Done!')
 
@@ -540,21 +543,21 @@ def Paolo_autofit_global_50_after(group1: QuadrantGroup, group2: QuadrantGroup, 
                 
                 print('Plotting one autofit subplot...')
                 global_autofit2=trail_model_exp(x=pixels, 
-                                           rho_q=float(-0.07655498618367), 
-                                           n_e=np.repeat(line1.mean_flux, ut.trail_length), 
-                                           n_bg=np.repeat(line1.mean_background, ut.trail_length),
+                                           rho_q=float(0.60360851177321), 
+                                           n_e=np.repeat(line2.mean_flux, ut.trail_length), 
+                                           n_bg=np.repeat(line2.mean_background, ut.trail_length),
                                           # n_e=line.model_flux, 
                                            #n_bg=line.model_background, 
-                                           row=np.repeat(line1.mean_row, ut.trail_length), 
-                                           beta=float(0.5842334318517097), 
+                                           row=np.repeat(line2.mean_row, ut.trail_length), 
+                                           beta=float(0.5844057727290449),  
                                            w=w, 
-                                           A=float(0.06224535579702), 
-                                           B=float(0.25720220489014), 
-                                           C=float(0.6805524393128399), 
-                                           tau_a=float(0.38924441872368193), 
-                                           tau_b=float(3.9121866165687713), 
-                                           tau_c=float(56.41621406803264),
-                                           notch=float(111.95468206492478)
+                                           A=float(0.08916026717034), 
+                                           B=float(0.74688879201079), 
+                                           C=float(0.16395094081887007), 
+                                           tau_a=float(1.0497943522763482), 
+                                           tau_b=float(7.66197712878277), 
+                                           tau_c=float(65.18607840934204),
+                                           notch=float(179.6666604700032)
                                           )
                 print('Done!')
 
@@ -696,7 +699,7 @@ dataset = wp.Dataset(dataset_directory)
 
 group1 = dataset.group("ABCD")
 
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_exp_free_v2_4.45", "02_2023_stock_exp_free_v2_4.45")
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", "stock_exp_free_c_4.45", "02_2023_stock_exp_free_c_4.45")
 cosma_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6")
 cosma_output_path = path.join(cosma_path, "output")
 workspace_path = "/cosma/home/durham/dc-barr6/warm_pixels_workspace/"
@@ -729,6 +732,6 @@ group3 = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group1, group2,group3,
-    save_path=Path(cosma_output_path)/f"ev2_comp_{const_fix}.png"
+    save_path=Path(cosma_output_path)/f"c_comp_{const_fix}.png"
 )
 
