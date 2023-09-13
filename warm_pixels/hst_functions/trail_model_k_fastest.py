@@ -353,6 +353,116 @@ def trail_model_arctic_notch_pushed_plot(x, rho_q, generated_trails, beta, w, A,
 
     return output_model
 
+def trail_model_arctic_notch_pushed_continuum(x, rho_q, generated_trails, beta, w, A, B, C, tau_a, tau_b, tau_c, sigma_a, sigma_b, sigma_c, notch):
+    
+    # Set up classes required to run arCTIc
+    # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
+    traps = [
+        cti.TrapInstantCaptureContinuum(density=A * rho_q, release_timescale=tau_a, release_timescale_sigma=sigma_a),
+        cti.TrapInstantCaptureContinuum(density=B * rho_q, release_timescale=tau_b, release_timescale_sigma=sigma_b),
+        cti.TrapInstantCaptureContinuum(density=C * rho_q, release_timescale=tau_c, release_timescale_sigma=sigma_c),
+    ]
+    
+# =============================================================================
+#     traps = [
+#         cti.TrapInstantCapture(density=A * rho_q, release_timescale=tau_a),
+#         cti.TrapInstantCapture(density=B * rho_q, release_timescale=tau_b),
+#         #cti.TrapInstantCaptureContinuum(density=A * rho_q, release_timescale=tau_a, release_timescale_sigma=1.0),
+#         #cti.TrapInstantCaptureContinuum(density=B * rho_q, release_timescale=tau_b, release_timescale_sigma=1.0),
+#         cti.TrapInstantCaptureContinuum(density=C * rho_q, release_timescale=tau_c, release_timescale_sigma=1.0),
+#     ]
+#     
+# =============================================================================
+    roe = cti.ROE()
+    ccd = cti.CCD(full_well_depth=w, well_fill_power=beta, well_notch_depth=notch)
+
+    # Work out how many trails are concatenated within the inputs
+    trail_length = np.int(np.max(x))
+    n_trails = x.size // trail_length
+
+    # Loop over all those trails, to calculate the corresponding model
+    output_model = np.zeros(n_trails * trail_length)
+    for i in np.arange(n_trails):
+        # Define input trail model, in format that can be passed to arCTIc
+        model_before_trail = generated_trails[i]
+        background_flux=model_before_trail[0]
+
+        # Run arCTIc to produce the output image with EPER trails
+        model_after_trail = cti.add_cti(
+            model_before_trail.reshape(-1, 1),  # pass 2D image to arCTIc
+            parallel_roe=roe,
+            parallel_ccd=ccd,
+            parallel_traps=traps,
+            parallel_express=5,
+            verbosity=0
+        ).flatten()  # convert back to a 1D array
+        # print(model_after_trail[-15:])
+        eper = model_after_trail[-trail_length:] - background_flux 
+        output_model[i * trail_length:(i + 1) * trail_length] = eper # put out of loop
+
+    #exponential_model = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    # print(output_model[-24:])
+    # print(exponential_model[-24:])
+    # print((output_model-exponential_model)[-24:])
+    # print()
+
+    return output_model
+
+def trail_model_arctic_notch_pushed_plot_continuum(x, rho_q, generated_trails, beta, w, A, B, C, tau_a, tau_b, tau_c, sigma_a, sigma_b, sigma_c, notch):
+    
+    # Set up classes required to run arCTIc
+    # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
+    traps = [
+        cti.TrapInstantCaptureContinuum(density=A * rho_q, release_timescale=tau_a, release_timescale_sigma=sigma_a),
+        cti.TrapInstantCaptureContinuum(density=B * rho_q, release_timescale=tau_b, release_timescale_sigma=sigma_b),
+        cti.TrapInstantCaptureContinuum(density=C * rho_q, release_timescale=tau_c, release_timescale_sigma=sigma_c),
+    ]
+    
+# =============================================================================
+#     traps = [
+#         cti.TrapInstantCapture(density=A * rho_q, release_timescale=tau_a),
+#         cti.TrapInstantCapture(density=B * rho_q, release_timescale=tau_b),
+#         #cti.TrapInstantCaptureContinuum(density=A * rho_q, release_timescale=tau_a, release_timescale_sigma=1.0),
+#         #cti.TrapInstantCaptureContinuum(density=B * rho_q, release_timescale=tau_b, release_timescale_sigma=1.0),
+#         cti.TrapInstantCaptureContinuum(density=C * rho_q, release_timescale=tau_c, release_timescale_sigma=1.0),
+#     ]
+#     
+# =============================================================================
+    roe = cti.ROE()
+    ccd = cti.CCD(full_well_depth=w, well_fill_power=beta, well_notch_depth=notch)
+
+    # Work out how many trails are concatenated within the inputs
+    trail_length = np.int(np.max(x))
+    n_trails = x.size // trail_length
+
+    # Loop over all those trails, to calculate the corresponding model
+    output_model = np.zeros(n_trails * trail_length)
+
+    # Define input trail model, in format that can be passed to arCTIc
+    model_before_trail = generated_trails
+    background_flux=model_before_trail[0]
+
+    # Run arCTIc to produce the output image with EPER trails
+    model_after_trail = cti.add_cti(
+        model_before_trail.reshape(-1, 1),  # pass 2D image to arCTIc
+        parallel_roe=roe,
+        parallel_ccd=ccd,
+        parallel_traps=traps,
+        parallel_express=5,
+        verbosity=0
+    ).flatten()  # convert back to a 1D array
+    # print(model_after_trail[-15:])
+    eper = model_after_trail[-trail_length:] - background_flux 
+    output_model[0 * trail_length:(0 + 1) * trail_length] = eper # put out of loop
+
+    #exponential_model = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    # print(output_model[-24:])
+    # print(exponential_model[-24:])
+    # print((output_model-exponential_model)[-24:])
+    # print()
+
+    return output_model
+
 def trail_model_arctic_continuum(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c, sigma_a, sigma_b, sigma_c):
     """Calculate the model shape of a CTI trail.
 

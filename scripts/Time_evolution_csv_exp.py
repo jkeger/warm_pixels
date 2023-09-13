@@ -44,10 +44,11 @@ repair_dates_2_end=2454018-2400000.5
 repair_dates_3_start=2454128-2400000.5
 repair_dates_3_end=2454968-2400000.5
 temp_switch_date=2453921-2400000.5
+temp_switch_date_since_launch=temp_switch_date-launch_date
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files_exp_free_final")
+csv_path = path.join("csv_files_v4_pushed")
 
 # Find all the csv files
 print('Finding csv files')
@@ -82,6 +83,10 @@ notches=[]
 mean_height_reductions=[]
 rho_q_reductions=[]
 ccdgains=[]
+rho_q_exp=[]
+success_metric=[]
+log_likelihoods=[]
+BICs=[]
 
 # Lists for the errors
 rho_q_post_upper=[]
@@ -102,11 +107,17 @@ tau_c_upper=[]
 tau_c_lower=[]
 notch_upper=[]
 notch_lower=[]
+rho_q_exp_upper=[]
+rho_q_exp_lower=[]
 
 
 # Read each csv file
 for file in files_corrected:
     data = pd.read_csv(f"{file}", header=None)
+    # Extract pre-correction log likelihood
+    log_likelihoodstring=str(data.loc[[1],:])
+    log_likelihoodval=log_likelihoodstring.partition("= ")[2]
+    log_likelihoods.append(float(log_likelihoodval))
     # Extract MJD values
     MJDstring=str(data.loc[[0],:])
     MJDval=MJDstring.partition("= ")[2]
@@ -163,6 +174,10 @@ for file in files_corrected:
     ccdstring=str(data.loc[[16],:])
     ccdval=ccdstring.partition("= ")[2]
     ccdgains.append(float(ccdval))
+    # Extract success metric values
+    successstring=str(data.loc[[17],:])
+    successval=successstring.partition("= ")[2]
+    success_metric.append(float(successval))
     
     # Extract post rho_q error
     with open(file, 'r') as named_file:
@@ -181,12 +196,26 @@ for file in files_corrected:
     upper_range=float(find_between(rho_q_region_long, ', ', ')' ))
     rho_q_post_upper.append(upper_range-float(rho_q_postval))
     
+BICs_squared =[]   
+# Calculate BIC values
+for value in log_likelihoods:
+    temp_BIC=8*np.log(12*50)-2*value
+    BICs.append(temp_BIC)
+    BICs_squared.append(temp_BIC**2)
+    
 # Now look for the errors from the uncorrected files 
 print('Now locating uncorrected csv files')
 files_string_uncorrected=[x for x in files_string if 'corrected' not in x]
 files_uncorrected=[]
 for stuff in files_string_uncorrected:
     files_uncorrected.append(Path(stuff))
+
+for file in files_uncorrected:
+    data = pd.read_csv(f"{file}", header=None)
+    # Extract MJD values
+    rho_q_exp_string=str(data.loc[[11],:])
+    rho_q_exp_val=rho_q_exp_string.partition("= ")[2]
+    rho_q_exp.append(float(rho_q_exp_val))
     
 rho_q_lower_ranges=[]
 rho_q_upper_ranges=[]
@@ -201,7 +230,7 @@ for file in files_uncorrected:
             long_string = row[0]  # Assuming the long string is in the third column (0-indexed)
             # Process the long string as needed
             #print("Long string:", long_string)
-            if 'Bayesian Evidence' in long_string:
+            if 'TrailModel (N=8)' in long_string:
                 info_file=long_string
                 
     # Rho q before correction
@@ -258,6 +287,33 @@ for file in files_uncorrected:
     notch_upper.append(float(notch_upper_range-notches[file_counter]))
     file_counter=file_counter+1
     
+rho_q_exp_lower_ranges=[]
+rho_q_exp_upper_ranges=[]
+file_counter=0
+for file in files_uncorrected:
+    with open(file, 'r') as file:
+        reader = csv.reader(file)
+        
+        # Iterate over each row in the CSV file
+        for row in reader:
+            # Access the long string in the desired row
+            long_string = row[0]  # Assuming the long string is in the third column (0-indexed)
+            # Process the long string as needed
+            #print("Long string:", long_string)
+            if 'TrailModelPrint' in long_string:
+                info_file=long_string
+                
+    # Rho q exp before correction
+    rho_q_exp_region_long=find_between( info_file, 'Summary (3.0 sigma limits):', 'ummary (1.0 sigma limits):' )
+    rho_q_exp_lower_range=float(find_between(rho_q_exp_region_long, '(', ',' ))
+    rho_q_exp_lower_ranges.append(rho_q_exp_lower_range)
+    rho_q_exp_lower.append(float(rho_q_exp[file_counter]-rho_q_exp_lower_range))
+    rho_q_exp_upper_range=float(find_between(rho_q_exp_region_long, ', ', ')' ))
+    rho_q_exp_upper_ranges.append(rho_q_exp_upper_range)
+    rho_q_exp_upper.append(float(rho_q_exp_upper_range-rho_q_exp[file_counter]))
+    file_counter=file_counter+1
+    
+    
 # Convert MJD to JD
 for MJDdates in MJDs:
     JDs.append(float(MJDdates+2400000.5))
@@ -289,11 +345,273 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_final_plots/Beta(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
+# BICS plot
+# Do the linear fit for BICs
+def linear_fit(x, param_vals):
+    #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
+    #return (param_vals[0]*x**3+param_vals[1]*x**2+param_vals[2]*x+param_vals[3])
+    return (param_vals[0]*x+param_vals[1])
+
+def chi_squared(model_params, model, x_data, y_data, y_err):
+    return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
+
+
+BICs_array=np.array(BICs)
+MJDs_array=np.array(MJDs)
+print('LINEAR FIT RESULTS BICs')
+initial_values=np.array([0,0])
+deg_freedom = len(notches) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_BICs = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, MJDs_array, BICs_array, 
+                                                                  np.full(len(BICs_array),0.01) ))
+print(fit_BICs.success) 
+print(fit_BICs.message) 
+sol0 = fit_BICs.x[0]
+sol1 = fit_BICs.x[1]
+fit_BICs_line = linear_fit(MJDs_array, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_BICs.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit_BICs.fun))
+chisq_min = fit_BICs.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+linear_coef1=sol0
+linear_coef1_err=zero_err
+linear_coef2=sol1
+linear_coef2_err=one_err
+print('Number of dates:', len(BICs))
+print('Mean BIC value:', np.mean(BICs))
+print('BIC RMS:', np.sqrt(np.mean(BICs_squared)))
+BICs_early=[]
+BICs_late=[]
+for i in range(len(BICs)):
+    if MJDs[i] < 53065: # first 2 years of operations
+        BICs_early.append(BICs[i])
+    elif MJDs[i] > 59463: # last 2 years of operations
+        BICs_late.append(BICs[i])
+print('Mean BIC value in the first 2 years:', np.mean(BICs_early))
+print('Mean BIC value in the last 2 years:', np.mean(BICs_late))
+print('')
+print('')
+fig = plt.figure()
+ax = fig.add_axes((0,0,1,1))
+for i in range(len(ccdgains)):
+    color='saddlebrown'
+    if ccdgains[i] == 1.0: color='chocolate'
+    ax.plot(MJDs[i], BICs[i], color=color,marker="o", linestyle='none')
+ax.set_xlim(launch_date-500, max(MJDs)+500)
+#ax.set_ylim(0, 1)
+plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
+ax.plot(MJDs_array, fit_BICs_line, linestyle='solid', color='orange')
+plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
+plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
+ax.set_ylabel('Bayesian Information Criterion', fontsize=12)
+ax.set_xlabel("MJD", fontsize = 12)
+ax_day = ax.twiny()
+ax_day.set_xlabel("Days since launch", fontsize=12)
+ax_day.set_xlim(-500, max(days)+500)
+ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
+ax.tick_params(axis='both', which='major', labelsize=12)
+ax_day.tick_params(axis='both', which='major', labelsize=12)
+plt.savefig('v4_pushed_plots/instant_unpushed', bbox_inches="tight")
+plt.show()
 
 # relative densities plot
+# fit relative densities before and after temp switch date
+early_days_list=[]
+late_days_list=[]
+early_a_list=[]
+early_b_list=[]
+early_c_list=[]
+late_a_list=[]
+late_b_list=[]
+late_c_list=[]
+early_a_err_list=[]
+early_b_err_list=[]
+early_c_err_list=[]
+late_a_err_list=[]
+late_b_err_list=[]
+late_c_err_list=[]
+
+for i in range(len(ccdgains)):
+    if days[i] > temp_switch_date_since_launch:
+        late_days_list.append(days[i])
+        late_a_list.append(a_vals[i])
+        late_b_list.append(b_vals[i])
+        late_c_list.append(c_vals[i])
+        if a_lower[i] > a_upper[i]:
+            late_a_err_list.append(a_lower[i])
+        else:
+            late_a_err_list.append(a_upper[i])
+        if b_lower[i] > b_upper[i]:
+            late_b_err_list.append(b_lower[i])
+        else:
+            late_b_err_list.append(b_upper[i])
+    elif days[i] < temp_switch_date_since_launch:
+        early_days_list.append(days[i])
+        early_a_list.append(a_vals[i])
+        early_b_list.append(b_vals[i])
+        early_c_list.append(c_vals[i])
+        if a_lower[i] > a_upper[i]:
+            early_a_err_list.append(a_lower[i])
+        else:
+            early_a_err_list.append(a_upper[i])
+        if b_lower[i] > b_upper[i]:
+            early_b_err_list.append(b_lower[i])
+        else:
+            early_b_err_list.append(b_upper[i])
+            
+early_days=np.array(early_days_list)
+late_days=np.array(late_days_list)
+early_a=np.array(early_a_list)
+early_b=np.array(early_b_list)
+early_c=np.array(early_c_list)
+late_a=np.array(late_a_list)
+late_b=np.array(late_b_list)
+late_c=np.array(late_c_list)
+early_a_err=np.array(early_a_err_list)
+early_b_err=np.array(early_b_err_list)
+early_c_err=np.array(early_c_err_list)
+late_a_err=np.array(late_a_err_list)
+late_b_err=np.array(late_b_err_list)
+late_c_err=np.array(late_c_err_list)
+
+print('EARLY A FIT RESULTS')
+initial_values=np.array([0.0004,0.0446])
+deg_freedom = len(early_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, early_days, early_a, 
+                                                                  early_a_err))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+fit_line_early_a = linear_fit(early_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+print('EARLY B FIT RESULTS')
+initial_values=np.array([0.0004,0.0446])
+deg_freedom = len(early_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, early_days, early_b, 
+                                                                  early_b_err))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+fit_line_early_b = linear_fit(early_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')        
+print('LATE A FIT RESULTS')
+initial_values=np.array([0.0004,0.0446])
+deg_freedom = len(late_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, late_days, late_a, 
+                                                                  late_a_err))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+fit_line_late_a = linear_fit(late_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+print('LATE B FIT RESULTS')
+initial_values=np.array([0.0004,0.0446])
+deg_freedom = len(late_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, late_days, late_b, 
+                                                                  late_b_err))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+fit_line_late_b = linear_fit(late_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
@@ -322,14 +640,274 @@ ax_day = ax.twiny()
 ax_day.set_xlabel("Days since launch", fontsize=12)
 ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
+ax_day.plot(early_days,fit_line_early_a,color="black", linestyle='solid',zorder=15)
+ax_day.plot(early_days,fit_line_early_b,color="fuchsia", linestyle='solid',zorder=15)
+ax_day.plot(late_days,fit_line_late_a,color="black", linestyle='solid',zorder=15)
+ax_day.plot(late_days,fit_line_late_b,color="fuchsia", linestyle='solid',zorder=15)
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_final_plots/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 # tau's plot
+# fit line before and after temp change
+early_days_list=[]
+late_days_list=[]
+tau_a_early_list=[]
+tau_b_early_list=[]
+tau_c_early_list=[]
+tau_a_late_list=[]
+tau_b_late_list=[]
+tau_c_late_list=[]
+tau_a_early_err_list=[]
+tau_b_early_err_list=[]
+tau_c_early_err_list=[]
+tau_a_late_err_list=[]
+tau_b_late_err_list=[]
+tau_c_late_err_list=[]
+
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
+for i in range(len(ccdgains)):
+    if days[i] > temp_switch_date_since_launch:
+        late_days_list.append(days[i])
+        tau_a_late_list.append(tau_a_vals[i])
+        tau_b_late_list.append(tau_b_vals[i])
+        tau_c_late_list.append(tau_c_vals[i])
+        if tau_a_lower[i] > tau_a_upper[i]:
+            tau_a_late_err_list.append(tau_a_lower[i])
+        else:
+            tau_a_late_err_list.append(tau_a_upper[i])
+        if tau_b_lower[i] > tau_b_upper[i]:
+            tau_b_late_err_list.append(tau_b_lower[i])
+        else:
+            tau_b_late_err_list.append(tau_b_upper[i])
+        if tau_c_lower[i] > tau_c_upper[i]:
+            tau_c_late_err_list.append(tau_c_lower[i])
+        else:
+            tau_c_late_err_list.append(tau_c_upper[i])
+    elif days[i] < temp_switch_date_since_launch:
+        early_days_list.append(days[i])
+        tau_a_early_list.append(tau_a_vals[i])
+        tau_b_early_list.append(tau_b_vals[i])
+        tau_c_early_list.append(tau_c_vals[i])
+        if tau_a_lower[i] > tau_a_upper[i]:
+            tau_a_early_err_list.append(tau_a_lower[i])
+        else:
+            tau_a_early_err_list.append(tau_a_upper[i])
+        if tau_b_lower[i] > tau_b_upper[i]:
+            tau_b_early_err_list.append(tau_b_lower[i])
+        else:
+            tau_b_early_err_list.append(tau_b_upper[i])
+        if tau_c_lower[i] > tau_c_upper[i]:
+            tau_c_early_err_list.append(tau_c_lower[i])
+        else:
+            tau_c_early_err_list.append(tau_c_upper[i])
+early_days=np.array(early_days_list)
+late_days=np.array(late_days_list) 
+tau_a_early=np.array(tau_a_early_list) 
+tau_b_early=np.array(tau_b_early_list) 
+tau_c_early=np.array(tau_c_early_list) 
+tau_a_late=np.array(tau_a_late_list) 
+tau_b_late=np.array(tau_b_late_list) 
+tau_c_late=np.array(tau_c_late_list) 
+tau_a_early_err=np.array(tau_a_early_err_list) 
+tau_b_early_err=np.array(tau_b_early_err_list) 
+tau_c_early_err=np.array(tau_c_early_err_list) 
+tau_a_late_err=np.array(tau_a_late_err_list) 
+tau_b_late_err=np.array(tau_b_late_err_list) 
+tau_c_late_err=np.array(tau_c_late_err_list)         
+        
+# Do the linear fit for the tau_a plot and tau_b plot
+def linear_fit(x, param_vals):
+    #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
+    #return (param_vals[0]*x**3+param_vals[1]*x**2+param_vals[2]*x+param_vals[3])
+    return (param_vals[0]*x+param_vals[1])
+
+def chi_squared(model_params, model, x_data, y_data, y_err):
+    return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
+
+print('EARLY LINEAR FIT RESULTS FOR TAU_A')
+initial_values=np.array([0,0])
+deg_freedom = len(early_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_a = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, early_days, tau_a_early, 
+                                                                  tau_a_early_err))
+print(fit_a.success) 
+print(fit_a.message) 
+sol0 = fit_a.x[0]
+sol1 = fit_a.x[1]
+fit_tau_a_early = linear_fit(early_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_a.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit_a.fun))
+chisq_min = fit_a.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+print('EARLY LINEAR FIT RESULTS FOR TAU_B')
+initial_values=np.array([0,0])
+deg_freedom = len(early_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_a = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, early_days, tau_b_early, 
+                                                                  tau_b_early_err))
+print(fit_a.success) 
+print(fit_a.message) 
+sol0 = fit_a.x[0]
+sol1 = fit_a.x[1]
+fit_tau_b_early = linear_fit(early_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_a.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit_a.fun))
+chisq_min = fit_a.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+print('EARLY LINEAR FIT RESULTS FOR TAU_C')
+initial_values=np.array([0,0])
+deg_freedom = len(early_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_a = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, early_days, tau_c_early, 
+                                                                  tau_c_early_err))
+print(fit_a.success) 
+print(fit_a.message) 
+sol0 = fit_a.x[0]
+sol1 = fit_a.x[1]
+fit_tau_c_early = linear_fit(early_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_a.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit_a.fun))
+chisq_min = fit_a.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+print('LATE LINEAR FIT RESULTS FOR TAU_A')
+initial_values=np.array([0,0])
+deg_freedom = len(late_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_a = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, late_days, tau_a_late, 
+                                                                  tau_a_late_err))
+print(fit_a.success) 
+print(fit_a.message) 
+sol0 = fit_a.x[0]
+sol1 = fit_a.x[1]
+fit_tau_a_late = linear_fit( late_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_a.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit_a.fun))
+chisq_min = fit_a.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+print('LATE LINEAR FIT RESULTS FOR TAU_B')
+initial_values=np.array([0,0])
+deg_freedom = len(late_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_a = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, late_days, tau_b_late, 
+                                                                  tau_b_late_err))
+print(fit_a.success) 
+print(fit_a.message) 
+sol0 = fit_a.x[0]
+sol1 = fit_a.x[1]
+fit_tau_b_late = linear_fit( late_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_a.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit_a.fun))
+chisq_min = fit_a.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+print('LATE LINEAR FIT RESULTS FOR TAU_C')
+initial_values=np.array([0,0])
+deg_freedom = len(late_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_a = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, late_days, tau_c_late, 
+                                                                  tau_c_late_err))
+print(fit_a.success) 
+print(fit_a.message) 
+sol0 = fit_a.x[0]
+sol1 = fit_a.x[1]
+fit_tau_c_late = linear_fit( late_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_a.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit_a.fun))
+chisq_min = fit_a.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+
 for i in range(len(ccdgains)):
     color='red'
     if ccdgains[i] == 1.0: color='lightcoral'
@@ -358,9 +936,15 @@ ax_day = ax.twiny()
 ax_day.set_xlabel("Days since launch", fontsize=12)
 ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
+ax_day.plot(early_days,fit_tau_a_early, color='orange', linestyle='solid',zorder=15)
+ax_day.plot(early_days,fit_tau_b_early, color='purple', linestyle='solid',zorder=15)
+ax_day.plot(early_days,fit_tau_c_early, color='blue', linestyle='solid',zorder=15)
+ax_day.plot(late_days,fit_tau_a_late, color='orange', linestyle='solid',zorder=15)
+ax_day.plot(late_days,fit_tau_b_late, color='purple', linestyle='solid',zorder=15)
+ax_day.plot(late_days,fit_tau_c_late, color='blue', linestyle='solid',zorder=15)
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_final_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -384,7 +968,31 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_final_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.show()
+
+# success metric plot
+fig = plt.figure()
+ax = fig.add_axes((0,0,1,1))
+for i in range(len(ccdgains)):
+    color='purple'
+    if ccdgains[i] == 1.0: color='deeppink'
+    ax.plot(MJDs[i],success_metric[i], color=color,marker="o", linestyle='none')
+ax.set_xlim(launch_date-500, max(MJDs)+500)
+plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
+plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
+plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
+plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
+ax.set_ylabel('Success metric (Rho_q_exp_after/Rho_q_exp_before)', fontsize=12)
+ax.set_xlabel("MJD", fontsize = 12)
+ax_day = ax.twiny()
+ax_day.set_xlabel("Days since launch", fontsize=12)
+ax_day.set_xlim(-500, max(days)+500)
+ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
+ax.tick_params(axis='both', which='major', labelsize=12)
+ax_day.tick_params(axis='both', which='major', labelsize=12)
+plt.savefig('v4_pushed_plots/success_metric(MJD)', bbox_inches="tight")
 plt.show()
 
 # correction metric plots
@@ -415,77 +1023,79 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('exp_free_final_plots/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
 
+# Look for datasets with days > 4000 to find the average beta value 
+late_days=[]
+late_days_index=[]
+betas_to_average=[]
+excel_notches=[]
+for i in range(len(days)):
+    if days[i] > 4000:
+        late_days.append(days[i])
+        late_days_index.append(i)
+        betas_to_average.append(betas[i])
+        excel_notches.append(notches[i])
+        
+avg_beta=np.mean(betas_to_average)
+print('mean beta is', avg_beta)
+        
+# Look for datasets with days > 4000 to find the average best fit values
+later_days=[]
+later_days_index=[]
+a_to_average=[]
+b_to_average=[]
+c_to_average=[]
+tau_a_to_average=[]
+tau_b_to_average=[]
+tau_c_to_average=[]
+notch_to_average=[]
+for i in range(len(days)):
+    if days[i] > 4000:
+        later_days.append(days[i])
+        later_days_index.append(i)
+        a_to_average.append(a_vals[i])
+        b_to_average.append(b_vals[i])
+        c_to_average.append(c_vals[i])
+        tau_a_to_average.append(tau_a_vals[i])
+        tau_b_to_average.append(tau_b_vals[i])
+        tau_c_to_average.append(tau_c_vals[i])
+        notch_to_average.append(notches[i])
+        
+avg_a=np.mean(a_to_average)
+print('mean a is ',avg_a)
+avg_b=np.mean(b_to_average)
+print('mean b is ',avg_b)
+avg_c=np.mean(c_to_average)
+print('mean c is ',avg_c)
+avg_tau_a=np.mean(tau_a_to_average)
+print('mean tau_a is ',avg_tau_a)
+avg_tau_b=np.mean(tau_b_to_average)
+print('mean tau_b is ',avg_tau_b)
+avg_tau_c=np.mean(tau_c_to_average)
+print('mean tau_c is ',avg_tau_c)
+avg_notch=np.mean(notch_to_average)
+print('mean notch for t>4000 is ',avg_notch)
+print('')
+print('')
+# Find average notch at early times
+notch_early_to_average=[]
+for i in range(len(days)):
+    if days[i] < 4000:
+        notch_early_to_average.append(notches[i])
+avg_notch_early=np.mean(notch_early_to_average)
+print('mean notch for t<4000 is ',avg_notch_early)
+        
+# Find average notch at all times
+notch_all_to_average=[]
+for i in range(len(days)):
+    notch_all_to_average.append(notches[i])
+avg_notch_all=np.mean(notch_all_to_average)
+print('mean notch all t is ',avg_notch_all)
+print('')
+print('')
 # =============================================================================
-# # Look for datasets with days > 3000 to find the average beta value 
-# late_days=[]
-# late_days_index=[]
-# betas_to_average=[]
-# excel_notches=[]
-# for i in range(len(days)):
-#     if days[i] > 3000:
-#         late_days.append(days[i])
-#         late_days_index.append(i)
-#         betas_to_average.append(betas[i])
-#         excel_notches.append(notches[i])
-#         
-# avg_beta=np.mean(betas_to_average)
-# print('mean beta is', avg_beta)
-#         
-# # Look for datasets with days > 4000 to find the average best fit values
-# later_days=[]
-# later_days_index=[]
-# a_to_average=[]
-# b_to_average=[]
-# c_to_average=[]
-# tau_a_to_average=[]
-# tau_b_to_average=[]
-# tau_c_to_average=[]
-# notch_to_average=[]
-# for i in range(len(days)):
-#     if days[i] > 4000:
-#         later_days.append(days[i])
-#         later_days_index.append(i)
-#         a_to_average.append(a_vals[i])
-#         b_to_average.append(b_vals[i])
-#         c_to_average.append(c_vals[i])
-#         tau_a_to_average.append(tau_a_vals[i])
-#         tau_b_to_average.append(tau_b_vals[i])
-#         tau_c_to_average.append(tau_c_vals[i])
-#         notch_to_average.append(notches[i])
-#         
-# avg_a=np.mean(a_to_average)
-# print('mean a is ',avg_a)
-# avg_b=np.mean(b_to_average)
-# print('mean b is ',avg_b)
-# avg_c=np.mean(c_to_average)
-# print('mean c is ',avg_c)
-# avg_tau_a=np.mean(tau_a_to_average)
-# print('mean tau_a is ',avg_tau_a)
-# avg_tau_b=np.mean(tau_b_to_average)
-# print('mean tau_b is ',avg_tau_b)
-# avg_tau_c=np.mean(tau_c_to_average)
-# print('mean tau_c is ',avg_tau_c)
-# avg_notch=np.mean(notch_to_average)
-# print('mean notch for t>4000 is ',avg_notch)
-# 
-# # Find average notch at early times
-# notch_early_to_average=[]
-# for i in range(len(days)):
-#     if days[i] < 4000:
-#         notch_early_to_average.append(notches[i])
-# avg_notch_early=np.mean(notch_early_to_average)
-# print('mean notch for t<4000 is ',avg_notch_early)
-#         
-# # Find average notch at all times
-# notch_all_to_average=[]
-# for i in range(len(days)):
-#     notch_all_to_average.append(notches[i])
-# avg_notch_all=np.mean(notch_all_to_average)
-# print('mean notch all t is ',avg_notch_all)
-# 
 # # Do the linear fit for the notch plot
 # def linear_fit(x, param_vals):
 #     #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
@@ -555,7 +1165,7 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('exp_free_final_plots/Notch(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -570,7 +1180,7 @@ def chi_squared(model_params, model, x_data, y_data, y_err):
 
 days_array=np.array(days)
 rho_q_pres_array=np.array(rho_q_pres)
-print('LINEAR FIT RESULTS')
+print('RHO_Q ALL DATES LINEAR FIT RESULTS')
 initial_values=np.array([0.0004,0.0446])
 deg_freedom = len(notches) - initial_values.size
 print('DoF = {}'.format(deg_freedom))
@@ -602,7 +1212,93 @@ linear_coef1=sol0
 linear_coef1_err=zero_err
 linear_coef2=sol1
 linear_coef2_err=one_err
+print('')
+print('')
+# 2 separate rho_q fits before and after temp switch 
+late_rho_days_list=[]
+early_rho_days_list=[]
+late_rho_list=[]
+early_rho_list=[]
+late_rho_errors_list=[]
+early_rho_errors_list=[]
+for i in range(len(ccdgains)):
+    if days[i] > temp_switch_date_since_launch:
+        late_rho_days_list.append(days[i])
+        late_rho_list.append(rho_q_pres[i])
+        late_rho_errors_list.append(rho_q_pre_lower[i])
+    elif days[i] < temp_switch_date_since_launch:
+        early_rho_days_list.append(days[i])
+        early_rho_list.append(rho_q_pres[i])
+        early_rho_errors_list.append(rho_q_pre_lower[i])
+late_rho_days=np.array(late_rho_days_list)
+early_rho_days=np.array(early_rho_days_list)
+late_rho=np.array(late_rho_list)
+early_rho=np.array(early_rho_list)
+late_rho_errors=np.array(late_rho_errors_list)
+early_rho_errors=np.array(early_rho_errors_list) 
+        
+# Fit early rho_q values 
+print('RHO_Q PRE TEMP SWITCH LINEAR FIT RESULTS')
+initial_values=np.array([0.0004,0.0446])
+deg_freedom = len(early_rho_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, early_rho_days, early_rho, 
+                                                                  early_rho_errors))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+fit_line_early = linear_fit(early_rho_days, [sol0,sol1])
 
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
+# Fit late rho_q values 
+print('RHO_Q POST TEMP SWITCH LINEAR FIT RESULTS')
+initial_values=np.array([1,1])
+deg_freedom = len(late_rho_days) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, late_rho_days, late_rho, 
+                                                                  late_rho_errors))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+fit_line_late = linear_fit(late_rho_days, [sol0,sol1])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Model Equation: {}x+{}'.format(sol0,sol1))
+print('')
+print('')
 # rho_q plot with swapped x-axes
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
@@ -616,7 +1312,16 @@ for i in range(len(ccdgains)):
     if ccdgains[i] == 1.0: color2='lightcoral'
     ax.errorbar(days[i],rho_q_posts[i],yerr=[[rho_q_post_lower[i]], [rho_q_post_upper[i]]],
                 color=color2,marker="o", label='post-correction', linestyle='none', alpha=1) 
-ax.plot(days_array, fit_line, linestyle='solid', color='orange')
+# =============================================================================
+# for i in range(len(ccdgains)):
+#     color2='green'
+#     if ccdgains[i] == 1.0: color2='lime'
+#     ax.errorbar(days[i],rho_q_exp[i],yerr=[[rho_q_exp_lower[i]], [rho_q_exp_upper[i]]],
+#                 color=color2,marker="o", label='exponential pre-correction', linestyle='none', alpha=1) 
+# =============================================================================
+#ax.plot(days_array, fit_line, linestyle='solid', color='orange')
+ax.plot(late_rho_days, fit_line_late, linestyle='solid', color='black',zorder=10)
+ax.plot(early_rho_days, fit_line_early, linestyle='solid', color='fuchsia',zorder=15)
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
 #ax.set_ylim(-0.02,0.05) # Zoom into post correction rho_q vals
@@ -652,7 +1357,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_free_final_plots/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # rho_q plot with swapped x-axes
@@ -668,6 +1373,11 @@ for i in range(len(ccdgains)):
     if ccdgains[i] == 1.0: color2='lightcoral'
     ax.errorbar(days[i],rho_q_posts[i],yerr=[[rho_q_post_lower[i]], [rho_q_post_upper[i]]],
                 color=color2,marker="o", label='post-correction', linestyle='none', alpha=1) 
+for i in range(len(ccdgains)):
+    color2='green'
+    if ccdgains[i] == 1.0: color2='lime'
+    ax.errorbar(days[i],rho_q_exp[i],yerr=[[rho_q_exp_lower[i]], [rho_q_exp_upper[i]]],
+                color=color2,marker="o", label='exponential pre-correction', linestyle='none', alpha=1) 
 ax.plot(days_array, fit_line, linestyle='solid', color='orange')
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
@@ -704,7 +1414,7 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('exp_free_final_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 plt.show()
                 
 # Find the mean value of the taus before and after temp switch date
@@ -744,7 +1454,8 @@ print('mean tau_c before temp switch is', avg_t_c_before)
 print('mean tau_a after temp switch is', avg_t_a_after)
 print('mean tau_b after temp switch is', avg_t_b_after)
 print('mean tau_c after temp switch is', avg_t_c_after)
-
+print('')
+print('')
 # Now find the error on the mean values
 array_tau_a_before=np.array(tau_a_before)
 array_tau_b_before=np.array(tau_b_before)

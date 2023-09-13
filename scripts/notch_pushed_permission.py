@@ -1533,6 +1533,9 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     noise_all_temp = np.array([])
     noise_all = np.array([])
     generated_trails=[]
+    n_e_each = np.array([])
+    n_bg_each = np.array([])
+    row_each = np.array([])
     
    #x_one=np.array(np.arange(ut.trail_length)+1)
 
@@ -1555,6 +1558,9 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
                     y_all = np.append(y_all, np.array(line.model_trail)) 
                     noise_all_temp = np.append(noise_all_temp, np.array(line.model_trail_noise))
                     generated_trails.append(line.model_full_trail_untrailed)
+                    n_e_each = np.append(n_e_each, line.mean_flux)
+                    n_bg_each = np.append(n_bg_each, line.mean_background)
+                    row_each = np.append(row_each, line.mean_row)
                     n_lines_used += 1
     if n_lines_used == 0:
         return None, None, np.zeros(ut.trail_length)
@@ -1575,6 +1581,11 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     x_all = np.tile(np.arange(ut.trail_length) + 1, n_lines_used)
     #x_one=np.array(np.arange(ut.trail_length)+1)
 
+    # Duplicate the single parameters of each trail for all pixels
+    n_e_all = np.repeat(n_e_each, ut.trail_length)
+    n_bg_all = np.repeat(n_bg_each, ut.trail_length)
+    row_all = np.repeat(row_each, ut.trail_length)
+    #N_all = np.repeat(N_each, ut.trail_length)
     
     # Make instance of analysis, passing it the data.  
     analysis = Analysis(
@@ -1582,6 +1593,15 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
        y=y_all,
        noise=noise_all,
        generated_trails=generated_trails
+    )
+    
+    analysis2 = Analysis2(
+       x=x_all,
+       y=y_all,
+       noise=noise_all,
+       n_e=n_e_all,
+       n_bg=n_bg_all,
+       row=row_all
     )
     
     #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
@@ -1642,7 +1662,42 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     best_fit_notch=best_trail_model.notch
     best_fit_mean_height=mean_height
     
+    # Now do the fits for the exponential model 
+    rho_q_exp = af.UniformPrior(
+        lower_limit=-10,
+        #lower_limit=0.0,
+        upper_limit=10,
+    )
+
+    model_exp = af.Model(
+        TrailModelPrint,
+        days_var=days_var,
+        rho_q=rho_q_exp,
+        beta=best_fit_beta,
+        w=w,
+        a=best_fit_a,
+        b=best_fit_b,
+        c=best_fit_c,
+        tau_a=best_fit_tau_a,
+        tau_b=best_fit_tau_b,
+        tau_c=best_fit_tau_c,
+        notch=best_fit_notch,
+    ) 
     
+    # Do the fitting
+    print('Perfoming global AUTOFIT for the exponential model: ')
+    result_exp = dynesty.fit(
+    model=model_exp,
+    analysis=analysis2,
+    )
+    
+    print(f"log likelihood = {result_exp.log_likelihood}")
+    
+    best_trail_model_exp = result_exp.instance
+    result_info_pre_exp=result_exp.info
+    print(result_exp.info)
+    global best_fit_rho_q_exp
+    best_fit_rho_q_exp = best_trail_model_exp.rho_q
 
     for i_row in range(n_row_bins):
         for i_flux in range(n_flux_bins):
@@ -1878,7 +1933,10 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
         writer.writerow([f"tau_c = {best_trail_model.tau_c}"])
         writer.writerow([f"notch = {best_trail_model.notch}"])
         writer.writerow([f"mean height = {mean_height}"])
+        writer.writerow([f"rho_q exponential model = {best_trail_model_exp.rho_q}"])
         writer.writerow([result.info])
+        writer.writerow(['BELOW IS THE SEARCH SUMMARY FOR THE EXPONENTIAL FIT:'])
+        writer.writerow([result_exp.info])
        
             
     print("Data file written!")
@@ -2239,7 +2297,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 
 
     model = af.Model(
-        TrailModel,
+        TrailModelPrint,
         days_var=days_var,
         rho_q=rho_q,
         beta=beta,
@@ -2320,6 +2378,9 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     noise_all_temp = np.array([])
     noise_all = np.array([])
     generated_trails=[]
+    n_e_each = np.array([])
+    n_bg_each = np.array([])
+    row_each = np.array([])
    #x_one=np.array(np.arange(ut.trail_length)+1)
 
     for i_row in range(n_row_bins):
@@ -2343,6 +2404,9 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
                     
                     noise_all_temp = np.append(noise_all_temp, np.array(line.model_trail_noise))
                     generated_trails.append(line.model_full_trail_untrailed_abs)
+                    n_e_each = np.append(n_e_each, line.mean_flux)
+                    n_bg_each = np.append(n_bg_each, line.mean_background)
+                    row_each = np.append(row_each, line.mean_row)
                     n_lines_used += 1
     if n_lines_used == 0:
         return None, None, np.zeros(ut.trail_length)
@@ -2361,14 +2425,20 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     x_all = np.tile(np.arange(ut.trail_length) + 1, n_lines_used)
     #x_one=np.array(np.arange(ut.trail_length)+1)
 
-    
+    # Duplicate the single parameters of each trail for all pixels
+    n_e_all = np.repeat(n_e_each, ut.trail_length)
+    n_bg_all = np.repeat(n_bg_each, ut.trail_length)
+    row_all = np.repeat(row_each, ut.trail_length)
+    #N_all = np.repeat(N_each, ut.trail_length)
     
     # Make instance of analysis, passing it the data.  
-    analysis = Analysis(
+    analysis2 = Analysis2(
        x=x_all,
        y=y_all,
        noise=noise_all,
-       generated_trails=generated_trails
+       n_e=n_e_all,
+       n_bg=n_bg_all,
+       row=row_all
     )
     
     #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
@@ -2384,7 +2454,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print('Perfoming global AUTOFIT: ')
     result = dynesty.fit(
     model=model,
-    analysis=analysis,
+    analysis=analysis2,
     )
     
     print(f"log likelihood = {result.log_likelihood}")
@@ -2490,9 +2560,13 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 
 
                 print('Plotting one autofit subplot...')
-                global_autofit=trail_model_arctic_notch_pushed_plot(x=pixels, 
+                global_autofit=trail_model_exp(x=pixels, 
                                            rho_q=float(best_trail_model.rho_q), 
-                                           generated_trails=line.model_full_trail_untrailed_abs,
+                                           n_e=np.repeat(line.mean_flux, ut.trail_length), 
+                                           n_bg=np.repeat(line.mean_background, ut.trail_length),
+                                          # n_e=line.model_flux, 
+                                           #n_bg=line.model_background, 
+                                           row=np.repeat(line.mean_row, ut.trail_length), 
                                            beta=float(best_fit_beta), 
                                            w=w, 
                                            A=float(best_fit_a), 
@@ -2620,6 +2694,9 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
         
     print("Total post correction fit processing time: ", time.time() - start_time, "seconds")
     
+    # Calculate exponential rho_q_after/ exponential rho_q_before 
+    success_metric=float(best_trail_model.rho_q)/float(best_fit_rho_q_exp)
+    
     #  Print results to csv file 
     writefilename=f"{dataset_date}_notch_pushed_{const_fix}_corrected"
     with open(writefilename+'.csv', 'w', newline='') as file:
@@ -2641,6 +2718,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
         writer.writerow([f"mean height reduction = {mean_height_reduction}"])
         writer.writerow([f"rho_q reduction = {rho_q_reduction}"])
         writer.writerow([f"CCDGAIN = {CCDGAIN_var}"])
+        writer.writerow([f"success metric = {success_metric}"])
         writer.writerow([result.info])
             
     print("Data file written!")
