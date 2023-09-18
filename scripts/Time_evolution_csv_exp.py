@@ -10,7 +10,69 @@ import pathlib
 from astropy.time import Time
 import scipy.optimize as scpo
 import scipy.stats
+import math
 
+def date_to_jd(year,month,day):
+    """
+    Convert a date to Julian Day.
+    
+    Algorithm from 'Practical Astronomy with your Calculator or Spreadsheet', 
+        4th ed., Duffet-Smith and Zwart, 2011.
+    
+    Parameters
+    ----------
+    year : int
+        Year as integer. Years preceding 1 A.D. should be 0 or negative.
+        The year before 1 A.D. is 0, 10 B.C. is year -9.
+        
+    month : int
+        Month as integer, Jan = 1, Feb. = 2, etc.
+    
+    day : float
+        Day, may contain fractional part.
+    
+    Returns
+    -------
+    jd : float
+        Julian Day
+        
+    Examples
+    --------
+    Convert 6 a.m., February 17, 1985 to Julian Day
+    
+    >>> date_to_jd(1985,2,17.25)
+    2446113.75
+    
+    """
+    if month == 1 or month == 2:
+        yearp = year - 1
+        monthp = month + 12
+    else:
+        yearp = year
+        monthp = month
+    
+    # this checks where we are in relation to October 15, 1582, the beginning
+    # of the Gregorian calendar.
+    if ((year < 1582) or
+        (year == 1582 and month < 10) or
+        (year == 1582 and month == 10 and day < 15)):
+        # before start of Gregorian calendar
+        B = 0
+    else:
+        # after start of Gregorian calendar
+        A = math.trunc(yearp / 100.)
+        B = 2 - A + math.trunc(A / 4.)
+        
+    if yearp < 0:
+        C = math.trunc((365.25 * yearp) - 0.75)
+    else:
+        C = math.trunc(365.25 * yearp)
+        
+    D = math.trunc(30.6001 * (monthp + 1))
+    
+    jd = B + C + D + day + 1720994.5
+    
+    return jd
 
 def jd_to_dec_yr(dates):
     """Convert one or more Julian dates to decimal-year dates."""
@@ -321,6 +383,8 @@ for MJDdates in MJDs:
 for JDdates in JDs:
     days.append(JDdates-launch_date_JD)    
     
+    
+    
 # Generate time evolution plots
 
 # beta plot
@@ -450,20 +514,7 @@ late_b_err_list=[]
 late_c_err_list=[]
 
 for i in range(len(ccdgains)):
-    if days[i] > temp_switch_date_since_launch:
-        late_days_list.append(days[i])
-        late_a_list.append(a_vals[i])
-        late_b_list.append(b_vals[i])
-        late_c_list.append(c_vals[i])
-        if a_lower[i] > a_upper[i]:
-            late_a_err_list.append(a_lower[i])
-        else:
-            late_a_err_list.append(a_upper[i])
-        if b_lower[i] > b_upper[i]:
-            late_b_err_list.append(b_lower[i])
-        else:
-            late_b_err_list.append(b_upper[i])
-    elif days[i] < temp_switch_date_since_launch:
+    if days[i] < temp_switch_date_since_launch:
         early_days_list.append(days[i])
         early_a_list.append(a_vals[i])
         early_b_list.append(b_vals[i])
@@ -476,6 +527,19 @@ for i in range(len(ccdgains)):
             early_b_err_list.append(b_lower[i])
         else:
             early_b_err_list.append(b_upper[i])
+    elif days[i] < 1666 or days[i] > 3666:
+        late_days_list.append(days[i])
+        late_a_list.append(a_vals[i])
+        late_b_list.append(b_vals[i])
+        late_c_list.append(c_vals[i])
+        if a_lower[i] > a_upper[i]:
+            late_a_err_list.append(a_lower[i])
+        else:
+            late_a_err_list.append(a_upper[i])
+        if b_lower[i] > b_upper[i]:
+            late_b_err_list.append(b_lower[i])
+        else:
+            late_b_err_list.append(b_upper[i])
             
 early_days=np.array(early_days_list)
 late_days=np.array(late_days_list)
@@ -669,24 +733,7 @@ tau_c_late_err_list=[]
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
-    if days[i] > temp_switch_date_since_launch:
-        late_days_list.append(days[i])
-        tau_a_late_list.append(tau_a_vals[i])
-        tau_b_late_list.append(tau_b_vals[i])
-        tau_c_late_list.append(tau_c_vals[i])
-        if tau_a_lower[i] > tau_a_upper[i]:
-            tau_a_late_err_list.append(tau_a_lower[i])
-        else:
-            tau_a_late_err_list.append(tau_a_upper[i])
-        if tau_b_lower[i] > tau_b_upper[i]:
-            tau_b_late_err_list.append(tau_b_lower[i])
-        else:
-            tau_b_late_err_list.append(tau_b_upper[i])
-        if tau_c_lower[i] > tau_c_upper[i]:
-            tau_c_late_err_list.append(tau_c_lower[i])
-        else:
-            tau_c_late_err_list.append(tau_c_upper[i])
-    elif days[i] < temp_switch_date_since_launch:
+    if days[i] < temp_switch_date_since_launch:
         early_days_list.append(days[i])
         tau_a_early_list.append(tau_a_vals[i])
         tau_b_early_list.append(tau_b_vals[i])
@@ -703,6 +750,24 @@ for i in range(len(ccdgains)):
             tau_c_early_err_list.append(tau_c_lower[i])
         else:
             tau_c_early_err_list.append(tau_c_upper[i])
+    elif days[i] < 1666 or days[i] > 3666:
+        late_days_list.append(days[i])
+        tau_a_late_list.append(tau_a_vals[i])
+        tau_b_late_list.append(tau_b_vals[i])
+        tau_c_late_list.append(tau_c_vals[i])
+        if tau_a_lower[i] > tau_a_upper[i]:
+            tau_a_late_err_list.append(tau_a_lower[i])
+        else:
+            tau_a_late_err_list.append(tau_a_upper[i])
+        if tau_b_lower[i] > tau_b_upper[i]:
+            tau_b_late_err_list.append(tau_b_lower[i])
+        else:
+            tau_b_late_err_list.append(tau_b_upper[i])
+        if tau_c_lower[i] > tau_c_upper[i]:
+            tau_c_late_err_list.append(tau_c_lower[i])
+        else:
+            tau_c_late_err_list.append(tau_c_upper[i])
+    
 early_days=np.array(early_days_list)
 late_days=np.array(late_days_list) 
 tau_a_early=np.array(tau_a_early_list) 
@@ -1169,6 +1234,7 @@ plt.savefig('v4_pushed_plots/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 
+
 # Do the linear fit for the rho plot
 def linear_fit(x, param_vals):
     #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
@@ -1214,6 +1280,10 @@ linear_coef2=sol1
 linear_coef2_err=one_err
 print('')
 print('')
+
+
+
+
 # 2 separate rho_q fits before and after temp switch 
 late_rho_days_list=[]
 early_rho_days_list=[]
@@ -1222,20 +1292,22 @@ early_rho_list=[]
 late_rho_errors_list=[]
 early_rho_errors_list=[]
 for i in range(len(ccdgains)):
-    if days[i] > temp_switch_date_since_launch:
-        late_rho_days_list.append(days[i])
-        late_rho_list.append(rho_q_pres[i])
-        late_rho_errors_list.append(rho_q_pre_lower[i])
-    elif days[i] < temp_switch_date_since_launch:
+    if days[i] < temp_switch_date_since_launch:
         early_rho_days_list.append(days[i])
         early_rho_list.append(rho_q_pres[i])
         early_rho_errors_list.append(rho_q_pre_lower[i])
+    elif days[i] < 1666 or days[i] > 3666:
+        late_rho_days_list.append(days[i])
+        late_rho_list.append(rho_q_pres[i])
+        late_rho_errors_list.append(rho_q_pre_lower[i])
+    
 late_rho_days=np.array(late_rho_days_list)
 early_rho_days=np.array(early_rho_days_list)
 late_rho=np.array(late_rho_list)
 early_rho=np.array(early_rho_list)
 late_rho_errors=np.array(late_rho_errors_list)
 early_rho_errors=np.array(early_rho_errors_list) 
+
         
 # Fit early rho_q values 
 print('RHO_Q PRE TEMP SWITCH LINEAR FIT RESULTS')
@@ -1299,6 +1371,139 @@ print('Second coefficient = {} +/- {}'.format(sol1, one_err))
 print('Model Equation: {}x+{}'.format(sol0,sol1))
 print('')
 print('')
+# Find sunspot data 
+sun_years=[]
+sun_months=[]
+sun_days=[]
+sunspots=[]
+sunspot_JD=[]
+sunspot_days_since_launch=[]
+sunspot_days_since_launch_fit=[0]
+sunspot_fit=[0]
+csv_file = 'sunspots.csv'
+
+# Open the CSV file
+with open(csv_file, mode='r') as file:
+    # Create a CSV reader with a custom delimiter
+    csv_reader = csv.reader(file, delimiter=';')
+
+    # Iterate through each row in the CSV file
+    for row in csv_reader:
+        # The 'row' variable now contains the data from each row
+        if float(row[0]) > 2001:
+            sun_years.append(row[0])
+            sun_months.append(row[1])
+            sun_days.append(row[2])
+            if float(row[4]) > 0:
+                sunspots.append(row[4])
+            else: sunspots.append(0)
+
+for x in range(len(sunspots)):
+    sunspot_JD.append(date_to_jd(float(sun_years[x]),float(sun_months[x]),float(sun_days[x])))
+for x in range(len(sunspots)):
+    sunspot_days_since_launch.append(sunspot_JD[x]-launch_date_JD)
+for x in range(len(sunspots)):
+    if sunspot_days_since_launch[x] > 0:
+        sunspot_fit.append(sunspots[x])
+        sunspot_days_since_launch_fit.append(sunspot_days_since_launch[x])
+ 
+# =============================================================================
+# def sunspot_rho_q(date_since_launch, param_vals):
+#     sum_sunspots=0
+#     rho_q=0
+#     for x in range(date_since_launch):
+#         sum_sunspots=sum_sunspots+float(sunspot_fit[x+1]) # sum all the sunspots from launch date
+#         rho_q=rho_q + float(param_vals[0] + param_vals[1] * ( np.exp(param_vals[2] * (sum_sunspots-param_vals[3])) )) # implement functional form
+#         
+#     return (sum_sunspots)    
+# =============================================================================
+def sunspot_rho_q(date_since_launch, param_vals):
+    #sum_sunspots=0
+    global date_since_launchg
+    date_since_launchg=date_since_launch
+    rho_q_vals=[]
+    for stuff in date_since_launch:
+        rho_q=0
+        #print('stuff is', stuff)
+        for x in range(stuff):
+# =============================================================================
+#             print('x is', x)
+#             print('param_vals0 is', param_vals[0])
+#             print('param_vals1 is', param_vals[1])
+#             print('param_vals2 is', param_vals[2])
+#             print('param_vals3 is', param_vals[3])
+# =============================================================================
+            #sum_sunspots=sum_sunspots+float(sunspot_fit[x+1]) # sum all the sunspots from launch date
+            rho_q=rho_q + float(param_vals[0] + param_vals[1] * ( np.exp(-param_vals[2] * (float(sunspot_fit[x+1])-param_vals[3])) )) # implement functional form
+        rho_q_vals.append(rho_q)
+    return (rho_q_vals)   
+
+def sunspot_rho_q_fixed(date_since_launch):
+    #sum_sunspots=0
+    global date_since_launchg
+    date_since_launchg=date_since_launch
+    rho_q_vals=[]
+    for stuff in date_since_launch:
+        rho_q=0
+        #print('stuff is', stuff)
+        for x in range(stuff):
+# =============================================================================
+#             print('x is', x)
+#             print('param_vals0 is', param_vals[0])
+#             print('param_vals1 is', param_vals[1])
+#             print('param_vals2 is', param_vals[2])
+#             print('param_vals3 is', param_vals[3])
+# =============================================================================
+            #sum_sunspots=sum_sunspots+float(sunspot_fit[x+1]) # sum all the sunspots from launch date
+            rho_q=rho_q + float(0.01 + 0.005 * ( np.exp(-0.1 * (float(sunspot_fit[x+1])-15)) )) # implement functional form
+        rho_q_vals.append(rho_q)
+    return (rho_q_vals)   
+
+def chi_squared(model_params, model, x_data, y_data, y_err):
+    return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
+
+days_whole=np.array([round(number) for number in days])
+print('SUNSPOT RHO_Q FIT RESULTS')
+initial_values=np.array([0,0,0,0])
+deg_freedom = len(days_whole) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+fit_sunspot = scipy.optimize.minimize(chi_squared, initial_values, args=(sunspot_rho_q, days_whole, rho_q_pres_array, 
+                                                                  rho_q_pre_lower))
+print(fit_sunspot.success) 
+print(fit_sunspot.message) 
+sol0 = fit_sunspot.x[0]
+sol1 = fit_sunspot.x[1]
+sol2 = fit_sunspot.x[2]
+sol3 = fit_sunspot.x[3]
+fit_sunspot_line = sunspot_rho_q(days_whole, [sol0,sol1,sol2,sol3])
+fit_sunspot_line_fixed = sunspot_rho_q_fixed(days_whole)
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit_sunspot.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+two_err=errs_Hessian[2]
+three_err=errs_Hessian[3]
+
+
+print('minimised chi-squared = {}'.format(fit_sunspot.fun))
+chisq_min = fit_sunspot.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+print('Third coefficient = {} +/- {}'.format(sol2, two_err))
+print('Fourth coefficient = {} +/- {}'.format(sol3, three_err))
+# =============================================================================
+# plt.figure(figsize=(8, 6))  # Optional: Set the figure size
+# plt.plot(x, sunspot_rho_q(x), color='blue')  # Plot the function
+# plt.xlabel('x')  # Label for the x-axis
+# plt.ylabel('f(x)')  # Label for the y-axis
+# plt.show()  # Display the plot
+# =============================================================================
 # rho_q plot with swapped x-axes
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
@@ -1320,8 +1525,10 @@ for i in range(len(ccdgains)):
 #                 color=color2,marker="o", label='exponential pre-correction', linestyle='none', alpha=1) 
 # =============================================================================
 #ax.plot(days_array, fit_line, linestyle='solid', color='orange')
-ax.plot(late_rho_days, fit_line_late, linestyle='solid', color='black',zorder=10)
-ax.plot(early_rho_days, fit_line_early, linestyle='solid', color='fuchsia',zorder=15)
+##ax.plot(late_rho_days, fit_line_late, linestyle='solid', color='black',zorder=10)
+##ax.plot(early_rho_days, fit_line_early, linestyle='solid', color='fuchsia',zorder=15)
+ax.plot(days_whole, fit_sunspot_line, linestyle='solid', color='black',zorder=25)
+#ax.plot(days_whole, fit_sunspot_line_fixed, linestyle='solid', color='black',zorder=10)
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
 #ax.set_ylim(-0.02,0.05) # Zoom into post correction rho_q vals
