@@ -8,6 +8,7 @@ import sys
 import os
 import pathlib
 from astropy.time import Time
+import scipy
 import scipy.optimize as scpo
 import scipy.stats
 import math
@@ -1380,7 +1381,7 @@ sunspot_JD=[]
 sunspot_days_since_launch=[]
 sunspot_days_since_launch_fit=[0]
 sunspot_fit=[0]
-csv_file = 'sunspots.csv'
+csv_file = 'sunspot_monthly.csv'
 
 # Open the CSV file
 with open(csv_file, mode='r') as file:
@@ -1393,9 +1394,9 @@ with open(csv_file, mode='r') as file:
         if float(row[0]) > 2001:
             sun_years.append(row[0])
             sun_months.append(row[1])
-            sun_days.append(row[2])
-            if float(row[4]) > 0:
-                sunspots.append(row[4])
+            sun_days.append(15)
+            if float(row[3]) > 0:
+                sunspots.append(row[3])
             else: sunspots.append(0)
 
 for x in range(len(sunspots)):
@@ -1407,34 +1408,23 @@ for x in range(len(sunspots)):
         sunspot_fit.append(sunspots[x])
         sunspot_days_since_launch_fit.append(sunspot_days_since_launch[x])
  
-# =============================================================================
-# def sunspot_rho_q(date_since_launch, param_vals):
-#     sum_sunspots=0
-#     rho_q=0
-#     for x in range(date_since_launch):
-#         sum_sunspots=sum_sunspots+float(sunspot_fit[x+1]) # sum all the sunspots from launch date
-#         rho_q=rho_q + float(param_vals[0] + param_vals[1] * ( np.exp(param_vals[2] * (sum_sunspots-param_vals[3])) )) # implement functional form
-#         
-#     return (sum_sunspots)    
-# =============================================================================
-def sunspot_rho_q(date_since_launch, param_vals):
+days_sunspot_interp=days    
+rho_q_pres_sunspot_interp=rho_q_pres
+days_sunspot_interp.insert(0, 0)
+rho_q_pres_sunspot_interp.insert(0, 0)
+interpolation=scipy.interpolate.interp1d(days_sunspot_interp, rho_q_pres_sunspot_interp)
+interpolated_rho_q=interpolation(sunspot_days_since_launch_fit)
+
+def sunspot_rho_q(dates_since_launch, param_vals):
     #sum_sunspots=0
-    global date_since_launchg
-    date_since_launchg=date_since_launch
+    global dates_since_launchg
+    date_since_launchg=dates_since_launch
     rho_q_vals=[]
-    for stuff in date_since_launch:
+    for date in dates_since_launch:
         rho_q=0
-        #print('stuff is', stuff)
-        for x in range(stuff):
-# =============================================================================
-#             print('x is', x)
-#             print('param_vals0 is', param_vals[0])
-#             print('param_vals1 is', param_vals[1])
-#             print('param_vals2 is', param_vals[2])
-#             print('param_vals3 is', param_vals[3])
-# =============================================================================
-            #sum_sunspots=sum_sunspots+float(sunspot_fit[x+1]) # sum all the sunspots from launch date
-            rho_q=rho_q + float(param_vals[0] + param_vals[1] * ( np.exp(-param_vals[2] * (float(sunspot_fit[x+1])-param_vals[3])) )) # implement functional form
+        for x in range(len(sunspot_days_since_launch_fit)):
+            if sunspot_days_since_launch_fit[x]<=date:
+                rho_q=rho_q + float(param_vals[0] + param_vals[1] * ( np.exp(-param_vals[2] * (float(sunspot_fit[x])-param_vals[3])) )) # implement functional form
         rho_q_vals.append(rho_q)
     return (rho_q_vals)   
 
@@ -1442,21 +1432,28 @@ def sunspot_rho_q(date_since_launch, param_vals):
 def chi_squared(model_params, model, x_data, y_data, y_err):
     return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
 
-days_whole=np.array([round(number) for number in days])
+sunspot_error=[]
+for i in range(len(rho_q_pres_array)):
+    if rho_q_pre_lower[i] > rho_q_pre_upper[i]:
+        sunspot_error.append(rho_q_pre_lower[i])
+    else:
+        sunspot_error.append(rho_q_pre_upper[i])
+sunspot_error_array=np.array(sunspot_error)
+
 print('SUNSPOT RHO_Q FIT RESULTS')
 initial_values=np.array([0,0,0,0])
-deg_freedom = len(days_whole) - initial_values.size
+deg_freedom = len(days) - initial_values.size
 print('DoF = {}'.format(deg_freedom))
-fit_sunspot = scipy.optimize.minimize(chi_squared, initial_values, args=(sunspot_rho_q, days_whole, rho_q_pres_array, 
-                                                                  rho_q_pre_lower))
+fit_sunspot = scipy.optimize.minimize(chi_squared, initial_values, args=(sunspot_rho_q, days, rho_q_pres_array, 
+                                                                  sunspot_error_array))
 print(fit_sunspot.success) 
 print(fit_sunspot.message) 
 sol0 = fit_sunspot.x[0]
 sol1 = fit_sunspot.x[1]
 sol2 = fit_sunspot.x[2]
 sol3 = fit_sunspot.x[3]
-fit_sunspot_line = sunspot_rho_q(days_whole, [sol0,sol1,sol2,sol3])
-fit_sunspot_line_fixed = sunspot_rho_q(days_whole,[0.01/30,0.005/30,0.1/30,15/30] )
+fit_sunspot_line = sunspot_rho_q(days, [sol0,sol1,sol2,sol3])
+fit_sunspot_line_fixed = sunspot_rho_q(days,[0.01,0.005,0.1,15] )
 
 #Show fit results
 errs_Hessian = np.sqrt(np.diag(2*fit_sunspot.hess_inv))
@@ -1508,7 +1505,8 @@ for i in range(len(ccdgains)):
 ##ax.plot(late_rho_days, fit_line_late, linestyle='solid', color='black',zorder=10)
 ##ax.plot(early_rho_days, fit_line_early, linestyle='solid', color='fuchsia',zorder=15)
 #ax.plot(days_whole, fit_sunspot_line, linestyle='solid', color='black',zorder=25)
-ax.scatter(days_whole, fit_sunspot_line, color='black',zorder=10)
+ax.scatter(days, fit_sunspot_line_fixed, color='black',zorder=10)
+ax.scatter(days, fit_sunspot_line, color='lime',zorder=10)
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
 #ax.set_ylim(-0.02,0.05) # Zoom into post correction rho_q vals
