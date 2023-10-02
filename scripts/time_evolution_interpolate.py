@@ -47,7 +47,7 @@ temp_switch_date=2453921-2400000.5
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files_opt7")
+csv_path = path.join("csv_files_opt8_1.05")
 
 # Find all the csv files
 print('Finding csv files')
@@ -212,7 +212,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt7_plots/Beta(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
 # BICS plot
@@ -294,7 +294,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt7_plots/instant_unpushed', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/instant_unpushed', bbox_inches="tight")
 plt.show()
 
 # relative densities plot
@@ -328,7 +328,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt7_plots/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 fit_mjds=[]
@@ -497,7 +497,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt7_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -521,7 +521,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt7_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/CCDGAIN(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -554,7 +554,7 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('opt7_plots/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
 
 # Look for datasets with days > 4000 to find the average beta value 
@@ -694,56 +694,85 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt7_plots/Notch(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 
+rho_fit_days_list = []
+rho_fit_vals_list = []
+rho_fit_errors_list = []
+for i in range(len(ccdgains)):
+        rho_fit_days_list.append(days[i])
+        rho_fit_vals_list.append(rho_q_posts[i])
+        if rho_q_post_lower[i] > rho_q_post_upper[i]:
+            rho_fit_errors_list.append(rho_q_post_lower[i])
+        else:
+            rho_fit_errors_list.append(rho_q_post_upper[i])
+            
+rho_fit_days=np.array(rho_fit_days_list)
+rho_fit_vals=np.array(rho_fit_vals_list)
+rho_fit_errors=np.array(rho_fit_errors_list)
+
+def rho_fit(x, param_vals):
+    calc_vals=[]
+    for days in x:
+        if days < param_vals[4]:
+            calc_vals.append(param_vals[0]*days+param_vals[1]) #m1 = vals0, c0 = vals1
+        elif days > param_vals[4] and days < param_vals[5]:
+            calc_vals.append(param_vals[2]*(days-param_vals[4])+param_vals[0]*param_vals[4]+param_vals[1]) # m2=vals2 t1=vals4
+        elif days > param_vals[5]:
+            calc_vals.append(param_vals[3]*(days-param_vals[5])+param_vals[2]*(param_vals[5]-param_vals[4])+param_vals[0]*param_vals[4]+param_vals[1]) #m3=vals3 t2=vals5
+    return (calc_vals)
+
+print('RHO_Q FIT RESULTS')
+initial_values=np.array([0,0,0,0,1366,4166])
+deg_freedom = len(rho_fit_days_list) - initial_values.size
+print('DoF = {}'.format(deg_freedom))
+bnds = ((0,10) ,(-10, 10),(0,10),(0,10),(0,8000),(0,8000))
+fit = scipy.optimize.minimize(chi_squared, initial_values,args=(rho_fit, rho_fit_days, rho_fit_vals, 
+                                                                  rho_fit_errors))
+print(fit.success) 
+print(fit.message) 
+sol0 = fit.x[0]
+sol1 = fit.x[1]
+sol2 = fit.x[2]
+sol3 = fit.x[3]
+sol4 = fit.x[4]
+sol5 = fit.x[5]
+fit_line_rho = rho_fit(rho_fit_days, [sol0,sol1,sol2,sol3,sol4,sol5])
+
+#Show fit results
+errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
+
+zero_err = errs_Hessian[0]
+one_err=errs_Hessian[1]
+two_err=errs_Hessian[2]
+three_err=errs_Hessian[3]
+four_err=errs_Hessian[4]
+five_err=errs_Hessian[5]
+
+
+print('minimised chi-squared = {}'.format(fit.fun))
+chisq_min = fit.fun
+chisq_reduced = chisq_min/deg_freedom
+print('reduced chi^2 = {}'.format(chisq_reduced))
+P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+print('P(chi^2_min, DoF) = {}'.format(P_value))
+print('c_0 = {} +/- {}'.format(sol1, one_err))
+print('m1 = {} +/- {}'.format(sol0, zero_err))
+print('m2 = {} +/- {}'.format(sol2, two_err))
+print('m3 = {} +/- {}'.format(sol3, three_err))
+print('t_1 = {} +/- {}'.format(sol4, four_err))
+print('t_2 = {} +/- {}'.format(sol5, five_err))
 # =============================================================================
-# # Do the linear fit for the rho plot
-# def linear_fit(x, param_vals):
-#     #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
-#     #return (param_vals[0]*x**3+param_vals[1]*x**2+param_vals[2]*x+param_vals[3])
-#     return (param_vals[0]*x+param_vals[1])
-# 
-# def chi_squared(model_params, model, x_data, y_data, y_err):
-#     return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
-# 
-# days_array=np.array(days)
-# rho_q_pres_array=np.array(rho_q_pres)
-# print('LINEAR FIT RESULTS')
-# initial_values=np.array([0.0004,0.0446])
-# deg_freedom = len(notches) - initial_values.size
-# print('DoF = {}'.format(deg_freedom))
-# fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, days_array, rho_q_pres_array, 
-#                                                                   rho_q_pre_lower))
-# print(fit.success) 
-# print(fit.message) 
-# sol0 = fit.x[0]
-# sol1 = fit.x[1]
-# fit_line = linear_fit(days_array, [sol0,sol1])
-# 
-# #Show fit results
-# errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
-# 
-# zero_err = errs_Hessian[0]
-# one_err=errs_Hessian[1]
-# 
-# 
-# print('minimised chi-squared = {}'.format(fit.fun))
-# chisq_min = fit.fun
-# chisq_reduced = chisq_min/deg_freedom
-# print('reduced chi^2 = {}'.format(chisq_reduced))
-# P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
-# print('P(chi^2_min, DoF) = {}'.format(P_value))
-# print('First coefficient = {} +/- {}'.format(sol0, zero_err))
-# print('Second coefficient = {} +/- {}'.format(sol1, one_err))
-# print('Model Equation: {}x+{}'.format(sol0,sol1))
-# linear_coef1=sol0
-# linear_coef1_err=zero_err
-# linear_coef2=sol1
-# linear_coef2_err=one_err
-# 
+# print('c_0 = {} +/- {}'.format(sol1, one_err))
+# print('m1 = {} +/- {}'.format(sol0, zero_err))
+# print('m2 = {} +/- {}'.format(sol2, two_err))
+# print('m3 = {} +/- {}'.format(sol3, three_err))
+# print('m4 = {} +/- {}'.format(sol4, four_err))
 # =============================================================================
+print('')
+print('')
 # rho_q plot with swapped x-axes
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
@@ -763,6 +792,7 @@ ax.set_xlim(-500, max(days)+500)
 #ax.set_ylim(-0.02,0.05) # Zoom into post correction rho_q vals
 ax.set_ylabel('Rho_q', fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
+ax.scatter(rho_fit_days, fit_line_rho, color='black',zorder=25)
 ax_MJD = ax.twiny()
 ax_MJD.set_xlim(launch_date-500, max(MJDs)+500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
@@ -776,7 +806,7 @@ ax_MJD.tick_params(axis='both', which='major', labelsize=12)
 # =============================================================================
 # plt.gca().axes.get_yaxis().set_ticks([])
 # =============================================================================
-plt.savefig('opt7_plots/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # =============================================================================
@@ -799,7 +829,7 @@ plt.show()
 # plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 # plt.ylim(-25,25)
 # plt.gca().axes.get_yaxis().set_ticks([])
-# plt.savefig('opt7_plots/Rho_q(MJD)', bbox_inches="tight")
+# plt.savefig('opt8_1.05_plots/Rho_q(MJD)', bbox_inches="tight")
 # plt.show()
 # =============================================================================
 
@@ -831,7 +861,7 @@ plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize = 12)
 ax_MJD.plot(MJDs,rho_q_pres,color="red",marker="None", linestyle='none') 
 ax_MJD.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt7_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('opt8_1.05_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 plt.show()
 
 # =============================================================================
@@ -854,7 +884,7 @@ plt.show()
 # plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 # plt.ylim(-25,25)
 # plt.gca().axes.get_yaxis().set_ticks([])
-# plt.savefig('opt7_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+# plt.savefig('opt8_1.05_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 # plt.show()
 # =============================================================================
                 
