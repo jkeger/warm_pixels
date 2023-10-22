@@ -1398,24 +1398,37 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     launch_date_JD=2452334.5
     launch_date=launch_date_JD-2400000.5
     temp_switch_date_since_launch=temp_switch_date-launch_date
-    
+    # Original interpolation
     if days_var > temp_switch_date_since_launch:
         rho_q=0.0003780906114990424*days_var+0.015567290427026453
         a = 0.146
         b = 0.594
         C = 0.260
-        tau_a = 0.515*1.05
-        tau_b = 5.531*1.05
-        tau_c = 43.924*1.05
+        tau_a = 0.515
+        tau_b = 5.531
+        tau_c = 43.924
     elif days_var < temp_switch_date_since_launch:
         rho_q=0.00036862386204472716*days_var+0.014660115838463172
         a = 0.146
         b = 0.594
         C = 0.260
-        tau_a=0.515/(0.74/0.48)*1.05
-        tau_b=5.531/(7.7/4.86)*1.05
-        tau_c=43.924/(37/20.6)*1.05
-        
+        tau_a=0.515/(0.74/0.48)
+        tau_b=5.531/(7.7/4.86)
+        tau_c=43.924/(37/20.6)
+    # First iteration residuals    
+    if days_var < 1386.5719802657381:
+        rho_q=rho_q+2.745638633974006e-05*days_var+0.0036536329018780345 #m1 = vals0, c0 = vals1
+    elif days_var > 1386.5719802657381 and days_var < 4164.510935644442:
+        rho_q=rho_q+0.0001490455546001391*(days_var-1386.5719802657381)+2.745638633974006e-05*1386.5719802657381+0.0036536329018780345 # m2=vals2 t1=vals4
+    elif days_var > 4164.510935644442:
+        rho_q=rho_q+2.7246751530650367e-05*(days_var-4164.510935644442)+0.0001490455546001391*(4164.510935644442-1386.5719802657381)+2.745638633974006e-05*1386.5719802657381+0.0036536329018780345 #m3=vals3 t2=vals5 
+    # Second iteration residuals
+    if days_var < 1586.5:
+        rho_q=rho_q+0 #m1 = vals0, c0 = vals1
+    elif days_var < 3970.2058668214822:
+        rho_q=rho_q-0.04879653188959215+1.9541278864810033e-05*(days_var-1586.5) # m2=vals2 c1=vals4
+    elif days_var > 3970.2058668214822:
+        rho_q=rho_q-0.04879653188959215+1.9541278864810033e-05*(3970.2058668214822-1586.5)+-1.84760874756846e-05*(days_var-3970.2058668214822) #m3=vals3 t2=vals5    
     #notch=0.013468157265719103*days_var-0.13793219313191085
 # =============================================================================
 #     notch=96.33892681649918
@@ -1887,7 +1900,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print("Total fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}" 
+    writefilename=f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"beta = {beta}"])
@@ -1912,11 +1925,11 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_1.05_{const_fix}", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_iter2_{const_fix}", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -1932,8 +1945,8 @@ cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
 #dataset_folder="Paolo's_03_2020"
 #dataset_name="03_2020"
 
-cosma_dataset_path = path.join(cosma_path, "hst", "cte", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo",f"notch_pushed_opt8_1.05_{const_fix}")
+cosma_dataset_path = path.join(cosma_path, "paolo", "datasets", dataset_date)
+cosma_output_path = path.join(cosma_path, "paolo",f"notch_pushed_opt8_iter2_{const_fix}")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -1945,16 +1958,16 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_1.05_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_iter2_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_1.05_{const_fix}",
-                 f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_iter2_{const_fix}",
+                 f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
     
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_1.05_{const_fix}",
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_iter2_{const_fix}",
                  "csv_files")
 if not os.path.exists(dir):
     os.mkdir(dir)
@@ -1987,8 +2000,8 @@ for file in temp_files:
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_1.05_{const_fix}",
-                     f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}"))/f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_iter2_{const_fix}",
+                     f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}"))/f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}.png"
 )
  
 
@@ -2061,8 +2074,8 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"notch_pushed_opt8_1.05_{const_fix}", 
-                            f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"notch_pushed_opt8_iter2_{const_fix}", 
+                            f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2102,8 +2115,8 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"notch_pushed_opt8_1.05_{const_fix}", 
-                                    f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}")
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"notch_pushed_opt8_iter2_{const_fix}", 
+                                    f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}")
         ).native
         for quadrant in ["A", "B", "C", "D"]
     ]
@@ -2134,8 +2147,8 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"notch_pushed_opt8_1.05_{const_fix}", 
-                            f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"notch_pushed_opt8_iter2_{const_fix}", 
+                            f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2639,7 +2652,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 # =============================================================================
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}_corrected"
+    writefilename=f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}_corrected"
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"MJD = {MJD_var}"])
@@ -2670,17 +2683,17 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}_corrected" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}_corrected" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"notch_pushed_opt8_1.05_{const_fix}",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"notch_pushed_opt8_iter2_{const_fix}",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"notch_pushed_opt8_1.05_{const_fix}",
-                               f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}")
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"notch_pushed_opt8_iter2_{const_fix}",
+                               f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}")
 cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
@@ -2696,7 +2709,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_1.05_{const_fix}",
-                     f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}"))/f"{dataset_date}_notch_pushed_opt8_1.05_{const_fix}_corrected.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"notch_pushed_opt8_iter2_{const_fix}",
+                     f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}"))/f"{dataset_date}_notch_pushed_opt8_iter2_{const_fix}_corrected.png"
 )
 
