@@ -47,7 +47,7 @@ temp_switch_date=2453921-2400000.5
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files_opt8_1.05_add")
+csv_path = path.join("csv_files_opt8_new")
 
 # Find all the csv files
 print('Finding csv files')
@@ -212,7 +212,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt8_1.05_add_plots/Beta(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/Beta(MJD)', bbox_inches="tight")
 plt.show()
 
 # BICS plot
@@ -294,7 +294,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt8_1.05_add_plots/instant_unpushed', bbox_inches="tight")
+plt.savefig('opt8_new_plots/instant_unpushed', bbox_inches="tight")
 plt.show()
 
 # relative densities plot
@@ -328,7 +328,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt8_1.05_add_plots/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/a,b,c(MJD)', bbox_inches="tight")
 plt.show()
 
 fit_mjds=[]
@@ -497,7 +497,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt8_1.05_add_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -521,7 +521,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt8_1.05_add_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/CCDGAIN(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -554,7 +554,7 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('opt8_1.05_add_plots/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/correction_metrics(MJD)', bbox_inches="tight")
 plt.show()
 
 # Look for datasets with days > 4000 to find the average beta value 
@@ -694,7 +694,7 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt8_1.05_add_plots/Notch(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/Notch(MJD)', bbox_inches="tight")
 plt.show()
 
 
@@ -792,7 +792,7 @@ ax.set_xlim(-500, max(days)+500)
 #ax.set_ylim(-0.02,0.05) # Zoom into post correction rho_q vals
 ax.set_ylabel('Rho_q', fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-#ax.scatter(rho_fit_days, fit_line_rho, color='black',zorder=25)
+ax.scatter(rho_fit_days, fit_line_rho, color='black',zorder=25)
 ax_MJD = ax.twiny()
 ax_MJD.set_xlim(launch_date-500, max(MJDs)+500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
@@ -806,7 +806,7 @@ ax_MJD.tick_params(axis='both', which='major', labelsize=12)
 # =============================================================================
 # plt.gca().axes.get_yaxis().set_ticks([])
 # =============================================================================
-plt.savefig('opt8_1.05_add_plots/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/Rho_q(MJD)', bbox_inches="tight")
 plt.show()
 
 # =============================================================================
@@ -829,7 +829,7 @@ plt.show()
 # plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 # plt.ylim(-25,25)
 # plt.gca().axes.get_yaxis().set_ticks([])
-# plt.savefig('opt8_1.05_add_plots/Rho_q(MJD)', bbox_inches="tight")
+# plt.savefig('opt8_new_plots/Rho_q(MJD)', bbox_inches="tight")
 # plt.show()
 # =============================================================================
 
@@ -861,7 +861,7 @@ plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize = 12)
 ax_MJD.plot(MJDs,rho_q_pres,color="red",marker="None", linestyle='none') 
 ax_MJD.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('opt8_1.05_add_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('opt8_new_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 plt.show()
 
 # =============================================================================
@@ -884,7 +884,7 @@ plt.show()
 # plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 # plt.ylim(-25,25)
 # plt.gca().axes.get_yaxis().set_ticks([])
-# plt.savefig('opt8_1.05_add_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+# plt.savefig('opt8_new_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
 # plt.show()
 # =============================================================================
                 

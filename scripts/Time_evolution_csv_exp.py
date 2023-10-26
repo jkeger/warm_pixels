@@ -395,7 +395,7 @@ for i in range(len(ccdgains)):
     if ccdgains[i] == 1.0: color='darkturquoise'
     ax.errorbar(MJDs[i],betas[i], yerr=[[beta_lower[i]], [beta_upper[i]]], color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
-#ax.set_ylim(0, 1)
+ax.set_ylim(0, 1)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
 plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
 plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
@@ -409,7 +409,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/Beta(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Beta(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # BICS plot
@@ -480,7 +480,7 @@ for i in range(len(ccdgains)):
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 #ax.set_ylim(0, 1)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
-ax.plot(MJDs_array, fit_BICs_line, linestyle='solid', color='orange')
+#ax.plot(MJDs_array, fit_BICs_line, linestyle='solid', color='orange')
 plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
 plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
 plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
@@ -493,7 +493,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/instant_unpushed', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/instant_unpushed.pdf', bbox_inches="tight")
 plt.show()
 
 # relative densities plot
@@ -693,6 +693,7 @@ for i in range(len(ccdgains)):
     if ccdgains[i] == 1.0: color='lightgreen'
     ax.plot(MJDs[i],c_vals[i], color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
+ax.set_ylim(0,1)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
 plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
 plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
@@ -704,13 +705,13 @@ ax_day = ax.twiny()
 ax_day.set_xlabel("Days since launch", fontsize=12)
 ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
-ax_day.plot(early_days,fit_line_early_a,color="black", linestyle='solid',zorder=15)
-ax_day.plot(early_days,fit_line_early_b,color="fuchsia", linestyle='solid',zorder=15)
-ax_day.plot(late_days,fit_line_late_a,color="black", linestyle='solid',zorder=15)
-ax_day.plot(late_days,fit_line_late_b,color="fuchsia", linestyle='solid',zorder=15)
+#ax_day.plot(early_days,fit_line_early_a,color="black", linestyle='solid',zorder=15)
+#ax_day.plot(early_days,fit_line_early_b,color="fuchsia", linestyle='solid',zorder=15)
+#ax_day.plot(late_days,fit_line_late_a,color="black", linestyle='solid',zorder=15)
+#ax_day.plot(late_days,fit_line_late_b,color="fuchsia", linestyle='solid',zorder=15)
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/a,b,c(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -1000,16 +1001,17 @@ ax.set_xlabel("MJD", fontsize = 12)
 ax_day = ax.twiny()
 ax_day.set_xlabel("Days since launch", fontsize=12)
 ax_day.set_xlim(-500, max(days)+500)
+ax_day.set_ylim(-5,100)
 ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none') 
-ax_day.plot(early_days,fit_tau_a_early, color='orange', linestyle='solid',zorder=15)
-ax_day.plot(early_days,fit_tau_b_early, color='purple', linestyle='solid',zorder=15)
-ax_day.plot(early_days,fit_tau_c_early, color='blue', linestyle='solid',zorder=15)
-ax_day.plot(late_days,fit_tau_a_late, color='orange', linestyle='solid',zorder=15)
-ax_day.plot(late_days,fit_tau_b_late, color='purple', linestyle='solid',zorder=15)
-ax_day.plot(late_days,fit_tau_c_late, color='blue', linestyle='solid',zorder=15)
+#ax_day.plot(early_days,fit_tau_a_early, color='orange', linestyle='solid',zorder=15)
+#ax_day.plot(early_days,fit_tau_b_early, color='purple', linestyle='solid',zorder=15)
+#ax_day.plot(early_days,fit_tau_c_early, color='blue', linestyle='solid',zorder=15)
+#ax_day.plot(late_days,fit_tau_a_late, color='orange', linestyle='solid',zorder=15)
+#ax_day.plot(late_days,fit_tau_b_late, color='purple', linestyle='solid',zorder=15)
+#ax_day.plot(late_days,fit_tau_c_late, color='blue', linestyle='solid',zorder=15)
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/tau_a,tau_b,tau_c(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -1033,7 +1035,7 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/CCDGAIN(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # success metric plot
@@ -1051,13 +1053,14 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax.set_ylabel('Success metric (Rho_q_exp_after/Rho_q_exp_before)', fontsize=12)
 ax.set_xlabel("MJD", fontsize = 12)
+
 ax_day = ax.twiny()
 ax_day.set_xlabel("Days since launch", fontsize=12)
 ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/success_metric(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/success_metric(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # correction metric plots
@@ -1076,6 +1079,7 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', label='temp switch date', alpha=0.5)
 ax.set_ylabel("Mean Height Reduction", color="red", fontsize=12)
 ax.set_xlabel("MJD", fontsize = 12)
+ax.set_ylim(0.5,1.8)
 ax2=ax.twinx()
 ax_day = ax.twiny()
 ax_day.set_xlabel("Days since launch", fontsize=12)
@@ -1088,7 +1092,8 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('v4_pushed_plots/correction_metrics(MJD)', bbox_inches="tight")
+ax2.set_ylim(0.80,1.10)
+plt.savefig('v4_pushed_plots/correction_metrics(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # Look for datasets with days > 4000 to find the average beta value 
@@ -1230,7 +1235,7 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/Notch(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Notch(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 
@@ -1460,7 +1465,6 @@ fit_sunspot_line_fixed = sunspot_rho_q(days_whole,[0.01/30,0.005/30,0.1/30,15/30
 
 #Show fit results
 errs_Hessian = np.sqrt(np.diag(2*fit_sunspot.hess_inv))
-
 zero_err = errs_Hessian[0]
 one_err=errs_Hessian[1]
 two_err=errs_Hessian[2]
@@ -1490,7 +1494,7 @@ ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.errorbar(days[i],rho_q_pres[i],yerr=[[rho_q_pre_lower[i]], [rho_q_pre_upper[i]]],
+    ax.errorbar(days[i],rho_q_pres[i],yerr=[[(rho_q_pre_lower[i])], [(rho_q_pre_upper[i])]],
                 color=color,marker="o",label='pre-correction', linestyle='none')
 for i in range(len(ccdgains)):
     color2='red'
@@ -1505,12 +1509,15 @@ for i in range(len(ccdgains)):
 #                 color=color2,marker="o", label='exponential pre-correction', linestyle='none', alpha=1) 
 # =============================================================================
 #ax.plot(days_array, fit_line, linestyle='solid', color='orange')
-##ax.plot(late_rho_days, fit_line_late, linestyle='solid', color='black',zorder=10)
-##ax.plot(early_rho_days, fit_line_early, linestyle='solid', color='fuchsia',zorder=15)
+# =============================================================================
+# ax.scatter(late_rho_days, fit_line_late, color='black',zorder=10)
+# ax.scatter(early_rho_days, fit_line_early, color='black',zorder=15)
+# =============================================================================
 #ax.plot(days_whole, fit_sunspot_line, linestyle='solid', color='black',zorder=25)
-ax.scatter(days_whole, fit_sunspot_line, color='black',zorder=10)
+#ax.scatter(days_whole, fit_sunspot_line, color='black',zorder=10)
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
+ax.set_ylim(-0.5,4.5)
 #ax.set_ylim(-0.02,0.05) # Zoom into post correction rho_q vals
 ax.set_ylabel('Rho_q', fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
@@ -1524,47 +1531,57 @@ plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize = 12)
 ax_MJD.plot(MJDs,rho_q_pres,color="red",marker="None", linestyle='none') 
 ax_MJD.tick_params(axis='both', which='major', labelsize=12)
-
-# Plot norm residuals
-ax3=fig.add_axes((0,-0.3,1,0.3))
-norm_residuals = (rho_q_pres_array - fit_line)/rho_q_pre_lower
-plt.xlabel("Days since launch", fontsize=14)
-plt.ylabel("Norm. Residuals", fontsize=14)
-plt.axhline(3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.axhline(-3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.ylim(-25,25)
-plt.xlim(-500, max(days)+500) 
-plt.scatter(days_array, norm_residuals,zorder=100)
-#ax3.tick_params(axis='both', which='major', labelsize=14)
-# Plot norm residuals histogram
-ax4=fig.add_axes((1,-0.3,0.3,0.3))
-ax4.tick_params(axis='both', which='major', labelsize=14)
-plt.hist(norm_residuals, np.linspace(-25,25,51), orientation = 'horizontal',alpha=1, zorder=100)
-plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.ylim(-25,25)
-plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('v4_pushed_plots/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Rho_q(MJD).pdf', bbox_inches="tight")
 plt.show()
 
+# =============================================================================
+# # Plot norm residuals
+# ax3=fig.add_axes((0,-0.3,1,0.3))
+# norm_residuals1 = (early_rho - fit_line_early)/early_rho_errors
+# norm_residuals2 = (late_rho - fit_line_late)/late_rho_errors
+# plt.xlabel("Days since launch", fontsize=14)
+# plt.ylabel("Norm. Residuals", fontsize=14)
+# plt.axhline(3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.axhline(-3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.ylim(-25,25)
+# plt.xlim(-500, max(days)+500) 
+# plt.scatter(early_rho_days, norm_residuals1,color='orange',zorder=100)
+# plt.scatter(late_rho_days, norm_residuals2,color='orange',zorder=100)
+# 
+# # Plot norm residuals histogram
+# ax4=fig.add_axes((1,-0.3,0.3,0.3))
+# ax4.tick_params(axis='both', which='major', labelsize=14)
+# norm_residuals_all=np.append(norm_residuals1,norm_residuals2)
+# plt.hist(norm_residuals_all, np.linspace(-25,25,51), orientation = 'horizontal',alpha=1,color='orange', zorder=100)
+# plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.ylim(-25,25)
+# plt.gca().axes.get_yaxis().set_ticks([])
+# plt.xlim(0.1,40)
+# plt.savefig('v4_pushed_plots/Rho_q(MJD).pdf', bbox_inches="tight")
+# plt.show()
+# 
+# =============================================================================
 # rho_q plot with swapped x-axes
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
     color='blue'
     if ccdgains[i] == 1.0: color='darkturquoise'
-    ax.errorbar(days[i],rho_q_pres[i],yerr=[[rho_q_pre_lower[i]], [rho_q_pre_upper[i]]],
+    ax.errorbar(days[i],rho_q_pres[i],yerr=[[(rho_q_pre_lower[i])], [(rho_q_pre_upper[i])]],
                 color=color,marker="o",label='pre-correction', linestyle='none')
 for i in range(len(ccdgains)):
     color2='red'
     if ccdgains[i] == 1.0: color2='lightcoral'
     ax.errorbar(days[i],rho_q_posts[i],yerr=[[rho_q_post_lower[i]], [rho_q_post_upper[i]]],
                 color=color2,marker="o", label='post-correction', linestyle='none', alpha=1) 
-for i in range(len(ccdgains)):
-    color2='green'
-    if ccdgains[i] == 1.0: color2='lime'
-    ax.errorbar(days[i],rho_q_exp[i],yerr=[[rho_q_exp_lower[i]], [rho_q_exp_upper[i]]],
-                color=color2,marker="o", label='exponential pre-correction', linestyle='none', alpha=1) 
+# =============================================================================
+# for i in range(len(ccdgains)):
+#     color2='green'
+#     if ccdgains[i] == 1.0: color2='lime'
+#     ax.errorbar(days[i],rho_q_exp[i],yerr=[[rho_q_exp_lower[i]], [rho_q_exp_upper[i]]],
+#                 color=color2,marker="o", label='exponential pre-correction', linestyle='none', alpha=1) 
+# =============================================================================
 ax.plot(days_array, fit_line, linestyle='solid', color='orange')
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
@@ -1581,28 +1598,32 @@ plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize = 12)
 ax_MJD.plot(MJDs,rho_q_pres,color="red",marker="None", linestyle='none') 
 ax_MJD.tick_params(axis='both', which='major', labelsize=12)
-
-# Plot norm residuals
-ax3=fig.add_axes((0,-0.3,1,0.3))
-norm_residuals = (rho_q_pres_array - fit_line)/rho_q_pre_lower
-plt.xlabel("Days since launch", fontsize=14)
-plt.ylabel("Norm. Residuals", fontsize=14)
-plt.axhline(3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.axhline(-3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.ylim(-25,25)
-plt.xlim(-500, max(days)+500) 
-plt.scatter(days_array, norm_residuals,zorder=100)
-#ax3.tick_params(axis='both', which='major', labelsize=14)
-# Plot norm residuals histogram
-ax4=fig.add_axes((1,-0.3,0.3,0.3))
-ax4.tick_params(axis='both', which='major', labelsize=14)
-plt.hist(norm_residuals, np.linspace(-25,25,51), orientation = 'horizontal',alpha=1, zorder=100)
-plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
-plt.ylim(-25,25)
-plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('v4_pushed_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('v4_pushed_plots/Rho_q_post_zoom(MJD).pdf', bbox_inches="tight")
 plt.show()
+
+# =============================================================================
+# # Plot norm residuals
+# ax3=fig.add_axes((0,-0.3,1,0.3))
+# norm_residuals = (rho_q_pres_array - fit_line)/rho_q_pre_lower
+# plt.xlabel("Days since launch", fontsize=14)
+# plt.ylabel("Norm. Residuals", fontsize=14)
+# plt.axhline(3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.axhline(-3,-1000,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.ylim(-25,25)
+# plt.xlim(-500, max(days)+500) 
+# plt.scatter(days_array, norm_residuals,zorder=100)
+# #ax3.tick_params(axis='both', which='major', labelsize=14)
+# # Plot norm residuals histogram
+# ax4=fig.add_axes((1,-0.3,0.3,0.3))
+# ax4.tick_params(axis='both', which='major', labelsize=14)
+# plt.hist(norm_residuals, np.linspace(-25,25,51), orientation = 'horizontal',alpha=1, zorder=100)
+# plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
+# plt.ylim(-25,25)
+# plt.gca().axes.get_yaxis().set_ticks([])
+# plt.savefig('v4_pushed_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+# plt.show()
+# =============================================================================
                 
 # Find the mean value of the taus before and after temp switch date
 #Look for datasets with days > 3000 to find the average beta value 
@@ -1634,6 +1655,7 @@ avg_t_a_after=np.mean(tau_a_after)
 avg_t_b_after=np.mean(tau_b_after)
 avg_t_c_after=np.mean(tau_c_after)
 
+
 print('temp switch day is', switch_day)
 print('mean tau_a before temp switch is', avg_t_a_before)
 print('mean tau_b before temp switch is', avg_t_b_before)
@@ -1664,3 +1686,40 @@ print('tau_c uncertainty on mean before temp switch is',tau_c_uncer_before)
 print('tau_a uncertainty on mean after temp switch is',tau_a_uncer_after)
 print('tau_b uncertainty on mean after temp switch is',tau_b_uncer_after)
 print('tau_c uncertainty on mean after temp switch is',tau_c_uncer_after)
+
+#Find averages after 4000 days
+array_a=np.array(a_to_average)
+array_b=np.array(b_to_average)
+array_c=np.array(c_to_average)
+array_tau_a=np.array(tau_a_to_average)
+array_tau_b=np.array(tau_b_to_average)
+array_tau_c=np.array(tau_c_to_average)
+array_notches=np.array(notch_to_average)
+array_betas=np.array(betas_to_average)
+
+print('mean a after t=4000 days is', np.mean(array_a))
+print('mean b after t=4000 days is', np.mean(array_b))
+print('mean c after t=4000 days is', np.mean(array_c))    
+print('mean tau_a after t=4000 days is', np.mean(array_tau_a))
+print('mean tau_b after t=4000 days is', np.mean(array_tau_b))  
+print('mean tau_c after t=4000 days is', np.mean(array_tau_c))        
+print('mean notch after t=4000 days is', np.mean(array_notches))
+print('mean beta after t=4000 days is', np.mean(array_betas))     
+
+a_rms=np.sqrt(np.mean(array_a**2))/np.sqrt(array_a.size-1)
+b_rms=np.sqrt(np.mean(array_b**2))/np.sqrt(array_b.size-1)
+c_rms=np.sqrt(np.mean(array_c**2))/np.sqrt(array_c.size-1)
+tau_a_rms=np.sqrt(np.mean(array_tau_a**2))/np.sqrt(array_tau_a.size-1)
+tau_b_rms=np.sqrt(np.mean(array_tau_b**2))/np.sqrt(array_tau_b.size-1)
+tau_c_rms=np.sqrt(np.mean(array_tau_c**2))/np.sqrt(array_tau_c.size-1)
+notches_rms=np.sqrt(np.mean(array_notches**2))/np.sqrt(array_notches.size-1)
+beta_rms=np.sqrt(np.mean(array_betas**2))/np.sqrt(array_betas.size-1)
+
+print('RMS for a is', a_rms)
+print('RMS for b is', b_rms)
+print('RMS for c is', c_rms)
+print('RMS for tau_a is', tau_a_rms)
+print('RMS for tau_b is', tau_b_rms)
+print('RMS for tau_c is', tau_c_rms)
+print('RMS for notch is', notches_rms)
+print('RMS for beta is', beta_rms)
