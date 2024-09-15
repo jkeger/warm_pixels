@@ -12,42 +12,35 @@ class OptionException(Exception):
     pass
 
 
-def _check_path(
-        path
-):
+def _check_path(path):
     if path.exists():
         print(f"{path} already exists")
         return True
-    os.makedirs(
-        path.parent,
-        exist_ok=True
-    )
+    os.makedirs(path.parent, exist_ok=True)
     return False
 
 
 class AbstractOutput:
     def __init__(
-            self,
-            warm_pixels_,
-            list_name,
+        self,
+        warm_pixels_,
+        list_name,
     ):
         """
         Handles outputting data from the pipeline.
 
         Parameters
         ----------
-        warm_pixels_
+        warm_pixels_ : ###
             API to access pipeline output such as warm pixels and fits
-        list_name
+
+        list_name : str
             A name for the set of data
         """
         self._warm_pixels = warm_pixels_
         self.list_name = list_name
 
-        self.all_methods = {
-            name for name in dir(self)
-            if not name.startswith("__")
-        }
+        self.all_methods = {name for name in dir(self) if not name.startswith("__")}
 
     def by_name(self, output_names: List[str]):
         """
@@ -57,7 +50,7 @@ class AbstractOutput:
 
         Parameters
         ----------
-        output_names
+        output_names : [str]
             A list of names outputs plots. These should match method names from this class
             but may use hyphens instead of underscores.
 
@@ -80,14 +73,7 @@ class Output(AbstractOutput):
     @staticmethod
     def _save_lines(pixel_lines, filename):
         with open(filename, "w+") as f:
-            json.dump(
-                [
-                    pixel_line.dict
-                    for pixel_line
-                    in pixel_lines
-                ],
-                f
-            )
+            json.dump([pixel_line.dict for pixel_line in pixel_lines], f)
 
     def consistent_lines(self):
         """
@@ -99,13 +85,9 @@ class Output(AbstractOutput):
 
         pixel_lines = []
         for dataset in self._warm_pixels.datasets:
-            for group in dataset.groups(
-                    self._warm_pixels.quadrants_string
-            ):
+            for group in dataset.groups(self._warm_pixels.quadrants_string):
                 for quadrant in group.quadrants:
-                    pixel_lines.extend(
-                        quadrant.consistent_lines().lines
-                    )
+                    pixel_lines.extend(quadrant.consistent_lines().lines)
 
         self._save_lines(
             pixel_lines=pixel_lines,
@@ -122,12 +104,8 @@ class Output(AbstractOutput):
 
         pixel_lines = []
         for dataset in self._warm_pixels.datasets:
-            for group in dataset.groups(
-                    self._warm_pixels.quadrants_string
-            ):
-                pixel_lines.extend(
-                    group.stacked_lines().lines
-                )
+            for group in dataset.groups(self._warm_pixels.quadrants_string):
+                pixel_lines.extend(group.stacked_lines().lines)
 
         self._save_lines(
             pixel_lines=pixel_lines,

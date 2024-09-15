@@ -30,7 +30,7 @@ from warm_pixels.pixel_lines import PixelLineCollection
 #
 # RJM: Jacob set up variables here, thinking they had global scope. They don't.
 #
-# Example dataset and image   
+# Example dataset and image
 # dataset = Dataset("07_2020")  # 2020/07/31, day 6727, 8 images
 # image_name = "jdrwc3fcq_raw"
 # image_path = dataset.path + image_name + ".fits"
@@ -86,7 +86,9 @@ def save_fig(Fp_save, do_pdf=False):
 # ========
 # Functions
 # ========
-def example_image_zooms(image_path, cor_path, quadrant, do_pdf=False, use_corrected=False):
+def example_image_zooms(
+    image_path, cor_path, quadrant, do_pdf=False, use_corrected=False
+):
     """Example HST ACS image with CTI trails"""
 
     if use_corrected:

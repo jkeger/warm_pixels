@@ -11,7 +11,9 @@ from ..func_test import FuncTest
 
 
 @FuncTest
-def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date, use_arctic=False):
+def fit_total_trap_density(
+    x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, date, use_arctic=False
+):
     """Fit the total trap density for a trail or a concatenated set of trails.
 
     Other than the x, y, and noise values, which should cover all pixels in the
@@ -21,7 +23,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     should be [row_1, row_1, ..., row_1, row_2, row_2, ... row_2, row_3, ...] to
     set the correct values for all pixels in each trail. The date is taken as a
     single value, which only affects the results by being before vs after the
-    change of trap model.
+    change of HST trap model.
 
     Parameters
     ----------
@@ -54,17 +56,19 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     rho_q_std : float
         The standard error on the total trap density.
 
-    eval
+    eval : ###
     """
 
     # Initialise the fitting model
     if use_arctic:
         model = lmfit.models.Model(
-            func=trail_model.trail_model_hst_arctic, independent_vars=["x", "n_e", "n_bg", "row", "date"]
+            func=trail_model.trail_model_hst_arctic,
+            independent_vars=["x", "n_e", "n_bg", "row", "date"],
         )
     else:
         model = lmfit.models.Model(
-            func=trail_model.trail_model_hst, independent_vars=["x", "n_e", "n_bg", "row", "date"]
+            func=trail_model.trail_model_hst,
+            independent_vars=["x", "n_e", "n_bg", "row", "date"],
         )
     params = model.make_params()
 
@@ -73,7 +77,7 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     params["rho_q"].min = 0.0
 
     # Weight using the noise
-    weights = 1 / noise_all ** 2
+    weights = 1 / noise_all**2
 
     # Run the fitting
     result = model.fit(
@@ -88,22 +92,27 @@ def fit_total_trap_density(x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, 
     )
     # print(result.fit_report())  ##
 
-    return result.params.get("rho_q").value, result.params.get("rho_q").stderr, result.eval()
+    return (
+        result.params.get("rho_q").value,
+        result.params.get("rho_q").stderr,
+        result.eval(),
+    )
 
 
 def fit_dataset_total_trap_density(
-        group: QuadrantGroup,
-        use_arctic=False,
-        row_bins=None,
-        flux_bins=None,
-        background_bins=None
+    group: QuadrantGroup,
+    use_arctic=False,
+    row_bins=None,
+    flux_bins=None,
+    background_bins=None,
 ):
     """Load, prep, and pass the stacked-trail data to fit_total_trap_density().
 
     Parameters
     ----------
-    group
-        A group of quadrants and a dataset for which consistent stacked lines are computed.
+    group : QuadrantGroup
+        A group of quadrants and a dataset for which consistent stacked lines
+        are computed.
 
     Returns
     -------
@@ -113,7 +122,7 @@ def fit_dataset_total_trap_density(
     rho_q_std : float
         The standard error on the total trap density.
 
-    y_fit
+    y_fit : ### see eval
     """
     # Load
     stacked_lines = group.stacked_lines()
@@ -172,7 +181,14 @@ def fit_dataset_total_trap_density(
 
     # Run the fitting
     rho_q, rho_q_std, y_fit = fit_total_trap_density(
-        x_all, y_all, noise_all, n_e_all, n_bg_all, row_all, group.dataset.date, use_arctic=use_arctic
+        x_all,
+        y_all,
+        noise_all,
+        n_e_all,
+        n_bg_all,
+        row_all,
+        group.dataset.date,
+        use_arctic=use_arctic,
     )
 
     return rho_q, rho_q_std, y_fit
@@ -184,8 +200,8 @@ def fit_total_trap_densities(groups: Tuple[QuadrantGroup]):
 
     Parameters
     ----------
-    groups
-        Groups of quadrants from datasets over time
+    groups : (QuadrantGroup)
+        Groups of quadrants from datasets over time.
     """
     # Initialise arrays
     days = []
@@ -196,8 +212,7 @@ def fit_total_trap_densities(groups: Tuple[QuadrantGroup]):
     for i_dataset, group in enumerate(groups):
         print(
             "\rFit total trap densities... "
-            '"%s" (%d of %d)'
-            % (group.dataset.name, i_dataset + 1, len(groups)),
+            '"%s" (%d of %d)' % (group.dataset.name, i_dataset + 1, len(groups)),
             end="            ",
             flush=True,
         )
@@ -217,9 +232,7 @@ def fit_total_trap_densities(groups: Tuple[QuadrantGroup]):
     print("\rFit total trap densities")
 
     if len(days) == 0:
-        raise AssertionError(
-            "No successful fits"
-        )
+        raise AssertionError("No successful fits")
 
     # Sort
     sort = np.argsort(days)
@@ -237,11 +250,11 @@ def fit_total_trap_densities(groups: Tuple[QuadrantGroup]):
 
 class TrapDensities:
     def __init__(
-            self,
-            quadrants_string,
-            days,
-            densities,
-            density_errors,
+        self,
+        quadrants_string,
+        days,
+        densities,
+        density_errors,
     ):
         self.quadrants_string = quadrants_string
         self.days = days

@@ -5,6 +5,13 @@ import numpy as np
 
 class Bins:
     def __init__(self, bins):
+        """A class for bins to organise data. See from_values().
+
+        Parameters
+        ----------
+        bins : [float]
+            The list of bin-edge values.
+        """
         self.bins = bins
 
     @property
@@ -24,12 +31,12 @@ class Bins:
 
     @classmethod
     def from_values(
-            cls,
-            values: Iterable[float],
-            n_bins: int,
-            min_value: Optional[float] = None,
-            max_value: Optional[float] = None,
-            scale: str = "linear"
+        cls,
+        values: Iterable[float],
+        n_bins: int,
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None,
+        scale: str = "linear",
     ) -> "Bins":
         """
         Constructs a collection of bins either between the minimum and maximum
@@ -58,25 +65,11 @@ class Bins:
 
         # Bin lower edge values
         if scale == "linear":
-            return Bins(
-                np.linspace(
-                    min_value,
-                    max_value,
-                    n_bins + 1
-                )
-            )
+            return Bins(np.linspace(min_value, max_value, n_bins + 1))
         elif scale == "log":
-            return Bins(
-                np.logspace(
-                    np.log10(min_value),
-                    np.log10(max_value),
-                    n_bins
-                )
-            )
+            return Bins(np.logspace(np.log10(min_value), np.log10(max_value), n_bins))
         else:
-            raise ValueError(
-                "Scale must be linear or log"
-            )
+            raise ValueError("Scale must be linear or log")
 
     def index(self, value):
         if value > self.max:

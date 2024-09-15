@@ -14,15 +14,13 @@ from warm_pixels import misc
 from warm_pixels.hst_functions.fit import TrapDensities
 from warm_pixels.misc import nice_plot
 
-logger = logging.getLogger(
-    __name__
-)
+logger = logging.getLogger(__name__)
 
 
 def plot_trap_density_evol(
-        all_trap_densities: List[TrapDensities],
-        save_path=None,
-        use_corrected=False,
+    all_trap_densities: List[TrapDensities],
+    save_path=None,
+    use_corrected=False,
 ):
     """Plot the evolution of the total trap density.
 
@@ -70,9 +68,7 @@ def plot_trap_density_evol(
     # Year | Month | Decimal year | N sunspots | Std dev | N obs | Provisional?
     sunspot_path = "SN_m_tot_V2.0.txt"
     if not os.path.exists(sunspot_path):
-        response = requests.get(
-            "https://www.sidc.be/silso/DATA/SN_ms_tot_V2.0.txt"
-        )
+        response = requests.get("https://www.sidc.be/silso/DATA/SN_ms_tot_V2.0.txt")
         response.raise_for_status()
         with open(sunspot_path, "w+b") as f:
             f.write(response.content)
@@ -85,9 +81,7 @@ def plot_trap_density_evol(
     with warnings.catch_warnings():
         # Ignore astropy.time's "dubious year" warnings
         warnings.simplefilter("ignore")
-        sunspot_days = (
-                ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
-        )
+        sunspot_days = ut.dec_yr_to_jd(sunspot_data["dcml_year"]) - ut.date_acs_launch
 
     # Restrict to the relevant dates
     sel_ss = np.where((day_0 < sunspot_days) & (sunspot_days < day_1))[0]
@@ -196,9 +190,7 @@ def plot_trap_density_evol(
 
             # Plot
             ax.plot(days_fit, fit_densities, c=c, lw=1)
-            fit_errors = np.sqrt(
-                err_icpt ** 2 + ((days_fit - day_mid) * err_grad) ** 2
-            )
+            fit_errors = np.sqrt(err_icpt**2 + ((days_fit - day_mid) * err_grad) ** 2)
             ax.plot(days_fit, fit_densities + fit_errors, c=c, lw=1, alpha=0.25)
             ax.plot(days_fit, fit_densities - fit_errors, c=c, lw=1, alpha=0.25)
 

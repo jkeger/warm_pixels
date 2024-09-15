@@ -11,10 +11,7 @@ def directory_func(quadrant_group):
 
 
 class QuadrantGroup:
-    def __init__(
-            self,
-            quadrants: List[DatasetQuadrant]
-    ):
+    def __init__(self, quadrants: List[DatasetQuadrant]):
         """
         Stacked and consistent lines are computed for a group of CCD quadrants
         and a collection of images.
@@ -31,11 +28,7 @@ class QuadrantGroup:
         return iter(self.quadrants)
 
     def __str__(self):
-        return "".join(
-            quadrant.quadrant
-            for quadrant
-            in self.quadrants
-        )
+        return "".join(quadrant.quadrant for quadrant in self.quadrants)
 
     @property
     def dataset(self):
@@ -47,10 +40,7 @@ class QuadrantGroup:
         A combined collection of stacked lines for every quadrant
         computed by averaging within bins
         """
-        combined = sum(
-            quadrant.consistent_lines()
-            for quadrant in self.quadrants
-        )
+        combined = sum(quadrant.consistent_lines() for quadrant in self.quadrants)
         return combined.generate_stacked_lines_from_bins(
             flux_bins=ut.flux_bins,
         )

@@ -10,29 +10,27 @@ from .cache import cache
 
 class ImageQuadrant:
     def __init__(
-            self,
-            quadrant: str,
-            image: Image,
+        self,
+        quadrant: str,
+        image: Image,
     ):
         """
-        A quadrant of an image. That is, one quarter of an image which
-        is read into a specific serial
+        A quadrant of an image, i.e., a quarter that is read to one readout.
 
         Parameters
         ----------
-        quadrant
-            A letter for the quadrant (A, B, C or D)
-        image
-            An object used to load the image
+        quadrant : str
+            A letter for the quadrant (A, B, C or D).
+
+        image : Image
+            An object used to load the image.
         """
         self.quadrant = quadrant
         self.image = image
 
     @cache
     def array(self) -> ImageACS:
-        """
-        The image laoded into an array
-        """
+        """The image laoded into an array."""
         self.image._check_bia_exists()
         return ImageACS.from_fits(
             file_path=str(self.image.path),
@@ -59,40 +57,31 @@ class ImageQuadrant:
         )
 
 
-def directory_func(
-        quadrant
-):
+def directory_func(quadrant):
     return f"{quadrant.dataset}/{quadrant}"
 
 
 class DatasetQuadrant:
     def __new__(
-            cls,
-            quadrant: str,
-            dataset: Dataset,
+        cls,
+        quadrant: str,
+        dataset: Dataset,
     ):
-        if isinstance(
-                dataset,
-                CorrectedDataset
-        ):
+        if isinstance(dataset, CorrectedDataset):
             return object.__new__(CorrectedDatasetQuadrant)
         return object.__new__(DatasetQuadrant)
 
-    def __init__(
-            self,
-            quadrant: str,
-            dataset: Dataset
-    ):
+    def __init__(self, quadrant: str, dataset: Dataset):
         """
-        Computes warm pixels and lines across a given CCD quadrant for a
-        dataset.
+        Computes warm pixels and lines across a given CCD quadrant for a dataset.
 
         Parameters
         ----------
-        quadrant
-            The name of a quadrant (A, B, C or D)
-        dataset
-            A dataset with images from a given date
+        quadrant : str
+            The name of a quadrant (A, B, C or D).
+
+        dataset : Dataset
+            A dataset with images from a given date.
         """
         self.quadrant = quadrant
         self.dataset = dataset
@@ -109,12 +98,7 @@ class DatasetQuadrant:
 
     @cache
     def warm_pixels(self) -> PixelLineCollection:
-        """
-        A collection of warm pixels found in images in the dataset.
-
-        This is where a single pixel is much brighter than surrounding pixels indicating
-        that it is not due to a true light source in an image.
-        """
+        """A collection of warm pixels found in images in the dataset."""
         warm_pixels = PixelLineCollection()
 
         # Find the warm pixels in each image
@@ -163,8 +147,8 @@ class CorrectedDatasetQuadrant(DatasetQuadrant):
                 warm_pixels_cor.append(
                     PixelLine(
                         data=array[
-                             row - ut.trail_length: row + ut.trail_length + 1, column
-                             ],
+                            row - ut.trail_length : row + ut.trail_length + 1, column
+                        ],
                         origin=line.origin,
                         location=line.location,
                         date=line.date,

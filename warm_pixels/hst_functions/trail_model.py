@@ -1,11 +1,11 @@
 import numpy as np
 
-import arcticpy as cti
+import ArCTIcpy as cti
 from warm_pixels import hst_utilities as ut
 
 
 def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
-    """Calculate the model shape of a CTI trail.
+    """Calculate the model shape of a CTI trail as a sum of exponentials.
 
     Parameters
     ----------
@@ -41,23 +41,25 @@ def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
     trail : [float]
         The model charge values at each pixel in the trail (e-).
     """
-    # print(n_bg,n_e)
     notch = 0
     return (
-            rho_q
-            * (((n_e - notch) / (w - notch)) ** beta - ((n_bg - notch) / (w - notch)) ** beta)
-            * row
-            * (
-                    A * np.exp((1 - x) / tau_a) * (1 - np.exp(-1 / tau_a))
-                    + B * np.exp((1 - x) / tau_b) * (1 - np.exp(-1 / tau_b))
-                    + C * np.exp((1 - x) / tau_c) * (1 - np.exp(-1 / tau_c))
-            )
-        # + n_bg
+        rho_q
+        * (
+            ((n_e - notch) / (w - notch)) ** beta
+            - ((n_bg - notch) / (w - notch)) ** beta
+        )
+        * row
+        * (
+            A * np.exp((1 - x) / tau_a) * (1 - np.exp(-1 / tau_a))
+            + B * np.exp((1 - x) / tau_b) * (1 - np.exp(-1 / tau_b))
+            + C * np.exp((1 - x) / tau_c) * (1 - np.exp(-1 / tau_c))
+        )
+        # + n_bg ##
     )
 
 
-def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
-    """Calculate the model shape of a CTI trail.
+def trail_model_ArCTIc(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
+    """Calculate the model shape of a CTI trail using ArCTIc.
 
     Parameters
     ----------
@@ -93,7 +95,7 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
     trail : [float]
         The model charge values at each pixel in the trail (e-).
     """
-    # Set up classes required to run arCTIc
+    # Set up classes required to run ArCTIc
     # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
     traps = [
         cti.TrapInstantCapture(density=A * rho_q, release_timescale=tau_a),
@@ -110,30 +112,29 @@ def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
     # Loop over all those trails, to calculate the corresponding model
     output_model = np.zeros(n_trails * trail_length)
     for i in np.arange(n_trails):
-        # Define input trail model, in format that can be passed to arCTIc
+        # Define input trail model, in format that can be passed to arctic
         warm_pixel_position = np.int(np.floor(row[i * trail_length]))
         warm_pixel_flux = n_e[i * trail_length]
         background_flux = n_bg[i * trail_length]
-        model_before_trail = np.full(warm_pixel_position + 1 + trail_length, background_flux)
+        model_before_trail = np.full(
+            warm_pixel_position + 1 + trail_length, background_flux
+        )
         model_before_trail[warm_pixel_position] = warm_pixel_flux
 
-        # Run arCTIc to produce the output image with EPER trails
+        # Run arctic to produce the output image with EPER trails
         model_after_trail = cti.add_cti(
-            model_before_trail.reshape(-1, 1),  # pass 2D image to arCTIc
+            model_before_trail.reshape(-1, 1),  # 2D image for arctic
             parallel_roe=roe,
             parallel_ccd=ccd,
             parallel_traps=traps,
-            parallel_express=5
+            parallel_express=5,
         ).flatten()  # convert back to a 1D array
-        # print(model_after_trail[-15:])
         eper = model_after_trail[-trail_length:] - background_flux
-        output_model[i * trail_length:(i + 1) * trail_length] = eper
+        output_model[i * trail_length : (i + 1) * trail_length] = eper
 
-    exponential_model = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
-    # print(output_model[-24:])
-    # print(exponential_model[-24:])
-    # print((output_model-exponential_model)[-24:])
-    # print()
+    exponential_model = trail_model(
+        x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c
+    )
 
     return output_model
 
@@ -160,7 +161,7 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
     C = 0.38
     # Trap lifetimes before or after the temperature change
     if date < ut.date_T_change:
-        tau_a = 0.48
+        tau_a = 0.48  ##store these somewhere?
         tau_b = 4.86
         tau_c = 20.6
     else:
@@ -171,7 +172,7 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
     return trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
 
 
-def trail_model_hst_arctic(x, rho_q, n_e, n_bg, row, date):
+def trail_model_hst_ArCTIc(x, rho_q, n_e, n_bg, row, date):
     """Wrapper for trail_model() for HST ACS.
 
     Parameters (where different to trail_model())
@@ -201,11 +202,6 @@ def trail_model_hst_arctic(x, rho_q, n_e, n_bg, row, date):
         tau_b = 7.70
         tau_c = 37.0
 
-    # model_arctic = trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
-    # model_exponentials = trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
-    # print(model_arctic[-24:])
-    # print(model_exponentials[-24:])
-    # print((model_arctic-model_exponentials)[-24:])
-    # print()
-
-    return trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
+    return trail_model_ArCTIc(
+        x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c
+    )

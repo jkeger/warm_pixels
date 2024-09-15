@@ -9,15 +9,15 @@ from autoarray.structures.arrays.array_2d_util import header_obj_from
 
 from warm_pixels.model.cache import cache
 
-HST_DATA_URL = "https://hst-crds.stsci.edu/unchecked_get/references/hst"
+HST_DATA_URL = "https://hst-crds.stsci.edu/unchecked_get/references/hst"  ###
 
 DAY_ZERO = dt.date(2002, 3, 1)
 
 
 class Image:
     def __init__(
-            self,
-            path: Path,
+        self,
+        path: Path,
     ):
         """
         An image found in the directory of a given dataset
@@ -37,46 +37,40 @@ class Image:
     @property
     @cache
     def bia_path(self):
-        return self.path.parent / header_obj_from(
-            str(self.path), 0
-        )["BIASFILE"].replace("jref$", "").replace("iref$", "")
+        return self.path.parent / header_obj_from(str(self.path), 0)[
+            "BIASFILE"
+        ].replace("jref$", "").replace("iref$", "")
 
     def _check_bia_exists(self):
         if not self.bia_path.exists():
-            response = requests.get(
-                f"{HST_DATA_URL}/{self.bia_path.name}"
-            )
+            response = requests.get(f"{HST_DATA_URL}/{self.bia_path.name}")
             response.raise_for_status()
             with open(self.bia_path, "w+b") as f:
                 f.write(response.content)
 
     def image(self) -> aa.acs.ImageACS:
-        """
-        Load the image from file for the first quadrant
-        """
+        """Load the image from file for the first quadrant."""
         self._check_bia_exists()
-        return aa.acs.ImageACS.from_fits(
-            file_path=str(self.path),
-            quadrant_letter="A"
-        )
+        return aa.acs.ImageACS.from_fits(file_path=str(self.path), quadrant_letter="A")
 
     def quadrant(self, item: str):
-        """
-        Load or retrieve a specific quadrant of the image
+        """Load or retrieve a specific quadrant of the image.
 
         Parameters
         ----------
-        item
-            A letter for the quadrant (A, B, C or D)
+        item : str
+            A letter for the quadrant (A, B, C or D).
 
         Returns
         -------
-        An object representing that quadrant
+        An object representing that quadrant.
         """
         if item not in self._quadrants:
             from warm_pixels.model.quadrant import ImageQuadrant
+
             self._quadrants[item] = ImageQuadrant(
-                item, self,
+                item,
+                self,
             )
         return self._quadrants[item]
 
@@ -92,14 +86,8 @@ class Image:
 
     @cache
     def observation_date(self) -> dt.date:
-        """
-        The date of observation
-        """
-        return dt.date.fromisoformat(
-            fits.open(self.path)[0].header[
-                "DATE-OBS"
-            ]
-        )
+        """The date of observation."""
+        return dt.date.fromisoformat(fits.open(self.path)[0].header["DATE-OBS"])
 
     def corrected(self):
         return CorrectedImage(self)
@@ -108,9 +96,6 @@ class Image:
 class CorrectedImage(Image):
     def __init__(self, image):
         super().__init__(
-            path=(
-                    image.path.parent
-                    / f"{image.name}_raw_cor.fits"
-            ),
+            path=(image.path.parent / f"{image.name}_raw_cor.fits"),
         )
         self.image = image

@@ -39,7 +39,7 @@ def cti_model_hst(date):
     if date < ut.date_T_change:
         release_times = np.array([0.48, 4.86, 20.6])
     else:
-        release_times = np.array([0.74, 7.70, 37.0])
+        release_times = np.array([0.74, 7.70, 37.0])  ###set all these elsewhere?
 
     # Density evolution
     if date < ut.date_sm4_repair:
@@ -49,7 +49,7 @@ def cti_model_hst(date):
         initial_total_trap_density = -0.261
         trap_growth_rate = 5.55e-4
     total_trap_density = initial_total_trap_density + trap_growth_rate * (
-            date - ut.date_acs_launch
+        date - ut.date_acs_launch
     )
     trap_densities = relative_densities * total_trap_density
 

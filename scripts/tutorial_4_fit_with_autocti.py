@@ -33,7 +33,7 @@ __Dataset__
 We now load every cti-dataset, including a noise-map and pre-cti data containing the data before read-out and
 therefore without CTI. This uses a`Dataset1D` object.
 """
-with open(dataset_1d_file, 'rb') as outfile:
+with open(dataset_1d_file, "rb") as outfile:
     dataset_1d_list = pickle.load(outfile)
 
 """

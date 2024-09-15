@@ -35,10 +35,7 @@ Datasets contain images
 """
 print(len(dataset))
 image = dataset[0]
-wp.plot.warm_pixels(
-    image.quadrant("B"),
-    save_path=wp_output / "warm_pixels_plot.png"
-)
+wp.plot.warm_pixels(image.quadrant("B"), save_path=wp_output / "warm_pixels_plot.png")
 
 """
 We can also take a quadrant for a dataset
@@ -52,8 +49,7 @@ dataset_quadrants = [
 And then plot the distribution of warm pixels
 """
 wp.plot.warm_pixel_distributions(
-    dataset_quadrants,
-    save_path=wp_output / "warm_pixel_distribution.png"
+    dataset_quadrants, save_path=wp_output / "warm_pixel_distribution.png"
 )
 
 """
@@ -64,25 +60,20 @@ group = dataset.group("AB")
 """
 Stacked trails may be plotted for a group
 """
-wp.plot.stacked_trails(
-    group,
-    save_path=wp_output / "stacked_trails.png"
-)
+wp.plot.stacked_trails(group, save_path=wp_output / "stacked_trails.png")
 
 """
 A WarmPixels object can be created to encapsulate multiple datasets
 """
 
-dataset_2 = wp.Dataset(
-    data_directory / "10_2017"
-)
+dataset_2 = wp.Dataset(data_directory / "10_2017")
 
 warm_pixels = wp.WarmPixels(
     datasets=[
         dataset,
         dataset_2,
     ],
-    quadrants_string="A_B"
+    quadrants_string="A_B",
 )
 
 """
@@ -93,7 +84,4 @@ trap_densities = warm_pixels.all_trap_densities()
 """
 Which can also be plotted
 """
-wp.plot.trap_density_evol(
-    trap_densities,
-    save_path=wp_output / "trap_density_evol.png"
-)
+wp.plot.trap_density_evol(trap_densities, save_path=wp_output / "trap_density_evol.png")

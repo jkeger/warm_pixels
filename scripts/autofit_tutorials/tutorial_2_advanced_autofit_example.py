@@ -6,10 +6,7 @@ from warm_pixels.fit.analysis import Analysis
 from warm_pixels.fit.model import TrailModel
 
 pixel_line_dict = {
-    "location": [
-        13,
-        0
-    ],
+    "location": [13, 0],
     "date": 2453963.758414352,
     "background": 31.30540652532858,
     "flux": 1760.68,
@@ -38,7 +35,7 @@ pixel_line_dict = {
         47.96562226593793,
         48.13477786554208,
         51.41839400253888,
-        49.58684465281521
+        49.58684465281521,
     ],
     "noise": [
         1.7182103404229303,
@@ -65,7 +62,7 @@ pixel_line_dict = {
         0.9350281902071158,
         0.8393195956710766,
         1.3560323220866162,
-        1.2543348504815965
+        1.2543348504815965,
     ],
 }
 

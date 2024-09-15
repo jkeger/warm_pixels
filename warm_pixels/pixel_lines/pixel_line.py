@@ -5,10 +5,12 @@ import numpy as np
 
 
 def _dump(value):
+    """Ensure a simple type for a variable."""
     if isinstance(value, np.ndarray):
         if value.shape == ():
             return float(value)
-        return list(value)
+        else:
+            return list(value)
     if isinstance(value, np.integer):
         return int(value)
     if isinstance(value, np.number):
@@ -16,35 +18,35 @@ def _dump(value):
     if isinstance(value, list):
         return list(map(_dump, value))
     if isinstance(value, dict):
-        return {
-            key: _dump(value)
-            for key, value
-            in value.items()
-        }
+        return {key: _dump(value) for key, value in value.items()}
+
     return value
 
 
 class AbstractPixelLine(ABC):
     def __init__(
-            self,
-            location: Optional[Tuple[int, int]] = None,
-            date: Optional[float] = None,
-            background: Optional[float] = None,
-            flux: Optional[float] = None,
+        self,
+        location: Optional[Tuple[int, int]] = None,
+        date: Optional[float] = None,
+        background: Optional[float] = None,
+        flux: Optional[float] = None,
     ):
         """
         Represents a trail
 
         Parameters
         ----------
-        location
-            The location of the warm pixel in (row, column)
-        date
-            The date on which the image was captured
-        background
-            Background sky in the original image
-        flux
-            The estimated flux of the warm pixel before trailing
+        location : (int, int)
+            The location of the warm pixel in (row, column).
+
+        date : float
+            The date on which the image was captured.
+
+        background : float
+            Background sky in the original image.
+
+        flux : float
+            The estimated flux of the warm pixel before trailing.
         """
         self.location = location
         self.date = date
@@ -53,9 +55,9 @@ class AbstractPixelLine(ABC):
 
     @property
     def dict(self) -> dict:
-        """
-        A dictionary representation of the pixel line. This can
-        be used to create a Dataset1D in autocti.
+        """A dictionary representation of the pixel line.
+
+        Can be used to create a Dataset1D in autocti.
         """
         d = {
             "location": self.location,
@@ -91,109 +93,123 @@ class AbstractPixelLine(ABC):
 
     @property
     def trail_length(self):
-        """Number of pixels in only the trailed section of the data array
-        (which is assumed to be N preceding pixels, 1 warm pixel, N trailed pixels)"""
+        """Number of pixels in only the trailed section of the data array.
+
+        Assumed to be N preceding pixels, 1 warm pixel, N trailed pixels.
+        """
         assert (self.length % 2) == 1
         return (self.length - 1) // 2
 
     @property
     def model_background(self, n_pixels_used_for_background=5):
-        """Re-estimate the background, locally"""
+        """Re-estimate the background, locally."""
         if self.data is None:
             return None
-        n_pixels_used_for_background = min(n_pixels_used_for_background, self.trail_length)
-        return np.mean(self.data[: n_pixels_used_for_background])
+        n_pixels_used_for_background = min(
+            n_pixels_used_for_background, self.trail_length
+        )
+
+        return np.mean(self.data[:n_pixels_used_for_background])
 
     @property
     def model_flux(self):
-        """Extract just the number of electrons in the warm pixel, locally
-        add_trail = True will push any trailed electrons back into the warm pixel"""
+        """Extract just the number of electrons in the warm pixel, locally."""
         if self.data is None:
             return None
         return self.data[-self.trail_length - 1]
 
     @property
     def model_trail(self):
-        """Convert a line with a warm pixel in the middle to just the trail (without background),
-        suitable for modelling as sums of exponentials.
+        """Convert a line with a warm pixel in the middle to just the trail.
+
+        Doesn't include background, suitable for modelling as sum of exponentials.
         """
         # Subtract preceding pixels, as a way of removing spurious sources (and the constant background)
-        return self.data[-self.trail_length:] - np.flip(self.data[: self.trail_length])
+        return self.data[-self.trail_length :] - np.flip(self.data[: self.trail_length])
 
     @property
     def model_trail_noise(self):
-        """Convert a line with a warm pixel in the middle to just the trail (without background),
-        suitable for modelling as sums of exponentials.
+        """Convert a line noise with a warm pixel in the middle to just the trail.
+
+        Doesn't include background, suitable for modelling as sum of exponentials.
         """
         # Add noise from preceding and trailed pixels in quadrature
-        return np.sqrt(self.noise[-self.trail_length:] ** 2 + np.flip(self.noise[:self.trail_length]) ** 2)
+        return np.sqrt(
+            self.noise[-self.trail_length :] ** 2
+            + np.flip(self.noise[: self.trail_length]) ** 2
+        )
 
     @property
     def model_full_trail_length(self):
-        """Determine the length of array needed to model the trail as enough of a full column to
-        conveniently pass to arCTIc, and not then need to use windows.
+        """Determine the length of array needed to model the trail.
+
+        Can then pass as a full column to conveniently pass to ArCTIc, and not
+        then need to use windows.
         """
-        # RJM: do we also need to shift the location by length pixels?
+        ## RJM: do we also need to shift the location by length pixels?
         return np.int(np.floor(self.mean_row) + 1 + self.trail_length)
 
     @property
     def model_full_trail(self):
-        """Convert a line with a warm pixel in the middle to the entire relevant part of a column
-        (with background), suitable for passing to arCTIc.
-        """
-
+        """Convert a line with a warm pixel in the middle to the entire relevant
+        part of a column (with background), suitable for passing to ArCTIc."""
         # Constant background level
         full_trail = np.full(self.model_full_trail_length, self.model_background)
         # Add warm pixel itself
         full_trail[-self.trail_length - 1] = self.model_flux
         # Add trail
-        full_trail[-self.trail_length:] += self.model_trail
+        full_trail[-self.trail_length :] += self.model_trail
 
         return full_trail
 
     @property
     def model_full_trail_untrailed(self):
-        """Convert a line with a warm pixel in the middle to the entire relevant part of a column
-        (with background), suitable for passing to arCTIc.
-        Ideally wouldn't ever use this, but would iterate to find this during fitting. This is
-        because the pushing back of trailed electrons into the warm pixel is noisy and truncated
-        (any trailed electrons past the original line.data have been lost, creating a biased
-        underestimate).
-        """
+        """Convert a line with a warm pixel in the middle to the entire relevant
+        part of a column (with background), suitable for passing to ArCTIc.
 
+        Ideally wouldn't ever use this, but would iterate to find this during
+        fitting. This is because the pushing back of trailed electrons into the
+        warm pixel is noisy and truncated (any trailed electrons past the
+        original line.data have been lost, creating a biased underestimate).
+        """
         # Constant background level
-        full_trail_untrailed = np.full(self.model_full_trail_length, self.model_background)
+        full_trail_untrailed = np.full(
+            self.model_full_trail_length, self.model_background
+        )
         # Add warm pixel itself
-        full_trail_untrailed[-self.trail_length - 1] = self.model_flux + sum(self.model_trail)
+        full_trail_untrailed[-self.trail_length - 1] = self.model_flux + sum(
+            self.model_trail
+        )
 
         return full_trail_untrailed
 
     @property
     def model_full_trail_noise(self):
-        """Noise model for the entire relevant part of a column, suitable for passing to arCTIc.
-        """
-
+        """Noise model for the entire relevant part of a column, suitable for
+        passing to ArCTIc."""
         # Constant background level
         # full_trail_noise = np.full(self.model_full_trail_length, np.sqrt(self.model_background))
-        full_trail_noise = np.full(self.model_full_trail_length, np.inf)  # downweight in fit
+        full_trail_noise = np.full(
+            self.model_full_trail_length, np.inf
+        )  # downweight in fit      ##?
         # Add warm pixel itself
         # full_trail_noise[-self.trail_length - 1] = self.noise[self.trail_length]
         # Add trail
-        full_trail_noise[-self.trail_length:] = self.model_trail_noise
+        full_trail_noise[-self.trail_length :] = self.model_trail_noise
 
         return full_trail_noise
 
 
 class PixelLine(AbstractPixelLine):
     def __init__(
-            self,
-            data=None,
-            noise=None,
-            origin=None,
-            location=None,
-            date=None,
-            background=None,
-            flux=None,
+        self,
+        data=None,
+        noise=None,
+        origin=None,
+        location=None,
+        date=None,
+        background=None,
+        flux=None,
     ):
         """A 1D line of pixels (e.g. a single CTI trail) with metadata.
 

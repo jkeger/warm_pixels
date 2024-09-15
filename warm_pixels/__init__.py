@@ -14,28 +14,20 @@ from warm_pixels.pixel_lines import PixelLine, PixelLineCollection
 
 class WarmPixels:
     def __init__(
-            self,
-            datasets: List[Dataset],
-            quadrants_string: str = "ABCD",
+        self,
+        datasets: List[Dataset],
+        quadrants_string: str = "ABCD",
     ):
         self.datasets = datasets
         self.quadrants_string = quadrants_string
-        self.all_quadrants_string = "".join(
-            quadrants_string.split("_")
-        )
+        self.all_quadrants_string = "".join(quadrants_string.split("_"))
 
     def all_groups(self) -> List[List[QuadrantGroup]]:
         """
         A list of lists of quadrant groups with each sub-list containing
         groups corresponding to a dataset.
         """
-        return [
-            dataset.groups(
-                self.quadrants_string
-            )
-            for dataset
-            in self.datasets
-        ]
+        return [dataset.groups(self.quadrants_string) for dataset in self.datasets]
 
     def all_groups_by_time(self) -> List[Tuple[QuadrantGroup]]:
         """
@@ -50,6 +42,5 @@ class WarmPixels:
         Fit the variation in trap density over time for each group of quadrants.
         """
         return [
-            fu.fit_total_trap_densities(groups)
-            for groups in self.all_groups_by_time()
+            fu.fit_total_trap_densities(groups) for groups in self.all_groups_by_time()
         ]

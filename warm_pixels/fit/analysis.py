@@ -42,12 +42,15 @@ class Analysis(af.Analysis):
 
     def visualize(self, paths, instance, during_analysis):
         plt.plot(self.x, self.y)
-        plt.plot(self.x, instance(
-            x=self.x,
-            n_e=self.n_e,
-            n_bg=self.n_bg,
-            row=self.row,
-        ))
+        plt.plot(
+            self.x,
+            instance(
+                x=self.x,
+                n_e=self.n_e,
+                n_bg=self.n_bg,
+                row=self.row,
+            ),
+        )
 
     def log_likelihood_function(self, instance: TrailModel) -> float:
         modelled_trail = instance(

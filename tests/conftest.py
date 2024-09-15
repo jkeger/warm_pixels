@@ -20,13 +20,8 @@ from warm_pixels.model.cache import persist
 directory = Path(__file__).parent
 
 
-@pytest.fixture(
-    autouse=True
-)
-def patch_cache(
-        monkeypatch,
-        output_path
-):
+@pytest.fixture(autouse=True)
+def patch_cache(monkeypatch, output_path):
     monkeypatch.setattr(
         persist,
         "path",
@@ -34,86 +29,60 @@ def patch_cache(
     )
 
 
-@pytest.fixture(
-    name="output_path"
-)
+@pytest.fixture(name="output_path")
 def make_output_path(monkeypatch):
     path = directory / "output"
-    monkeypatch.setattr(
-        hst_utilities,
-        "output_path",
-        path
-    )
+    monkeypatch.setattr(hst_utilities, "output_path", path)
     return path
 
 
-@pytest.fixture(
-    name="dataset_list_path"
-)
+@pytest.fixture(name="dataset_list_path")
 def make_dataset_list_path():
     return directory / "dataset_list"
 
 
-@pytest.fixture(
-    name="dataset_path"
-)
+@pytest.fixture(name="dataset_path")
 def make_dataset_path(dataset_list_path):
     return dataset_list_path / "dataset"
 
 
-@pytest.fixture(
-    name="combined_lines"
-)
+@pytest.fixture(name="combined_lines")
 def make_combined_lines():
     with open(directory / "combined_lines.pickle", "r+b") as f:
         return pickle.load(f)
 
 
-@pytest.fixture(
-    name="dataset"
-)
+@pytest.fixture(name="dataset")
 def make_dataset(
-        dataset_path,
+    dataset_path,
 ):
     return Dataset(
         dataset_path,
     )
 
 
-@pytest.fixture(
-    name="image"
-)
+@pytest.fixture(name="image")
 def make_image(dataset):
     return dataset.images[0]
 
 
-@pytest.fixture(
-    name="array"
-)
+@pytest.fixture(name="array")
 def make_array(dataset_path):
-    return np.load(
-        str(dataset_path / "array_raw.fits")
-    )
+    return np.load(str(dataset_path / "array_raw.fits"))
 
 
 def remove_cti(
-        image,
-        **kwargs,
+    image,
+    **kwargs,
 ):
     return image
 
 
-@pytest.fixture(
-    autouse=True
-)
+@pytest.fixture(autouse=True)
 def patch_arctic(monkeypatch):
+    monkeypatch.setattr(cti, "remove_cti", remove_cti)
     monkeypatch.setattr(
-        cti, "remove_cti", remove_cti
-    )
-    monkeypatch.setattr(
-        trail_model,
-        "trail_model_hst_arctic",
-        trail_model.trail_model_hst
+        trail_model, "trail_model_hst_arctic", trail_model.trail_model_hst
     )
 
 
@@ -122,40 +91,29 @@ class SaveFig:
         self.calls = []
 
     def __call__(self, *args, **kwargs):
-        self.calls.append(
-            (args, kwargs)
-        )
+        self.calls.append((args, kwargs))
 
 
-@pytest.fixture(
-    name="savefig_calls"
-)
+@pytest.fixture(name="savefig_calls")
 def patch_pyplot(monkeypatch):
     savefig = SaveFig()
-    monkeypatch.setattr(
-        pyplot,
-        "savefig",
-        savefig
-    )
+    monkeypatch.setattr(pyplot, "savefig", savefig)
     return savefig.calls
 
 
 def output_quadrants_to_fits(
-        file_path: str,
-        quadrant_a,
-        quadrant_b,
-        quadrant_c,
-        quadrant_d,
-        header_a=None,
-        header_b=None,
-        header_c=None,
-        header_d=None,
-        overwrite: bool = False,
+    file_path: str,
+    quadrant_a,
+    quadrant_b,
+    quadrant_c,
+    quadrant_d,
+    header_a=None,
+    header_b=None,
+    header_c=None,
+    header_d=None,
+    overwrite: bool = False,
 ):
-    np.save(
-        file_path,
-        quadrant_a
-    )
+    np.save(file_path, quadrant_a)
     os.rename(f"{file_path}.npy", file_path)
 
 
@@ -171,12 +129,12 @@ class MockFits:
 
 
 def from_fits(
-        file_path,
-        quadrant_letter,
-        bias_subtract_via_bias_file=False,
-        bias_subtract_via_prescan=False,
-        bias_file_path=None,
-        use_calibrated_gain=True,
+    file_path,
+    quadrant_letter,
+    bias_subtract_via_bias_file=False,
+    bias_subtract_via_prescan=False,
+    bias_file_path=None,
+    use_calibrated_gain=True,
 ):
     array = np.load(file_path)
     return ImageACS(
@@ -191,52 +149,25 @@ def from_fits(
             },
             hdu=None,
             quadrant_letter=quadrant_letter,
-        )
+        ),
     )
 
 
-def fits_open(
-        file_path
-):
+def fits_open(file_path):
     return [MockFits]
 
 
-@pytest.fixture(
-    autouse=True
-)
+@pytest.fixture(autouse=True)
 def patch_fits(monkeypatch):
+    monkeypatch.setattr(ImageACS, "from_fits", from_fits)
+    monkeypatch.setattr(fits, "open", fits_open)
+    monkeypatch.setattr(acs, "output_quadrants_to_fits", output_quadrants_to_fits)
     monkeypatch.setattr(
-        ImageACS,
-        "from_fits",
-        from_fits
-    )
-    monkeypatch.setattr(
-        fits,
-        "open",
-        fits_open
-    )
-    monkeypatch.setattr(
-        acs,
-        "output_quadrants_to_fits",
-        output_quadrants_to_fits
-    )
-    monkeypatch.setattr(
-        image,
-        "header_obj_from",
-        lambda name, hdu: {
-            "BIASFILE": "array_raw.fits"
-        }
+        image, "header_obj_from", lambda name, hdu: {"BIASFILE": "array_raw.fits"}
     )
 
 
-@pytest.fixture(
-    autouse=True
-)
-def remove_output(
-        output_path
-):
+@pytest.fixture(autouse=True)
+def remove_output(output_path):
     yield
-    shutil.rmtree(
-        output_path,
-        ignore_errors=True
-    )
+    shutil.rmtree(output_path, ignore_errors=True)

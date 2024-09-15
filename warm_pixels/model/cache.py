@@ -8,9 +8,7 @@ from warm_pixels import hst_utilities as hu
 
 
 def cache(func):
-    """
-    Cache the results of a method that takes no arguments
-    """
+    """Cache the results of a method that takes no arguments."""
 
     @wraps(func)
     def wrapper(*args):
@@ -25,31 +23,24 @@ def cache(func):
 
 class Persist:
     def __init__(self, path: Path):
-        """
-        Save the output of methods and load it rather than
-        calling the method to avoid re-executing expensive
-        steps in the pipeline.
+        """Save the output of methods and load it rather than calling the method.
+
+        Avoids re-executing expensive steps in the pipeline.
 
         Parameters
         ----------
-        path
+        path : Path
             A path in which cached data is saved.
         """
         self.path = path
 
     def __call__(self, directory_func=str):
-        """
-        Create a decorator with a function to convert an object into
-        a directory name
+        """Create a decorator with a function to convert an object into a directory name.
 
         Parameters
         ----------
         directory_func
             A function that converts an instance into a directory
-
-        Returns
-        -------
-
         """
 
         def outer(func):

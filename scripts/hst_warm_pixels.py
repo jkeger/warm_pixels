@@ -86,16 +86,8 @@ parser.add_argument(
 )
 
 # Filter
-parser.add_argument(
-    "--after",
-    default=None,
-    type=str
-)
-parser.add_argument(
-    "--before",
-    default=None,
-    type=str
-)
+parser.add_argument("--after", default=None, type=str)
+parser.add_argument("--before", default=None, type=str)
 parser.add_argument(
     "--downsample",
     "-w",
@@ -114,15 +106,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--plot',
-    nargs='+',
-    help='Specify plots from:\nwarm-pixels\nwarm-pixel-distributions\nstacked-trails\ndensity',
+    "--plot",
+    nargs="+",
+    help="Specify plots from:\nwarm-pixels\nwarm-pixel-distributions\nstacked-trails\ndensity",
     default=[],
 )
 parser.add_argument(
-    '--output',
-    nargs='+',
-    help='Specify outputs from:\nconsistent-lines\nstacked-lines',
+    "--output",
+    nargs="+",
+    help="Specify outputs from:\nconsistent-lines\nstacked-lines",
     default=[],
 )
 parser.add_argument(
@@ -152,10 +144,10 @@ def main():
 
     downsample = args.downsample
     if downsample is not None:
-        source = source.downsample(
-            step=downsample
+        source = source.downsample(step=downsample)
+        print(
+            f"Down sampling to every {downsample}th dataset -> {len(source)} datasets"
         )
-        print(f"Down sampling to every {downsample}th dataset -> {len(source)} datasets")
 
     after = args.after
     if after is not None:
@@ -176,16 +168,12 @@ def main():
     datasets = list(source)
 
     datasets_string = "\n".join(
-        f"{dataset.name} {dataset.observation_date()}"
-        for dataset in datasets
+        f"{dataset.name} {dataset.observation_date()}" for dataset in datasets
     )
 
     print(f"Included Datasets:\n\n{datasets_string}\n")
 
-    warm_pixels = WarmPixels(
-        datasets=datasets,
-        quadrants_string=args.quadrants
-    )
+    warm_pixels = WarmPixels(datasets=datasets, quadrants_string=args.quadrants)
 
     list_name = str(source)
 

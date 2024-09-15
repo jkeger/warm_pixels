@@ -12,6 +12,7 @@ from warm_pixels import hst_utilities as ut
 
 data_directory = Path(os.path.abspath("")) / "data"
 
+
 def load_data(name):
     with open(data_directory / f"{name}.pickle", "r+b") as f:
         return pickle.load(f)
@@ -35,6 +36,8 @@ trail modelled using a set of parameters sampled from parameter space.
 The analysis can also use this functionality to visualise the modelled trail and
 show how good a match it is.
 """
+
+
 class Analysis(af.Analysis):
     def __init__(self, x, y, noise, n_e, n_bg, row):
         self.x = x
@@ -46,12 +49,15 @@ class Analysis(af.Analysis):
 
     def visualize(self, paths, instance, during_analysis):
         plt.plot(self.x, self.y)
-        plt.plot(self.x, instance(
-            x=self.x,
-            n_e=self.n_e,
-            n_bg=self.n_bg,
-            row=self.row,
-        ))
+        plt.plot(
+            self.x,
+            instance(
+                x=self.x,
+                n_e=self.n_e,
+                n_bg=self.n_bg,
+                row=self.row,
+            ),
+        )
 
     def log_likelihood_function(self, instance):
         modelled_trail = instance(
@@ -67,6 +73,7 @@ class Analysis(af.Analysis):
         )
         return fit.log_likelihood
 
+
 """
 The TrailModel is what we're fitting as we optimise. It's parameterised by the arguments
 passed into the constructor (rho_q, beta, w, a, b, c, tau_a, tau_b and tau_c). These
@@ -74,18 +81,20 @@ arguments can be constant or they can be a prior if we want the variable to be o
 
 The trail model can be called to recover a modelled trail.
 """
+
+
 class TrailModel:
     def __init__(
-            self,
-            rho_q,
-            beta,
-            w,
-            a,
-            b,
-            c,
-            tau_a,
-            tau_b,
-            tau_c,
+        self,
+        rho_q,
+        beta,
+        w,
+        a,
+        b,
+        c,
+        tau_a,
+        tau_b,
+        tau_c,
     ):
         self.rho_q = rho_q
         self.beta = beta
@@ -113,6 +122,7 @@ class TrailModel:
             tau_b=self.tau_b,
             tau_c=self.tau_c,
         )
+
 
 """
 For now we're setting constant values for most parameters

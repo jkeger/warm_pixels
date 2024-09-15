@@ -20,13 +20,9 @@ with open(data_directory / "stacked_lines.json") as f:
 date_groups = defaultdict(list)
 
 for stacked_line in stacked_lines:
-    date_groups[stacked_line['date']].append(stacked_line)
+    date_groups[stacked_line["date"]].append(stacked_line)
 
-print({
-    date: len(lines)
-    for date, lines
-    in date_groups.items()
-})
+print({date: len(lines) for date, lines in date_groups.items()})
 
 """
 We define global parameters which are true for any image captured
@@ -136,8 +132,7 @@ Let's plot this to see what happens over time.
 """
 date_rho_dict = {
     analysis.pixel_line.date: instance.rho_q
-    for instance, analysis
-    in zip(result.instance, analyses)
+    for instance, analysis in zip(result.instance, analyses)
 }
 
 dates, rho_qs = zip(*sorted(date_rho_dict.items(), key=lambda t: t[0]))

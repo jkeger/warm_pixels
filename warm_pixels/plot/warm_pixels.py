@@ -11,9 +11,7 @@ from warm_pixels.misc import plot_hist
 from warm_pixels.model.quadrant import DatasetQuadrant
 from warm_pixels.pixel_lines import PixelLineCollection
 
-logger = logging.getLogger(
-    __name__
-)
+logger = logging.getLogger(__name__)
 
 
 def plot_warm_pixels(image_quadrant, save_path=None):
@@ -38,12 +36,7 @@ def plot_warm_pixels(image_quadrant, save_path=None):
         image_quadrant.warm_pixels(),
     )
 
-    im = plt.imshow(
-        X=image,
-        aspect="equal",
-        vmin=0,
-        vmax=500
-    )
+    im = plt.imshow(X=image, aspect="equal", vmin=0, vmax=500)
     try:
         plt.scatter(
             warm_pixels.locations[:, 1] + 0.5,
@@ -122,10 +115,7 @@ def plot_warm_pixel_distributions(quadrants: List[DatasetQuadrant], save_path=No
     date_bins = np.linspace(date_min, date_max, n_date_bins + 1)
 
     # Plot each quadrant separately
-    for quadrant, c in zip(
-            quadrants,
-            colours
-    ):
+    for quadrant, c in zip(quadrants, colours):
         warm_pixels = quadrant.consistent_lines()
         # Data
         row_hist, row_bin_edges = np.histogram(

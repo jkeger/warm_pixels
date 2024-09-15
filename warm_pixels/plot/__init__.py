@@ -55,7 +55,10 @@ class Plot(AbstractOutput):
         Plot a histogram of the distribution of warm pixels
         """
         for dataset in self._warm_pixels.datasets:
-            filename = ut.output_path / f"plotted_distributions/{dataset.name}_plotted_distributions_{self._warm_pixels.all_quadrants_string}.png"
+            filename = (
+                ut.output_path
+                / f"plotted_distributions/{dataset.name}_plotted_distributions_{self._warm_pixels.all_quadrants_string}.png"
+            )
             if _check_path(filename):
                 continue
 
@@ -63,8 +66,7 @@ class Plot(AbstractOutput):
                 warm_pixel_distributions(
                     [
                         dataset.quadrant(quadrant)
-                        for quadrant
-                        in self._warm_pixels.quadrants_string
+                        for quadrant in self._warm_pixels.quadrants_string
                     ],
                     save_path=filename,
                 )
@@ -76,10 +78,11 @@ class Plot(AbstractOutput):
         Plot a tiled set of stacked trails for each dataset
         """
         for dataset in self._warm_pixels.datasets:
-            for group in dataset.groups(
-                    self._warm_pixels.quadrants_string
-            ):
-                filename = ut.output_path / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self._warm_pixels.all_quadrants_string}.png"
+            for group in dataset.groups(self._warm_pixels.quadrants_string):
+                filename = (
+                    ut.output_path
+                    / f"stacked_trail_plots/{dataset.name}_plotted_stacked_trails_{self._warm_pixels.all_quadrants_string}.png"
+                )
                 if _check_path(filename):
                     continue
 
@@ -93,12 +96,15 @@ class Plot(AbstractOutput):
         """
         Plot the evolution of trap density over time
         """
-        save_path = ut.output_path / f"density_evol_{self.list_name}{self._warm_pixels.quadrants_string}.{extension}"
+        save_path = (
+            ut.output_path
+            / f"density_evol_{self.list_name}{self._warm_pixels.quadrants_string}.{extension}"
+        )
         if _check_path(save_path):
             return
 
         trap_density_evol(
             all_trap_densities=self._warm_pixels.all_trap_densities(),
             use_corrected=self.use_corrected,
-            save_path=save_path
+            save_path=save_path,
         )

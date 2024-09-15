@@ -71,17 +71,17 @@ ls_dash = (0, (4, 3))
 # Plotting functions
 # ========
 def set_std_form_axes(ax, force_x=False, force_y=False):
-    """ Set the axis labels to use standard form, if the current limits are very
-        large or small (and the scale is linear).
+    """Set the axis labels to use standard form, if the current limits are very
+    large or small (and the scale is linear).
 
-        Args:
-            ax (plt axes)
-                The plot axes.
+    Args:
+        ax (plt axes)
+            The plot axes.
 
-            force_x, force_y (opt. bool)
-                False:      (Default) Only set stardard form if the axis limits
-                            are very large or small.
-                True:       Set standard form regardless of the current limits.
+        force_x, force_y (opt. bool)
+            False:      (Default) Only set stardard form if the axis limits
+                        are very large or small.
+            True:       Set standard form regardless of the current limits.
     """
     # Check if either axis is logarithmic
     if ax.get_xscale() == "log":
@@ -133,11 +133,11 @@ def set_std_form_axes(ax, force_x=False, force_y=False):
 
 
 def set_large_ticks(ax, do_x=True, do_y=True):
-    """ Set larger ticks on plot axes, especially for logarithmic scales.
+    """Set larger ticks on plot axes, especially for logarithmic scales.
 
-        Args:
-            ax (plt axes)
-                The plot axes.
+    Args:
+        ax (plt axes)
+            The plot axes.
     """
     # Check if either axis is logarithmic
     log_x = False
@@ -173,19 +173,19 @@ def set_large_ticks(ax, do_x=True, do_y=True):
 
 
 def set_font_size(ax, cbar=None, fontsize=22):
-    """ Set the font size for all plot text.
+    """Set the font size for all plot text.
 
-        Args:
-            ax (plt axes)
-                The plot axes.
+    Args:
+        ax (plt axes)
+            The plot axes.
 
-            cbar (opt. plt colour bar)
-                A colour bar object.
-                None:       (Default)
+        cbar (opt. plt colour bar)
+            A colour bar object.
+            None:       (Default)
 
-            fontsize (opt. float)
-                The font size.
-                20:         (Default)
+        fontsize (opt. float)
+            The font size.
+            20:         (Default)
     """
     # Main labels
     for item in (
@@ -206,7 +206,7 @@ def set_font_size(ax, cbar=None, fontsize=22):
 
 
 def nice_plot(ax=None, cbar=None, fontsize=22):
-    """ Call my standard nice-plot-making functions, default values only. """
+    """Call my standard nice-plot-making functions, default values only."""
     if ax is None:
         ax = plt.gca()
     set_large_ticks(ax)
@@ -218,7 +218,7 @@ def nice_plot(ax=None, cbar=None, fontsize=22):
 
 
 def plot_hist(ax, A1_hist, A1_bin_edge, c="k", ls="-", lw=1.7, alpha=1, label=None):
-    """ Plot a nice histogram with no vertical lines in the middle.
+    """Plot a nice histogram with no vertical lines in the middle.
 
     Parameters
     ----------

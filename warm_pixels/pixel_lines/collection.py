@@ -13,9 +13,9 @@ class AbstractPixelLineCollection(ABC):
         return self.lines[item]
 
     def consistent(
-            self,
-            flux_min=ut.flux_bins[0],
-            flux_max=ut.flux_bins[-1],
+        self,
+        flux_min=ut.flux_bins[0],
+        flux_max=ut.flux_bins[-1],
     ):
         """Find the consistent warm pixels in a dataset.
 
@@ -28,21 +28,15 @@ class AbstractPixelLineCollection(ABC):
             with fluxes outside of these limits.
         """
         # Ignore warm pixels below the minimum flux
-        sel_flux = np.where(
-            (flux_min < self.fluxes) & (self.fluxes < flux_max)
-        )[0]
-        within_fluxes = PixelLineCollection(
-            np.array(self.lines)[sel_flux]
-        )
+        sel_flux = np.where((flux_min < self.fluxes) & (self.fluxes < flux_max))[0]
+        within_fluxes = PixelLineCollection(np.array(self.lines)[sel_flux])
 
         # Find the warm pixels present in at least e.g. 2/3 of the images
         consistent_lines = within_fluxes.find_consistent_lines(
             fraction_present=ut.fraction_present
         )
 
-        return PixelLineCollection(
-            within_fluxes.lines[consistent_lines]
-        )
+        return PixelLineCollection(within_fluxes.lines[consistent_lines])
 
     def __radd__(self, other):
         if other == 0:
@@ -52,13 +46,9 @@ class AbstractPixelLineCollection(ABC):
     def __add__(self, other):
         collection = PixelLineCollection()
         collection.extend(self.lines)
-        if isinstance(
-                other, PixelLineCollection
-        ):
+        if isinstance(other, PixelLineCollection):
             collection.extend(other.lines)
-        if isinstance(
-                other, PixelLine
-        ):
+        if isinstance(other, PixelLine):
             collection.append(other)
         return collection
 
@@ -73,59 +63,43 @@ class AbstractPixelLineCollection(ABC):
 
     @property
     def data(self) -> np.ndarray:
-        """
-        The pixel counts of each line, in units of electrons.
-        """
+        """The pixel counts of each line, in units of electrons."""
         return np.array([line.data for line in self.lines])
 
     @property
     def origins(self):
-        """
-        The identifiers for the origins (e.g. image name) of each line.
-        """
+        """The identifiers for the origins (e.g. image name) of each line."""
         return np.array([line.origin for line in self.lines])
 
     @property
     def locations(self):
-        """
-        The row and column indices of the first pixel in the line in the
-            image, for each line.
-        """
+        """The row and column indices of the first pixel in the line in the
+        image, for each line."""
         return np.array([line.location for line in self.lines])
 
     @property
     def dates(self):
-        """
-        The Julian date of each line.
-        """
+        """The Julian date of each line."""
         return np.array([line.date for line in self.lines])
 
     @property
     def backgrounds(self):
-        """
-        The background charge count of each line, in units of electrons.
-        """
+        """The background charge count of each line, in units of electrons."""
         return np.array([line.background for line in self.lines])
 
     @property
     def fluxes(self):
-        """
-        The maximum charge in each line, in units of electrons.
-        """
+        """The maximum charge in each line, in units of electrons."""
         return np.array([line.flux for line in self.lines])
 
     @property
     def lengths(self):
-        """
-        The number of pixels in the data array of each line.
-        """
+        """The number of pixels in the data array of each line."""
         return np.array([line.length for line in self.lines])
 
     @property
     def n_lines(self):
-        """
-        The number of lines in the collection.
-        """
+        """The number of lines in the collection."""
         return len(self.lines)
 
     @property
@@ -134,9 +108,11 @@ class AbstractPixelLineCollection(ABC):
         pass
 
     def remove_symmetry(self, n_pixels_used_for_background=5):
-        """Convert each line from a format that has a warm pixel in the middle (and background)
-        to just the trail (without background)."""
-        self = np.array([line.remove_symmetry(n_pixels_used_for_background) for line in self.lines])
+        """Convert each line from a format that has a warm pixel in the middle
+        (and background) to just the trail (without background)."""
+        self = np.array(
+            [line.remove_symmetry(n_pixels_used_for_background) for line in self.lines]
+        )
         return
 
     def find_consistent_lines(self, fraction_present=2 / 3):
@@ -183,13 +159,13 @@ class AbstractPixelLineCollection(ABC):
 
     @staticmethod
     def stacked_bin_index(
-            i_row=0,
-            i_flux=0,
-            n_flux_bins=1,
-            i_date=0,
-            n_date_bins=1,
-            i_background=0,
-            n_background_bins=1,
+        i_row=0,
+        i_flux=0,
+        n_flux_bins=1,
+        i_date=0,
+        n_date_bins=1,
+        i_background=0,
+        n_background_bins=1,
     ):
         """
         Return the index for the 1D ordering of stacked lines in bins, given the
@@ -230,11 +206,11 @@ class AbstractPixelLineCollection(ABC):
         )
 
     def generate_stacked_lines_from_bins(
-            self,
-            row_bins=None,
-            flux_bins=None,
-            date_bins=None,
-            background_bins=None,
+        self,
+        row_bins=None,
+        flux_bins=None,
+        date_bins=None,
+        background_bins=None,
     ):
         """Create a collection of stacked lines by averaging within bins.
 
@@ -334,10 +310,7 @@ class PixelLineCollection(AbstractPixelLineCollection):
         return self._lines
 
     def extend(self, new_lines):
-        if isinstance(
-                new_lines,
-                PixelLineCollection
-        ):
+        if isinstance(new_lines, PixelLineCollection):
             new_lines = new_lines.lines
         self._lines.extend(new_lines)
 

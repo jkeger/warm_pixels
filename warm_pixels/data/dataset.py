@@ -16,8 +16,8 @@ from .image import Image
 
 class Dataset:
     def __init__(
-            self,
-            path: Path,
+        self,
+        path: Path,
     ):
         """Simple class to store a list of image file paths and mild metadata.
 
@@ -55,16 +55,10 @@ class Dataset:
         self.logger.info("Retrieving groups")
         return [
             self.group(group)
-            for group in tuple(map(
-                tuple,
-                quadrants_string.split("_")
-            ))
+            for group in tuple(map(tuple, quadrants_string.split("_")))
         ]
 
-    def group(
-            self,
-            quadrants: Tuple[str]
-    ):
+    def group(self, quadrants: Tuple[str]):
         """
         Create a group for a collection of quadrants
 
@@ -79,9 +73,8 @@ class Dataset:
         A group of quadrants
         """
         from warm_pixels.model.group import QuadrantGroup
-        return QuadrantGroup(list(
-            map(self.quadrant, quadrants)
-        ))
+
+        return QuadrantGroup(list(map(self.quadrant, quadrants)))
 
     def quadrant(self, quadrant: str):
         """
@@ -97,18 +90,12 @@ class Dataset:
         -------
         An object comprising a quadrant and this dataset
         """
-        self.logger.debug(
-            f"Recovering dataset quadrant for quadrant {quadrant}..."
-        )
+        self.logger.debug(f"Recovering dataset quadrant for quadrant {quadrant}...")
         if quadrant not in self._quadrants:
-            self.logger.debug(
-                f"Not found. Creating..."
-            )
+            self.logger.debug(f"Not found. Creating...")
             from warm_pixels.model.quadrant import DatasetQuadrant
-            self._quadrants[quadrant] = DatasetQuadrant(
-                quadrant=quadrant,
-                dataset=self
-            )
+
+            self._quadrants[quadrant] = DatasetQuadrant(quadrant=quadrant, dataset=self)
         return self._quadrants[quadrant]
 
     def days_since_launch(self) -> int:
@@ -133,9 +120,7 @@ class Dataset:
             Image(
                 Path(image_path),
             )
-            for image_path in glob(
-                f"{self.path}/*_raw.fits"
-            )
+            for image_path in glob(f"{self.path}/*_raw.fits")
         ]
 
     def __len__(self):
@@ -204,7 +189,7 @@ class Dataset:
                         parallel_roe=roe,
                         parallel_ccd=ccd,
                         parallel_traps=traps,
-                        parallel_express=5
+                        parallel_express=5,
                     ),
                     mask=quadrant.mask,
                     header=quadrant.header,

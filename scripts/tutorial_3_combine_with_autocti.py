@@ -14,9 +14,7 @@ data_directory = Path.cwd().parent / "hst_acs_datasets"
 """
 We can create an object to access all datasets in that directory
 """
-source = wp.Source(
-    data_directory
-)
+source = wp.Source(data_directory)
 
 """
 We can get a list of datasets from that source
@@ -75,11 +73,7 @@ stacked_lines = group.stacked_lines()
 """
 Each stacked line has a dictionary representation
 """
-stacked_line_dicts = [
-    stacked_line.dict
-    for stacked_line
-    in stacked_lines
-]
+stacked_line_dicts = [stacked_line.dict for stacked_line in stacked_lines]
 
 """
 Let's see what the first one looks like
@@ -121,7 +115,7 @@ We can output this to .pickle files for fitting with PyAutoCTI.
 """
 dataset_1d_file = Path.cwd() / "dataset" / "individual"
 
-with open(dataset_1d_file, 'wb') as outfile:
+with open(dataset_1d_file, "wb") as outfile:
     pickle.dump(dataset_1d, outfile)
 
 """
@@ -132,8 +126,7 @@ dataset_1d_list = [
         stacked_line_dict,
         size=array.shape[0],
     )
-    for stacked_line_dict
-    in stacked_line_dicts
+    for stacked_line_dict in stacked_line_dicts
 ]
 
 """
@@ -154,7 +147,7 @@ We can output this stack of Dataset1D objects to .pickle files for fitting with 
 """
 dataset_1d_file = Path.cwd() / "dataset" / "stack"
 
-with open(dataset_1d_file, 'wb') as outfile:
+with open(dataset_1d_file, "wb") as outfile:
     pickle.dump(dataset_1d_list, outfile)
 
 

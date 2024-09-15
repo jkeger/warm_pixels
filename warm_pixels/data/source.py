@@ -7,26 +7,18 @@ from warm_pixels.data.dataset import Dataset
 
 
 class AbstractDatasetSource:
-    """
-    A source of datasets. Provides a list of datasets and a name for that list.
-    """
+    """A source of datasets. Provides a list of datasets and a name for that list."""
 
     @abstractmethod
     def __str__(self):
-        """
-        A name for the list of datasets
-        """
+        """A name for the list of datasets."""
 
     @abstractmethod
     def datasets(self):
-        """
-        A list of datasets
-        """
+        """A list of datasets."""
 
     def __iter__(self):
-        """
-        Convenience method to iterate datasets
-        """
+        """Convenience method to iterate datasets."""
         return iter(self.datasets())
 
     def __getitem__(self, item):
@@ -35,39 +27,23 @@ class AbstractDatasetSource:
     def __len__(self):
         return len(self.datasets())
 
-    def after(
-            self,
-            day: int
-    ) -> "FilteredDatasetSource":
-        """
-        Only return datasets with an observation date after a given date.
-        """
+    def after(self, day: int) -> "FilteredDatasetSource":
+        """Only return datasets with an observation date after a given date."""
         return FilteredDatasetSource(
-            f"after_{day}",
-            self,
-            lambda dataset: day < dataset.days_since_launch()
+            f"after_{day}", self, lambda dataset: day < dataset.days_since_launch()
         )
 
-    def before(
-            self,
-            day: int
-    ) -> "FilteredDatasetSource":
-        """
-        Only return datasets with an observation date before a given date.
-        """
+    def before(self, day: int) -> "FilteredDatasetSource":
+        """Only return datasets with an observation date before a given date."""
         return FilteredDatasetSource(
-            f"before_{day}",
-            self,
-            lambda dataset: dataset.days_since_launch() < day
+            f"before_{day}", self, lambda dataset: dataset.days_since_launch() < day
         )
 
     def downsample(
-            self,
-            step: int,
+        self,
+        step: int,
     ) -> "DownsampleDatasetSource":
-        """
-        Downsample datasets returning a every nth dataset
-        """
+        """Downsample datasets returning a every nth dataset."""
         return DownsampleDatasetSource(
             source=self,
             step=step,
@@ -85,42 +61,31 @@ class CorrectedDatasetSource(AbstractDatasetSource):
         return f"{self.source}_corrected"
 
     def datasets(self):
-        return [
-            dataset.corrected()
-            for dataset
-            in self.source.datasets()
-        ]
+        return [dataset.corrected() for dataset in self.source.datasets()]
 
 
 class FileDatasetSource(AbstractDatasetSource):
     def __init__(
-            self,
-            directory: Path,
+        self,
+        directory: Path,
     ):
-        """
-        Load datasets from a directory.
+        """Load datasets from a directory.
 
         Parameters
         ----------
-        directory
+        directory : Path
             A directory containing directories. Each subdirectory contains one
             dataset comprising images observed at a similar time.
         """
         self.directory = directory
 
     def __str__(self):
-        """
-        The name of a dataset is simply the name of the directory that contains it
-        """
+        """The dataset name is set as the name of the directory that contains it."""
         return self.directory.name
 
     def datasets(self) -> List[Dataset]:
-        """
-        A list of datasets, one for each subdirectory.
-        """
-        dataset_folders = os.listdir(
-            self.directory
-        )
+        """A list of datasets, one for each subdirectory."""
+        dataset_folders = os.listdir(self.directory)
         datasets = []
         for folder in dataset_folders:
             dataset = Dataset(
@@ -128,83 +93,66 @@ class FileDatasetSource(AbstractDatasetSource):
             )
             if len(dataset) > 0:
                 datasets.append(dataset)
-        return sorted(
-            datasets,
-            key=lambda d: d.observation_date()
-        )
+        return sorted(datasets, key=lambda d: d.observation_date())
 
 
 class DownsampleDatasetSource(AbstractDatasetSource):
     def __init__(
-            self,
-            source: AbstractDatasetSource,
-            step: int,
+        self,
+        source: AbstractDatasetSource,
+        step: int,
     ):
-        """
-        Downsample by returning every nth dataset.
+        """Downsample by returning every nth dataset.
 
         Parameters
         ----------
-        source
-            A source of datasets
-        step
-            The step to jump between datasets
+        source : AbstractDatasetSource
+            A source of datasets.
+        step : int
+            The step to jump between datasets.
         """
         self.source = source
         self.step = step
 
     def __str__(self):
-        """
-        The name of a downsampled dataset is the name of the source with
-        _downsampled_step_size as a suffix
-        """
+        """The name of a downsampled dataset is the name of the source with
+        _downsampled_{step} as a suffix."""
         return f"{self.source}_downsampled_{self.step}"
 
     def datasets(self) -> List[Dataset]:
-        """
-        A list of datasets downsampled by step
-        """
-        return self.source.datasets()[0::self.step]
+        """A list of datasets downsampled by step."""
+        return self.source.datasets()[0 :: self.step]
 
 
 class FilteredDatasetSource(AbstractDatasetSource):
     def __init__(
-            self,
-            filter_name: str,
-            source: AbstractDatasetSource,
-            filter_: Callable,
+        self,
+        filter_name: str,
+        source: AbstractDatasetSource,
+        filter_: Callable,
     ):
-        """
-        Filter datasets.
+        """Filter datasets.
 
         Parameters
         ----------
-        filter_name
-            The name of this filter
-        source
-            A source of datasets
-        filter_
-            A function that returns True iff the dataset passed as an
-            argument should be included
+        filter_name : str
+            The name of this filter.
+
+        source : AbstractDatasetSource
+            A source of datasets.
+
+        filter_ : Callable
+            A function that returns True iff the dataset passed as an argument
+            should be included.
         """
         self.filter_name = filter_name
         self.source = source
         self.filter = filter_
 
     def __str__(self):
-        """
-        The name of a filtered dataset comprises the name of the source
-        the name of the filter
-        """
+        """The name of a filtered dataset is the name of the source plus filter."""
         return f"{self.source}_{self.filter_name}"
 
     def datasets(self) -> List[Dataset]:
-        """
-        A list of datasets for which the filter function evaluates to True
-        """
-        return [
-            dataset
-            for dataset
-            in self.source.datasets()
-            if self.filter(dataset)
-        ]
+        """A list of datasets for which the filter function evaluates to True."""
+        return [dataset for dataset in self.source.datasets() if self.filter(dataset)]

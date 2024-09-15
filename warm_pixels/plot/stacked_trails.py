@@ -10,9 +10,7 @@ from warm_pixels.hst_functions.fit import fit_dataset_total_trap_density
 from warm_pixels.hst_functions.trail_model import trail_model_hst
 from warm_pixels.model.group import QuadrantGroup
 
-logger = logging.getLogger(
-    __name__
-)
+logger = logging.getLogger(__name__)
 
 
 def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=None):
@@ -22,9 +20,9 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
     Parameters
     ----------
-    group
-        A group of CCD quadrants and a dataset for which stacked and
-        consistent lines are computed for.
+    group : QuadrantGroup
+        A group of CCD quadrants and a dataset for which stacked and consistent
+        lines are computed for.
 
     use_corrected : bool (opt.)
         If True, then use the corrected images with CTI removed instead.
@@ -49,28 +47,30 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
 
     # Don't plot the warm pixel itself
     pixels = np.arange(1, ut.trail_length + 1)
-    sel_non_zero = np.where(stacked_lines.data[:, -ut.trail_length:] != 0)
+    sel_non_zero = np.where(stacked_lines.data[:, -ut.trail_length :] != 0)
     # Set y limits
     if use_corrected:
         # For symlog scale
         # Assume ymin < 0
-        y_min = 0.1  # 4 * np.amin(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
-        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length:][sel_non_zero])
+        y_min = (
+            0.1  # 4 * np.amin(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
+        )
+        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
         log10_y_min = np.ceil(np.log10(abs(y_min)))
         log10_y_max = np.floor(np.log10(y_max))
-        y_min = min(y_min, -10 ** (log10_y_min + 0.6))
+        y_min = min(y_min, -(10 ** (log10_y_min + 0.6)))
         y_max = max(y_max, 10 ** (log10_y_max + 0.6))
         y_ticks = np.append(
-            -10 ** np.arange(log10_y_min, -0.1, -1),
+            -(10 ** np.arange(log10_y_min, -0.1, -1)),
             10 ** np.arange(0, log10_y_max + 0.1, 1),
         )
     else:
         # For log scale
         y_min = np.partition(
-            abs(np.ravel(stacked_lines.data[:, -ut.trail_length:][sel_non_zero])), 2
+            abs(np.ravel(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])), 2
         )[1]
         y_min = 0.1
-        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length:][sel_non_zero])
+        y_max = 4 * np.amax(stacked_lines.data[:, -ut.trail_length :][sel_non_zero])
         log10_y_min = np.ceil(np.log10(y_min))
         log10_y_max = np.floor(np.log10(y_max))
         y_min = min(y_min, 10 ** (log10_y_min - 0.4))
@@ -117,7 +117,7 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
                     row_index=i_row,
                     flux_index=i_flux,
                     background_index=i_background,
-                    date_index=0
+                    date_index=0,
                 )
                 # Skip empty and single-entry bins
                 if line.n_stacked <= 1:
@@ -172,9 +172,16 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
                 # Plot fitted trail
                 # ========
                 # Fit the total trap density to this single stacked trail (dotted line, which has swapped since Jacob's version)
-                rho_q_indiv, rho_q_std_indiv, y_fit_indiv = fit_dataset_total_trap_density(
-                    group, use_arctic=True,
-                    row_bins=[i_row], flux_bins=[i_flux], background_bins=[i_background]
+                (
+                    rho_q_indiv,
+                    rho_q_std_indiv,
+                    y_fit_indiv,
+                ) = fit_dataset_total_trap_density(
+                    group,
+                    use_arctic=True,
+                    row_bins=[i_row],
+                    flux_bins=[i_flux],
+                    background_bins=[i_background],
                 )
                 ax.plot(pixels, y_fit_indiv, color=c, ls=misc.ls_dot, alpha=0.7)
 
@@ -259,7 +266,7 @@ def plot_stacked_trails(group: QuadrantGroup, use_corrected=False, save_path=Non
                     )
                 flux_max = stacked_lines.flux_bins[i_flux + 1]
                 pow10 = np.floor(np.log10(flux_max))
-                text = r"$%.1f \!\times\! 10^{%d}$" % (flux_max / 10 ** pow10, pow10)
+                text = r"$%.1f \!\times\! 10^{%d}$" % (flux_max / 10**pow10, pow10)
                 ax.text(
                     1.0, 1.01, text, transform=ax.transAxes, ha="center", va="bottom"
                 )

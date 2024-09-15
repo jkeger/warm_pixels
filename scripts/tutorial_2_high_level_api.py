@@ -10,9 +10,7 @@ data_directory = Path.cwd().parent / "hst_acs_datasets"
 """
 We can create an object to access all datasets in that directory
 """
-source = wp.Source(
-    data_directory
-)
+source = wp.Source(data_directory)
 print(f"Source contains {len(source)} datasets")
 
 first = source[0]
@@ -37,10 +35,7 @@ print(f"Source contains {len(source)} datasets")
 """
 A warm pixels object can easily be created from our source
 """
-warm_pixels = wp.WarmPixels(
-    datasets=list(source),
-    quadrants_string="AB"
-)
+warm_pixels = wp.WarmPixels(datasets=list(source), quadrants_string="AB")
 
 """
 And from this we can create a plot object
@@ -61,10 +56,7 @@ Note that the filenames for plots are generated to be unique. Files are output t
 It's also possible to do the same but for corrected data
 """
 source = source.corrected()
-warm_pixels = warm_pixels(
-    datasets=list(source),
-    quadrants_string="AB"
-)
+warm_pixels = warm_pixels(datasets=list(source), quadrants_string="AB")
 
 plot = wp.plot.Plot(
     warm_pixels,

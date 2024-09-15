@@ -2,9 +2,7 @@ from warm_pixels.model.quadrant import DatasetQuadrant
 from warm_pixels.warm_pixels import find_warm_pixels
 
 
-def test_warm_pixels(
-        array
-):
+def test_warm_pixels(array):
     result = find_warm_pixels(
         image=array,
         trail_length=2,
@@ -13,9 +11,7 @@ def test_warm_pixels(
     assert len(result) == 107
 
 
-def test_dataset_warm_pixels(
-        dataset
-):
+def test_dataset_warm_pixels(dataset):
     dataset_quadrant = DatasetQuadrant(
         quadrant="A",
         dataset=dataset,

@@ -3,16 +3,16 @@ from warm_pixels.hst_functions.trail_model import trail_model
 
 class TrailModel:
     def __init__(
-            self,
-            rho_q,
-            beta,
-            w,
-            a,
-            b,
-            c,
-            tau_a,
-            tau_b,
-            tau_c,
+        self,
+        rho_q,
+        beta,
+        w,
+        a,  ###rename?
+        b,
+        c,
+        tau_a,
+        tau_b,
+        tau_c,
     ):
         self.rho_q = rho_q
         self.beta = beta

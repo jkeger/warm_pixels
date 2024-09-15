@@ -7,16 +7,16 @@ from ..bins import Bins
 
 class StackedPixelLine(AbstractPixelLine):
     def __init__(
-            self,
-            length,
-            location=None,
-            date=None,
-            background=None,
-            flux=None,
-            row_index=None,
-            flux_index=None,
-            date_index=None,
-            background_index=None,
+        self,
+        length,
+        location=None,
+        date=None,
+        background=None,
+        flux=None,
+        row_index=None,
+        flux_index=None,
+        date_index=None,
+        background_index=None,
     ):
         self._length = length
         super().__init__(
@@ -32,29 +32,29 @@ class StackedPixelLine(AbstractPixelLine):
         self.background_index = background_index
 
     def append(self, pixel_line):
-        self.stacked_lines.append(
-            pixel_line
-        )
+        self.stacked_lines.append(pixel_line)
 
     @property
     def dict(self) -> dict:
+        """A dictionary representation of the pixel line.
+
+        This can be used to create a Dataset1D in autocti.
         """
-        A dictionary representation of the pixel line. This can
-        be used to create a Dataset1D in autocti.
-        """
-        return _dump({
-            **super().dict,
-            "mean_row": self.mean_row,
-            "rms_row": self.rms_row,
-            "mean_background": self.mean_background,
-            "rms_background": self.rms_background,
-            "mean_flux": self.mean_flux,
-            "rms_flux": self.rms_flux,
-            "row_index": self.row_index,
-            "flux_index": self.flux_index,
-            "date_index": self.date_index,
-            "background_index": self.background_index,
-        })
+        return _dump(
+            {
+                **super().dict,
+                "mean_row": self.mean_row,
+                "rms_row": self.rms_row,
+                "mean_background": self.mean_background,
+                "rms_background": self.rms_background,
+                "mean_flux": self.mean_flux,
+                "rms_flux": self.rms_flux,
+                "row_index": self.row_index,
+                "flux_index": self.flux_index,
+                "date_index": self.date_index,
+                "background_index": self.background_index,
+            }
+        )
 
     @property
     def mean_row(self):
@@ -62,7 +62,9 @@ class StackedPixelLine(AbstractPixelLine):
 
     @property
     def rms_row(self):
-        return np.sqrt(sum(line.location[0] ** 2 for line in self.stacked_lines) / self.n_stacked)
+        return np.sqrt(
+            sum(line.location[0] ** 2 for line in self.stacked_lines) / self.n_stacked
+        )
 
     @property
     def mean_background(self):
@@ -70,7 +72,9 @@ class StackedPixelLine(AbstractPixelLine):
 
     @property
     def rms_background(self):
-        return np.sqrt(sum(line.background ** 2 for line in self.stacked_lines) / self.n_stacked)
+        return np.sqrt(
+            sum(line.background**2 for line in self.stacked_lines) / self.n_stacked
+        )
 
     @property
     def mean_flux(self):
@@ -78,7 +82,9 @@ class StackedPixelLine(AbstractPixelLine):
 
     @property
     def rms_flux(self):
-        return np.sqrt(sum(line.flux ** 2 for line in self.stacked_lines) / self.n_stacked)
+        return np.sqrt(
+            sum(line.flux**2 for line in self.stacked_lines) / self.n_stacked
+        )
 
     @property
     def n_stacked(self):
@@ -107,33 +113,36 @@ class StackedPixelLine(AbstractPixelLine):
 
 class StackedPixelLineCollection(AbstractPixelLineCollection):
     def __init__(
-            self,
-            length: int,
-            row_bins: Bins,
-            flux_bins: Bins,
-            date_bins: Bins,
-            background_bins: Bins,
+        self,
+        length: int,
+        row_bins: Bins,
+        flux_bins: Bins,
+        date_bins: Bins,
+        background_bins: Bins,
     ):
         """
-        A collection where pixel lines are grouped into bins by their attributes.
+        A collection of pixel lines grouped into bins by their attributes.
 
-        For example, two pixel lines in nearby rows on the CCD, with similar flux,
-        similar background and captured on similar dates may be added to the same
-        group in 4D.
+        For example, two pixel lines in nearby rows on the CCD, with similar
+        flux, similar background and captured on similar dates may be added to
+        the same group in 4D.
 
         Parameters
         ----------
-        length
-            The length of the data array containing each pixel line
-        row_bins
-            Bins for rows in the CCD
-        flux_bins
-            Bins for different flux values of each warm pixel
-        date_bins
-            Bins for the data on which warm pixels or pixel lines
-            were observed
-        background_bins
-            Bins for the background when a pixel line was observed
+        length : int
+            The length of the data array containing each pixel line.
+
+        row_bins : Bins
+            Bins for rows in the CCD.
+
+        flux_bins : Bins
+            Bins for different flux values of each warm pixel.
+
+        date_bins : Bins
+            Bins for the data on which warm pixels or pixel lines were observed.
+
+        background_bins : Bins
+            Bins for the background when a pixel line was observed.
         """
         self._lines = dict()
         self.length = length
@@ -143,11 +152,11 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         self.background_bins = background_bins
 
     def stacked_line_for_indices(
-            self,
-            row_index: int,
-            flux_index: int,
-            date_index: int,
-            background_index: int,
+        self,
+        row_index: int,
+        flux_index: int,
+        date_index: int,
+        background_index: int,
     ) -> "StackedPixelLine":
         """
         Retrieve or create a StackedLine for a given hyperbin in 4D parameter
@@ -155,14 +164,17 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
 
         Parameters
         ----------
-        row_index
-            The index of the bin in the row direction
-        flux_index
-            The index of the bin in the flux direction
-        date_index
-            The index of the bin in the date direction
-        background_index
-            The index of the bin in the background direction
+        row_index : int
+            The index of the bin in the row direction.
+
+        flux_index : int
+            The index of the bin in the flux direction.
+
+        date_index : int
+            The index of the bin in the date direction.
+
+        background_index : int
+            The index of the bin in the background direction.
 
         Returns
         -------
@@ -189,26 +201,29 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         return self._lines[key]
 
     def stacked_line_for(
-            self,
-            row: int,
-            flux: float,
-            date: float,
-            background: float,
+        self,
+        row: int,
+        flux: float,
+        date: float,
+        background: float,
     ) -> StackedPixelLine:
         """
-        Retrieve or create a StackedLine by computing which bin a given combination
-        of attribute values corresponds to.
+        Retrieve or create a StackedLine by computing which bin a given
+        combination of attribute values corresponds to.
 
         Parameters
         ----------
-        row
-            The value used to determine the index of the bin in the row direction
-        flux
-            The value used to determine the index of the bin in the flux direction
-        date
-            The value used to determine the index of the bin in the date direction
-        background
-            The value used to determine the index of the bin in the background direction
+        row : int
+            The value used to determine the index of the bin in the row direction.
+
+        flux : float
+            The value used to determine the index of the bin in the flux direction.
+
+        date : float
+            The value used to determine the index of the bin in the date direction.
+
+        background : float
+            The value used to determine the index of the bin in the background direction.
 
         Returns
         -------
@@ -219,31 +234,23 @@ class StackedPixelLineCollection(AbstractPixelLineCollection):
         date_index = self.date_bins.index(date)
         background_index = self.background_bins.index(background)
         return self.stacked_line_for_indices(
-            row_index,
-            flux_index,
-            date_index,
-            background_index
+            row_index, flux_index, date_index, background_index
         )
 
     def add_line(self, line: AbstractPixelLine):
         """
         Add a pixel line to the relevant group in the collection.
 
-        The bin is created or retrieved based on the which bins the
-        attributes of the line (row, flux, date and background)
-        correspond to
+        The bin is created or retrieved based on which bins the attributes of
+        the line (row, flux, date and background) correspond to.
 
         Parameters
         ----------
-        line
-            A line of pixels representing the trail from a warm
-            pixel
+        line : AbstractPixelLine
+            A line of pixels representing the trail from a warm pixel.
         """
         self.stacked_line_for(
-            line.location[0],
-            line.flux,
-            line.date,
-            line.background
+            line.location[0], line.flux, line.date, line.background
         ).append(line)
 
     @property
