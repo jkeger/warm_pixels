@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 from astropy.io import fits
-from autoarray import acs
-from autoarray.instruments.acs import ImageACS, HeaderACS
+from autocti.instruments import acs
+from autocti.instruments.acs import ImageACS, HeaderACS
 from matplotlib import pyplot
 
 from warm_pixels import hst_utilities
@@ -161,7 +161,7 @@ def fits_open(file_path):
 def patch_fits(monkeypatch):
     monkeypatch.setattr(ImageACS, "from_fits", from_fits)
     monkeypatch.setattr(fits, "open", fits_open)
-    monkeypatch.setattr(acs, "output_quadrants_to_fits", output_quadrants_to_fits)
+    monkeypatch.setattr(acs.acs_util, "output_quadrants_to_fits", output_quadrants_to_fits)
     monkeypatch.setattr(
         image, "header_obj_from", lambda name, hdu: {"BIASFILE": "array_raw.fits"}
     )

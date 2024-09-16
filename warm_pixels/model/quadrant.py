@@ -1,5 +1,5 @@
 import numpy as np
-from autoarray.instruments.acs import ImageACS
+from autocti.instruments.acs import ImageACS
 
 from warm_pixels import hst_utilities as ut
 from warm_pixels.data import Dataset, Image, CorrectedDataset

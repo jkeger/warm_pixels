@@ -3,6 +3,7 @@ import datetime as dt
 from pathlib import Path
 
 import autoarray as aa
+from autocti.instruments import acs
 import requests
 from astropy.io import fits
 from autoarray.structures.arrays.array_2d_util import header_obj_from
@@ -48,10 +49,10 @@ class Image:
             with open(self.bia_path, "w+b") as f:
                 f.write(response.content)
 
-    def image(self) -> aa.acs.ImageACS:
+    def image(self) -> acs.ImageACS:
         """Load the image from file for the first quadrant."""
         self._check_bia_exists()
-        return aa.acs.ImageACS.from_fits(file_path=str(self.path), quadrant_letter="A")
+        return acs.ImageACS.from_fits(file_path=str(self.path), quadrant_letter="A")
 
     def quadrant(self, item: str):
         """Load or retrieve a specific quadrant of the image.

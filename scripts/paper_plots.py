@@ -15,6 +15,7 @@ run : [str]
 import argparse
 
 import autoarray as aa
+from autocti.instruments import acs
 import matplotlib.patheffects as path_effects
 from matplotlib.patches import ConnectionPatch
 
@@ -97,7 +98,7 @@ def example_image_zooms(
         file_path = image_path
 
     # Load the image
-    image = aa.acs.ImageACS.from_fits(
+    image = acs.ImageACS.from_fits(
         file_path=file_path,
         quadrant_letter=quadrant,
         bias_subtract_via_bias_file=True,
@@ -210,7 +211,7 @@ def example_image_corrected(image_path, cor_path, quadrant, n_iterations, do_pdf
     if True:
         # Load each quadrant of the image
         image_A, image_B, image_C, image_D = [
-            aa.acs.ImageACS.from_fits(
+            acs.ImageACS.from_fits(
                 file_path=image_path,
                 quadrant_letter=quadrant_letter,
                 bias_subtract_via_bias_file=True,
@@ -253,7 +254,7 @@ def example_image_corrected(image_path, cor_path, quadrant, n_iterations, do_pdf
         ]
 
         # Save the corrected image
-        aa.acs.output_quadrants_to_fits(
+        acs.acs_util.output_quadrants_to_fits(
             file_path=cor_path,
             quadrant_a=image_out_A,
             quadrant_b=image_out_B,
@@ -269,13 +270,13 @@ def example_image_corrected(image_path, cor_path, quadrant, n_iterations, do_pdf
         print("Saved %s" % cor_path[-36:])
 
     # Load the images
-    image = aa.acs.ImageACS.from_fits(
+    image = acs.ImageACS.from_fits(
         file_path=image_path,
         quadrant_letter=quadrant,
         bias_subtract_via_bias_file=True,
         bias_subtract_via_prescan=True,
     ).native
-    image_cor = aa.acs.ImageACS.from_fits(
+    image_cor = acs.ImageACS.from_fits(
         file_path=cor_path,
         quadrant_letter=quadrant,
         bias_subtract_via_bias_file=True,
@@ -375,7 +376,7 @@ def found_warm_pixels(image_path, quadrant, do_pdf=False):
     """Example HST ACS image with identified warm pixels"""
 
     # Load the image
-    image = aa.acs.ImageACS.from_fits(
+    image = acs.ImageACS.from_fits(
         file_path=image_path,
         quadrant_letter=quadrant,
         bias_subtract_via_bias_file=True,

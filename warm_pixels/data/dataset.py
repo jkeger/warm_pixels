@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Tuple, List
 
 import autoarray as aa
-from autoarray.instruments.acs import ImageACS
+from autocti.instruments.acs import ImageACS
 
 import arcticpy as cti
 from warm_pixels.hst_functions.cti_model import cti_model_hst
@@ -197,7 +197,7 @@ class Dataset:
                 corrected_quadrants.append(corrected_quadrant)
 
             # Save the corrected image
-            aa.acs.output_quadrants_to_fits(
+            acs.acs_util.output_quadrants_to_fits(
                 image_path,
                 *corrected_quadrants,
                 overwrite=True,

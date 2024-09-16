@@ -1,6 +1,6 @@
 import numpy as np
 
-import ArCTIcpy as cti
+import arcticpy as cti
 from warm_pixels import hst_utilities as ut
 
 
@@ -58,7 +58,7 @@ def trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
     )
 
 
-def trail_model_ArCTIc(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
+def trail_model_arctic(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c):
     """Calculate the model shape of a CTI trail using ArCTIc.
 
     Parameters
@@ -95,7 +95,7 @@ def trail_model_ArCTIc(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b,
     trail : [float]
         The model charge values at each pixel in the trail (e-).
     """
-    # Set up classes required to run ArCTIc
+    # Set up classes required to run arctic
     # roe, ccd, traps = ac.CTI_model_for_HST_ACS(date)
     traps = [
         cti.TrapInstantCapture(density=A * rho_q, release_timescale=tau_a),
@@ -172,7 +172,7 @@ def trail_model_hst(x, rho_q, n_e, n_bg, row, date):
     return trail_model(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c)
 
 
-def trail_model_hst_ArCTIc(x, rho_q, n_e, n_bg, row, date):
+def trail_model_hst_arctic(x, rho_q, n_e, n_bg, row, date):
     """Wrapper for trail_model() for HST ACS.
 
     Parameters (where different to trail_model())
@@ -202,6 +202,6 @@ def trail_model_hst_ArCTIc(x, rho_q, n_e, n_bg, row, date):
         tau_b = 7.70
         tau_c = 37.0
 
-    return trail_model_ArCTIc(
+    return trail_model_arctic(
         x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c
     )
