@@ -1,0 +1,20 @@
+Login: ssh dc-barr6@login5.cosma.dur.ac.uk
+Status: squeue -u dc-barr6
+Upload: rsync --update -v -r Paolo_autofit_arctic_cosma_rho.py dc-barr6@login5.cosma.dur.ac.uk:/cosma/home/durham/dc-barr6/warm_pixels_workspace/cosma_scripts
+Download: rsync --update -v -r dc-barr6@login5.cosma.dur.ac.uk:/cosma5/data/durham/dc-barr6/output/Arctic_fit_03_2020_cosma_rho.png .
+Download: rsync --update -v -r dc-barr6@login5.cosma.dur.ac.uk:/cosma/home/durham/dc-barr6/warm_pixels_workspace/batch_scripts/03_2020_Master.csv .
+Change max files open: ulimit -n 4096
+Cancel job: scancel <jobid>
+
+rsync --update -v -r L4_Proj_Stock.py dc-barr6@login5.cosma.dur.ac.uk:/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/cosma_scripts
+
+rsync --update -v -r dc-barr6@login5.cosma.dur.ac.uk:/cosma5/data/durham/rjm/paolo/stock_bia_v4/csv_files .
+
+NEW 2024 COMMANDS:
+Login: ssh cosma
+
+rsync -Pav -e "ssh -i  ~/.ssh/cosmakey" trail_model_k_fastest.py dc-barr6@login5c.cosma.dur.ac.uk:/cosma/home/durham/dc-barr6/Arctic2/arctic/python/warm_pixels/hst_functions
+
+Download: rsync -Pav -e "ssh -i ~/.ssh/cosmakey" --update -v -r dc-barr6@login5c.cosma.dur.ac.uk:/cosma5/data/durham/rjm/paolo/notch_pushed_1.0/csv_files .
+Upload: rsync -Pav -e "ssh -i ~/.ssh/cosmakey" --update -v -r 2024_july_sunspot_permission.py dc-barr6@login5c.cosma.dur.ac.uk:/cosma/home/durham/dc-barr6/warm_pixels_workspace/cosma_scripts
+Status: squeue -p cosma5
