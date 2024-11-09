@@ -1700,6 +1700,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     global best_fit_tau_b
     global best_fit_tau_c
     global best_fit_notch
+    global best_fit_log_likelihood
     
 # =============================================================================
 #     best_fit_loglikelihood=result.log_likelihood

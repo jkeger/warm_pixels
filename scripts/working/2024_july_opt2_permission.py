@@ -1625,6 +1625,10 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     global best_fit_tau_b
     global best_fit_tau_c
     global best_fit_notch
+    global best_fit_loglikelihood
+    
+    
+    best_fit_loglikelihood=result.log_likelihood
     
 # =============================================================================
 #     best_fit_loglikelihood=result.log_likelihood
@@ -1769,17 +1773,17 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
 # =============================================================================
                 print('Plotting one autofit subplot...')
                 global_autofit=trail_model_arctic_notch_pushed_plot(x=pixels, 
-                                           rho_q=float(rho_q), 
+                                           rho_q=best_fit_rho_q, 
                                            generated_trails=line.model_full_trail_untrailed,
-                                           beta=float(beta), 
+                                           beta=best_fit_beta, 
                                            w=w, 
-                                           A=float(a), 
-                                           B=float(b), 
-                                           C=float(C), 
-                                           tau_a=float(tau_a), 
-                                           tau_b=float(tau_b), 
-                                           tau_c=float(tau_c),
-                                           notch=float(notch)
+                                           A=best_fit_a, 
+                                           B=best_fit_b, 
+                                           C=best_fit_c, 
+                                           tau_a=best_fit_tau_a, 
+                                           tau_b=best_fit_tau_b, 
+                                           tau_c=best_fit_tau_c,
+                                           notch=best_fit_notch
                                           )
                 print('Done!')
 
@@ -1902,16 +1906,18 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     writefilename=f"{dataset_date}_2024_july_opt2_{const_fix}" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([f"beta = {beta}"])
-        writer.writerow([f"rho_q = {rho_q}"])
-        writer.writerow([f"a = {a}"])
-        writer.writerow([f"b = {b}"])
-        writer.writerow([f"c = {C}"])
-        writer.writerow([f"tau_a = {tau_a}"])
-        writer.writerow([f"tau_b = {tau_b}"])
-        writer.writerow([f"tau_c = {tau_c}"])
-        writer.writerow([f"notch = {notch}"])
+        writer.writerow([f"Log likelihood = {result.log_likelihood}"])
+        writer.writerow([f"beta = {best_trail_model.beta}"])
+        writer.writerow([f"rho_q = {best_trail_model.rho_q}"])
+        writer.writerow([f"a = {best_trail_model.a}"])
+        writer.writerow([f"b = {best_trail_model.b}"])
+        writer.writerow([f"c = {best_trail_model.c}"])
+        writer.writerow([f"tau_a = {best_trail_model.tau_a}"])
+        writer.writerow([f"tau_b = {best_trail_model.tau_b}"])
+        writer.writerow([f"tau_c = {best_trail_model.tau_c}"])
+        writer.writerow([f"notch = {best_trail_model.notch}"])
         writer.writerow([f"mean height = {mean_height}"])
+        writer.writerow([result.info])
        
             
     print("Data file written!")
@@ -2656,6 +2662,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
         writer = csv.writer(file)
         writer.writerow([f"MJD = {MJD_var}"])
         writer.writerow([f"Log likelihood after = {result.log_likelihood}"])
+        writer.writerow([f"Log likelihood before = {best_fit_loglikelihood}"])
         writer.writerow([f"beta = {best_trail_model.beta}"])
         writer.writerow([f"rho_q before = {best_fit_rho_q}"])
         writer.writerow([f"rho_q after = {best_trail_model.rho_q}"])
