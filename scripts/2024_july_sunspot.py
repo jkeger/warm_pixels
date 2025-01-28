@@ -24,6 +24,7 @@ import pathlib
 import shutil
 from astropy.io import fits
 import copy
+import math 
 
 from autoarray.structures.header import Header
 #from autoarray.structures.arrays.uniform_2d import Array2D
@@ -50,6 +51,69 @@ logger = logging.getLogger(
 )
 
 start_time = time.time()
+
+def date_to_jd(year,month,day):
+    """
+    Convert a date to Julian Day.
+    
+    Algorithm from 'Practical Astronomy with your Calculator or Spreadsheet', 
+        4th ed., Duffet-Smith and Zwart, 2011.
+    
+    Parameters
+    ----------
+    year : int
+        Year as integer. Years preceding 1 A.D. should be 0 or negative.
+        The year before 1 A.D. is 0, 10 B.C. is year -9.
+        
+    month : int
+        Month as integer, Jan = 1, Feb. = 2, etc.
+    
+    day : float
+        Day, may contain fractional part.
+    
+    Returns
+    -------
+    jd : float
+        Julian Day
+        
+    Examples
+    --------
+    Convert 6 a.m., February 17, 1985 to Julian Day
+    
+    >>> date_to_jd(1985,2,17.25)
+    2446113.75
+    
+    """
+    if month == 1 or month == 2:
+        yearp = year - 1
+        monthp = month + 12
+    else:
+        yearp = year
+        monthp = month
+    
+    # this checks where we are in relation to October 15, 1582, the beginning
+    # of the Gregorian calendar.
+    if ((year < 1582) or
+        (year == 1582 and month < 10) or
+        (year == 1582 and month == 10 and day < 15)):
+        # before start of Gregorian calendar
+        B = 0
+    else:
+        # after start of Gregorian calendar
+        A = math.trunc(yearp / 100.)
+        B = 2 - A + math.trunc(A / 4.)
+        
+    if yearp < 0:
+        C = math.trunc((365.25 * yearp) - 0.75)
+    else:
+        C = math.trunc(365.25 * yearp)
+        
+    D = math.trunc(30.6001 * (monthp + 1))
+    
+    jd = B + C + D + day + 1720994.5
+    
+    return jd
+
 # Sum of exponentials model to fit negative rho_q after correction
 def trail_model_exp(x, rho_q, n_e, n_bg, row, beta, w, A, B, C, tau_a, tau_b, tau_c, notch):
     
@@ -650,8 +714,8 @@ def array_eps_to_counts(array_eps, bscale, bzero):
 #         os.remove(new_file_path)
 # 
 #         hdulist.writeto(new_file_path)
-# 
 # =============================================================================
+
 
 class ImageACS(Array2DACS):
     """
@@ -1381,12 +1445,6 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     w = 84700.0   
     notch=94.091
     
-    rho_q = af.UniformPrior(
-        lower_limit=-10.0,
-        #lower_limit=0.0,
-        upper_limit=10.0,
-    )
-    
     # Convert MJD to days since launch for notch time evolution
     global days_var
     JD_var=float(MJD_var)+2400000.5
@@ -1398,7 +1456,6 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     temp_switch_date_since_launch=temp_switch_date-launch_date
     # Original interpolation
     if days_var > temp_switch_date_since_launch:
-        #rho_q=0.0003780906114990424*days_var+0.015567290427026453
         a = 0.146
         b = 0.594
         C = 0.260
@@ -1406,46 +1463,62 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
         tau_b = 5.531
         tau_c = 43.924
     elif days_var < temp_switch_date_since_launch:
-        #rho_q=0.0003761622045852727*days_var+0.0013960558857972621
         a = 0.146
         b = 0.594
         C = 0.260
         tau_a=0.515/(0.74/0.48)
         tau_b=5.531/(7.7/4.86)
         tau_c=43.924/(37/20.6)
-        
-    model = af.Model(
-        TrailModel,
-        days_var=days_var,
-        rho_q=rho_q,
-        beta=beta,
-        w=w,
-        a=a,
-        b=b,
-        c=C,
-        tau_a=tau_a,
-        tau_b=tau_b,
-        tau_c=tau_c,
-        notch=notch
-    )
     
-# =============================================================================
-#     # First iteration residuals    
-#     if days_var < 1403.787485034912:
-#         rho_q=rho_q+1.2789602405667652e-05*days_var+0.01611231257086182 #m1 = vals0, c0 = vals1
-#     elif days_var > 1403.787485034912 and days_var < 4165.970307342939:
-#         rho_q=rho_q+0.00013978316740632756*(days_var-1403.787485034912)+1.2789602405667652e-05*1403.787485034912+0.01611231257086182 # m2=vals2 t1=vals4
-#     elif days_var > 4165.970307342939:
-#         rho_q=rho_q+1.8685093491632426e-05*(days_var-4165.970307342939)+0.00013978316740632756*(4165.970307342939-1403.787485034912)+1.2789602405667652e-05*1403.787485034912+0.01611231257086182 #m3=vals3 t2=vals5 
-#     
-#     # Second iteration residuals
-#     if days_var < 1586.5:
-#         rho_q=rho_q+0 #m1 = vals0, c0 = vals1
-#     elif days_var < 3961.9247800728617:
-#         rho_q=rho_q-0.037586665739412245+2.74840460582629e-05*(days_var-1586.5) # m2=vals2 c1=vals4
-#     elif days_var > 3961.9247800728617:
-#         rho_q=rho_q-0.037586665739412245+2.74840460582629e-05*(3961.9247800728617-1586.5)-9.500901967932416e-06*(days_var-3961.9247800728617) #m3=vals3 t2=vals5    
-# =============================================================================
+    # Import sunspot rho_q data
+    # Find sunspot data 
+    sun_years=[]
+    sun_months=[]
+    sun_days=[]
+    sunspots=[]
+    sunspot_JD=[]
+    sunspot_days_since_launch=[]
+    sunspot_days_since_launch_fit=[]
+    sunspot_fit=[]
+    csv_file = 'sunspot_monthly.csv'
+    
+    # Open the CSV file
+    with open(csv_file, mode='r') as file:
+        # Create a CSV reader with a custom delimiter
+        csv_reader = csv.reader(file, delimiter=';')
+
+        # Iterate through each row in the CSV file
+        for row in csv_reader:
+            # The 'row' variable now contains the data from each row. Effectively generates a list of sunspots per day since 2001. 
+            if float(row[0]) > 2001:
+                for i in range(30):
+                    sun_years.append(row[0])
+                    sun_months.append(row[1])
+                    sun_days.append(i+1)
+                if float(row[3]) > 0:
+                    for i in range(30):
+                        sunspots.append(row[3])
+                else: 
+                    for i in range(30):
+                        sunspots.append(0)
+                        
+    for x in range(len(sunspots)):
+        sunspot_JD.append(date_to_jd(float(sun_years[x]),float(sun_months[x]),float(sun_days[x])))
+    for x in range(len(sunspots)): #  a list of days since launch since 2001
+        sunspot_days_since_launch.append(sunspot_JD[x]-launch_date_JD)
+    for x in range(len(sunspots)): # Generate a list of sunspots per day since ACS launch
+        if sunspot_days_since_launch[x] >= 0:
+            sunspot_fit.append(sunspots[x])
+            sunspot_days_since_launch_fit.append(sunspot_days_since_launch[x])
+    
+    # Perform rho_q calculation based on sunspot data 
+    rho_q=0
+    for x in range(len(sunspot_days_since_launch_fit)):
+        if sunspot_days_since_launch_fit[x]<=days_var:
+            rho_q=rho_q + float(0.00039422665676894366 + 0.00046107328927158476 * ( np.exp(-0.04009888346316515 * (float(sunspot_fit[x])--13.26743062356235)) )) # implement functional form
+
+    
+    
 
    
     
@@ -1562,46 +1635,48 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     row_all = np.repeat(row_each, ut.trail_length)
     #N_all = np.repeat(N_each, ut.trail_length)
     
-    # Make instance of analysis, passing it the data.  
-    analysis = Analysis(
-       x=x_all,
-       y=y_all,
-       noise=noise_all,
-       generated_trails=generated_trails
-    )
-    
-    analysis2 = Analysis2(
-       x=x_all,
-       y=y_all,
-       noise=noise_all,
-       n_e=n_e_all,
-       n_bg=n_bg_all,
-       row=row_all
-    )
-    
-    #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
-    
-    # Load our optimiser
-    dynesty = af.DynestyStatic(number_of_cores=16, sample="rwalk", walks=10, nlive=500,
-                               iterations_per_update=10000000)#, #force_x1_cpu=True)
-    
-    print(dynesty.config_dict_run)
-    #exit(dynesty.config_dict_search)
-    
-    # Do the fitting
-    print('Perfoming global AUTOFIT: ')
-    result = dynesty.fit(
-    model=model,
-    analysis=analysis,
-    )
-    
-    print(f"log likelihood = {result.log_likelihood}")
-    
-    best_trail_model = result.instance
-    
-    global result_info_pre
-    result_info_pre=result.info
-    print(result.info)
+# =============================================================================
+#     # Make instance of analysis, passing it the data.  
+#     analysis = Analysis(
+#        x=x_all,
+#        y=y_all,
+#        noise=noise_all,
+#        generated_trails=generated_trails
+#     )
+#     
+#     analysis2 = Analysis2(
+#        x=x_all,
+#        y=y_all,
+#        noise=noise_all,
+#        n_e=n_e_all,
+#        n_bg=n_bg_all,
+#        row=row_all
+#     )
+#     
+#     #plt.plot(analysis.x, analysis.y, label='Analysis x and y')
+#     
+#     # Load our optimiser
+#     dynesty = af.DynestyStatic(number_of_cores=16, sample="rwalk", walks=10, nlive=500,
+#                                iterations_per_update=10000000)#, #force_x1_cpu=True)
+#     
+#     print(dynesty.config_dict_run)
+#     #exit(dynesty.config_dict_search)
+#     
+#     # Do the fitting
+#     print('Perfoming global AUTOFIT: ')
+#     result = dynesty.fit(
+#     model=model,
+#     analysis=analysis,
+#     )
+#     
+#     print(f"log likelihood = {result.log_likelihood}")
+#     
+#     best_trail_model = result.instance
+#     
+#     global result_info_pre
+#     result_info_pre=result.info
+#     print(result.info)
+# =============================================================================
 
 # =============================================================================
 #     print(f"beta = {best_trail_model.beta}")
@@ -1625,23 +1700,20 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     global best_fit_tau_b
     global best_fit_tau_c
     global best_fit_notch
-    global best_fit_loglikelihood
-    
-    
-    best_fit_loglikelihood=result.log_likelihood
+    global best_fit_log_likelihood
     
 # =============================================================================
 #     best_fit_loglikelihood=result.log_likelihood
 # =============================================================================
-    best_fit_beta=best_trail_model.beta
-    best_fit_rho_q=best_trail_model.rho_q
-    best_fit_a=best_trail_model.a
-    best_fit_b=best_trail_model.b
-    best_fit_c=best_trail_model.c
-    best_fit_tau_a=best_trail_model.tau_a
-    best_fit_tau_b=best_trail_model.tau_b
-    best_fit_tau_c=best_trail_model.tau_c
-    best_fit_notch=best_trail_model.notch
+    best_fit_beta=beta
+    best_fit_rho_q=rho_q
+    best_fit_a=a
+    best_fit_b=b
+    best_fit_c=C
+    best_fit_tau_a=tau_a
+    best_fit_tau_b=tau_b
+    best_fit_tau_c=tau_c
+    best_fit_notch=notch
     best_fit_mean_height=mean_height
     
 # =============================================================================
@@ -1773,17 +1845,17 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
 # =============================================================================
                 print('Plotting one autofit subplot...')
                 global_autofit=trail_model_arctic_notch_pushed_plot(x=pixels, 
-                                           rho_q=best_fit_rho_q, 
+                                           rho_q=float(rho_q), 
                                            generated_trails=line.model_full_trail_untrailed,
-                                           beta=best_fit_beta, 
+                                           beta=float(beta), 
                                            w=w, 
-                                           A=best_fit_a, 
-                                           B=best_fit_b, 
-                                           C=best_fit_c, 
-                                           tau_a=best_fit_tau_a, 
-                                           tau_b=best_fit_tau_b, 
-                                           tau_c=best_fit_tau_c,
-                                           notch=best_fit_notch
+                                           A=float(a), 
+                                           B=float(b), 
+                                           C=float(C), 
+                                           tau_a=float(tau_a), 
+                                           tau_b=float(tau_b), 
+                                           tau_c=float(tau_c),
+                                           notch=float(notch)
                                           )
                 print('Done!')
 
@@ -1903,21 +1975,19 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print("Total fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_2024_july_opt2_{const_fix}" 
+    writefilename=f"{dataset_date}_2024_july_sunspot_{const_fix}" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([f"Log likelihood = {result.log_likelihood}"])
-        writer.writerow([f"beta = {best_trail_model.beta}"])
-        writer.writerow([f"rho_q = {best_trail_model.rho_q}"])
-        writer.writerow([f"a = {best_trail_model.a}"])
-        writer.writerow([f"b = {best_trail_model.b}"])
-        writer.writerow([f"c = {best_trail_model.c}"])
-        writer.writerow([f"tau_a = {best_trail_model.tau_a}"])
-        writer.writerow([f"tau_b = {best_trail_model.tau_b}"])
-        writer.writerow([f"tau_c = {best_trail_model.tau_c}"])
-        writer.writerow([f"notch = {best_trail_model.notch}"])
+        writer.writerow([f"beta = {beta}"])
+        writer.writerow([f"rho_q = {rho_q}"])
+        writer.writerow([f"a = {a}"])
+        writer.writerow([f"b = {b}"])
+        writer.writerow([f"c = {C}"])
+        writer.writerow([f"tau_a = {tau_a}"])
+        writer.writerow([f"tau_b = {tau_b}"])
+        writer.writerow([f"tau_c = {tau_c}"])
+        writer.writerow([f"notch = {notch}"])
         writer.writerow([f"mean height = {mean_height}"])
-        writer.writerow([result.info])
        
             
     print("Data file written!")
@@ -1930,11 +2000,11 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_opt2_{const_fix}" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_sunspot_{const_fix}" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_sunspot_{const_fix}", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -1951,7 +2021,7 @@ cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
 #dataset_name="03_2020"
 
 cosma_dataset_path = path.join(cosma_path, "hst", "cte", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo",f"2024_july_opt2_{const_fix}")
+cosma_output_path = path.join(cosma_path, "paolo",f"2024_july_sunspot_{const_fix}")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -1963,16 +2033,16 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_sunspot_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                 f"{dataset_date}_2024_july_opt2_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_sunspot_{const_fix}",
+                 f"{dataset_date}_2024_july_sunspot_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
     
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_sunspot_{const_fix}",
                  "csv_files")
 if not os.path.exists(dir):
     os.mkdir(dir)
@@ -2005,8 +2075,8 @@ for file in temp_files:
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                     f"{dataset_date}_2024_july_opt2_{const_fix}"))/f"{dataset_date}_2024_july_opt2_{const_fix}.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_sunspot_{const_fix}",
+                     f"{dataset_date}_2024_july_sunspot_{const_fix}"))/f"{dataset_date}_2024_july_sunspot_{const_fix}.png"
 )
  
 
@@ -2079,8 +2149,8 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
-                            f"{dataset_date}_2024_july_opt2_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_sunspot_{const_fix}", 
+                            f"{dataset_date}_2024_july_sunspot_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2120,8 +2190,8 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
-                                    f"{dataset_date}_2024_july_opt2_{const_fix}")
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_sunspot_{const_fix}", 
+                                    f"{dataset_date}_2024_july_sunspot_{const_fix}")
         ).native
         for quadrant in ["A", "B", "C", "D"]
     ]
@@ -2152,8 +2222,8 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
-                            f"{dataset_date}_2024_july_opt2_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_sunspot_{const_fix}", 
+                            f"{dataset_date}_2024_july_sunspot_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2657,12 +2727,11 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 # =============================================================================
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_2024_july_opt2_{const_fix}_corrected"
+    writefilename=f"{dataset_date}_2024_july_sunspot_{const_fix}_corrected"
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"MJD = {MJD_var}"])
         writer.writerow([f"Log likelihood after = {result.log_likelihood}"])
-        writer.writerow([f"Log likelihood before = {best_fit_loglikelihood}"])
         writer.writerow([f"beta = {best_trail_model.beta}"])
         writer.writerow([f"rho_q before = {best_fit_rho_q}"])
         writer.writerow([f"rho_q after = {best_trail_model.rho_q}"])
@@ -2689,17 +2758,17 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_opt2_{const_fix}_corrected" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_sunspot_{const_fix}_corrected" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt2_{const_fix}",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_sunspot_{const_fix}",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt2_{const_fix}",
-                               f"{dataset_date}_2024_july_opt2_{const_fix}")
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_sunspot_{const_fix}",
+                               f"{dataset_date}_2024_july_sunspot_{const_fix}")
 cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
@@ -2715,7 +2784,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                     f"{dataset_date}_2024_july_opt2_{const_fix}"))/f"{dataset_date}_2024_july_opt2_{const_fix}_corrected.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_sunspot_{const_fix}",
+                     f"{dataset_date}_2024_july_sunspot_{const_fix}"))/f"{dataset_date}_2024_july_sunspot_{const_fix}_corrected.png"
 )
 

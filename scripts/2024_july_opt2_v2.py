@@ -1629,10 +1629,6 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     
     
     best_fit_loglikelihood=result.log_likelihood
-    
-# =============================================================================
-#     best_fit_loglikelihood=result.log_likelihood
-# =============================================================================
     best_fit_beta=best_trail_model.beta
     best_fit_rho_q=best_trail_model.rho_q
     best_fit_a=best_trail_model.a
@@ -1923,8 +1919,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print("Data file written!")
     
     # Put the csv file into the appropriate folder
-    batch_path = path.join(path.sep, "cosma", "home", "durham","dc-barr6", "warm_pixels_workspace", 
-                           "batch_scripts")
+    batch_path = path.join(path.sep, "cosma5","data","durham","dc-barr6","richard_scripts")
     csv_directory = Path(batch_path)
     csvs_all=list(pathlib.Path(csv_directory).glob('*.csv'))
     csvs_string=[]
@@ -1934,7 +1929,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt2_{const_fix}", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -1946,12 +1941,12 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     
 # Import data to be fitted
 start_time2=time.time()
-cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
+cosma_path = path.join(path.sep, "cosma", "home", "dphgals", "rjm", "data")
 #dataset_folder="Paolo's_03_2020"
 #dataset_name="03_2020"
 
-cosma_dataset_path = path.join(cosma_path, "hst", "cte", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo",f"2024_july_opt2_{const_fix}")
+cosma_dataset_path = path.join(cosma_path, "hst", "cte1+2+3", dataset_date)
+cosma_output_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt2_{const_fix}")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -1963,19 +1958,14 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}")
-if not os.path.exists(dir):
-    os.mkdir(dir)
+base_dir = os.path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt2_{const_fix}")
+os.makedirs(base_dir, exist_ok=True)
 
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                 f"{dataset_date}_2024_july_opt2_{const_fix}")
-if not os.path.exists(dir):
-    os.mkdir(dir)
-    
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                 "csv_files")
-if not os.path.exists(dir):
-    os.mkdir(dir)
+sub_dir_1 = os.path.join(base_dir, f"{dataset_date}_2024_july_opt2_{const_fix}")
+os.makedirs(sub_dir_1, exist_ok=True)
+
+sub_dir_2 = os.path.join(base_dir, "csv_files")
+os.makedirs(sub_dir_2, exist_ok=True)
     
 data_directory = dataset_directory
 
@@ -2005,7 +1995,7 @@ for file in temp_files:
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt2_{const_fix}",
                      f"{dataset_date}_2024_july_opt2_{const_fix}"))/f"{dataset_date}_2024_july_opt2_{const_fix}.png"
 )
  
@@ -2079,7 +2069,7 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6","richard_scripts", f"2024_july_opt2_{const_fix}", 
                             f"{dataset_date}_2024_july_opt2_{const_fix}", filename)
     
     # Save the corrected image
@@ -2120,7 +2110,7 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "dc-barr6","richard_scripts", f"2024_july_opt2_{const_fix}", 
                                     f"{dataset_date}_2024_july_opt2_{const_fix}")
         ).native
         for quadrant in ["A", "B", "C", "D"]
@@ -2152,7 +2142,7 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6","richard_scripts", f"2024_july_opt2_{const_fix}", 
                             f"{dataset_date}_2024_july_opt2_{const_fix}", filename)
     
     # Save the corrected image
@@ -2682,8 +2672,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print("Data file written!")
     
     # Put the csv file into the output folder
-    batch_path = path.join(path.sep, "cosma", "home", "durham", "dc-barr6",
-                           "warm_pixels_workspace", "batch_scripts")
+    batch_path = path.join(path.sep, "cosma5","data","durham","dc-barr6","richard_scripts")
     csv_directory = Path(batch_path)
     csvs_all=list(pathlib.Path(csv_directory).glob('*.csv'))
     csvs_string=[]
@@ -2693,12 +2682,12 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt2_{const_fix}",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts",f"2024_july_opt2_{const_fix}",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt2_{const_fix}",
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts",f"2024_july_opt2_{const_fix}",
                                f"{dataset_date}_2024_july_opt2_{const_fix}")
 cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
@@ -2715,7 +2704,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt2_{const_fix}",
                      f"{dataset_date}_2024_july_opt2_{const_fix}"))/f"{dataset_date}_2024_july_opt2_{const_fix}_corrected.png"
 )
 

@@ -26,10 +26,10 @@ from astropy.io import fits
 import copy
 
 from autoarray.structures.header import Header
-from autoarray.structures.arrays.uniform_2d import Array2D
-#from autocti.instruments.acs import Array2DACS
-from autoarray.layout.layout import Layout2D
-#from autocti.instruments.acs import Layout2DACS
+#from autoarray.structures.arrays.uniform_2d import Array2D
+from autocti.instruments.acs import Array2DACS
+#from autoarray.layout.layout import Layout2D
+from autocti.instruments.acs import Layout2DACS
 from autoarray.layout.region import Region2D
 
 from autoarray import exc
@@ -340,326 +340,328 @@ def array_eps_to_counts(array_eps, bscale, bzero):
     return (array_eps - bzero) / bscale
 
 
-
-class Array2DACS(Array2D):
-    """
-    An ACS array consists of four quadrants ('A', 'B', 'C', 'D') which have the following layout (which are described
-    at the following STScI 
-    link https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418).
-
-        <--------S-----------   ---------S----------->
-    [] [========= 2 =========] [========= 3 =========] []          /\
-    /    [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  /        |
-    |   [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  |         | Direction arctic
-    P   [xxxxxxxxx B/C xxxxxxx] [xxxxxxxxx A/D xxxxxxx]  P         | clocks an image
-    |   [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  |         | without any rotation
-    \/  [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  \/        | (e.g. towards row 0
-                                                                    | of the NumPy arrays)
-
-    For a ACS .fits file:
-
-    - The images contained in hdu 1 correspond to quadrants B (left) and A (right).
-    - The images contained in hdu 4 correspond to quadrants C (left) and D (right).
-    """
-
-    @classmethod
-    def from_fits(cls, file_path, quadrant_letter):
-        """
-        Use the input .fits file and quadrant letter to extract the quadrant from the full CCD, perform
-        the rotations required to give correct arctic clocking and convert the image from units of COUNTS / CPS to
-        ELECTRONS.
-
-        See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
-        rotations.
-        
-        Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
-        """
-
-        hdu = fits_hdu_via_quadrant_letter_from(quadrant_letter=quadrant_letter)
-
-        array = array_2d_util.numpy_array_2d_via_fits_from(file_path=file_path, hdu=hdu)
-
-        return cls.from_ccd(array_electrons=array, quadrant_letter=quadrant_letter)
-
-    @classmethod
-    def from_ccd(
-        cls,
-        array_electrons,
-        quadrant_letter,
-        header=None,
-        bias_subtract_via_prescan=False,
-        bias=None,
-    ):
-        """
-        Using an input array of both quadrants in electrons, use the quadrant letter to extract the quadrant from the
-        full CCD and perform the rotations required to give correct arctic.
-
-        See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
-        rotations.
-        
-        Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
-        """
-        if quadrant_letter == "A":
-
-            array_electrons = array_electrons[0:2068, 0:2072]
-            roe_corner = (1, 0)
-            use_flipud = True
-
-            if bias is not None:
-                bias = bias[0:2068, 0:2072]
-
-        elif quadrant_letter == "B":
-
-            array_electrons = array_electrons[0:2068, 2072:4144]
-            roe_corner = (1, 1)
-            use_flipud = True
-
-            if bias is not None:
-                bias = bias[0:2068, 2072:4144]
-
-        elif quadrant_letter == "C":
-
-            array_electrons = array_electrons[0:2068, 0:2072]
-
-            roe_corner = (1, 0)
-            use_flipud = False
-
-            if bias is not None:
-                bias = bias[0:2068, 0:2072]
-
-        elif quadrant_letter == "D":
-
-            array_electrons = array_electrons[0:2068, 2072:4144]
-
-            roe_corner = (1, 1)
-            use_flipud = False
-
-            if bias is not None:
-                bias = bias[0:2068, 2072:4144]
-
-        else:
-            raise exc.ArrayException(
-                "Quadrant letter for FrameACS must be A, B, C or D."
-            )
-
-        return cls.quadrant_a(
-            array_electrons=array_electrons,
-            header=header,
-            roe_corner=roe_corner,
-            use_flipud=use_flipud,
-            bias_subtract_via_prescan=bias_subtract_via_prescan,
-            bias=bias,
-        )
-
-    @classmethod
-    def quadrant_a(
-        cls,
-        array_electrons,
-        roe_corner,
-        use_flipud,
-        header=None,
-        bias_subtract_via_prescan=False,
-        bias=None,
-    ):
-        """
-        Use an input array of the left quadrant in electrons and perform the rotations required to give correct
-        arctic clocking.
-
-        See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
-        rotations.
-        
-        Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
-        """
-
-        array_electrons = layout_util.rotate_array_via_roe_corner_from(
-            array=array_electrons, roe_corner=roe_corner
-        )
-
-        if use_flipud:
-            array_electrons = np.flipud(array_electrons)
-
-        if bias_subtract_via_prescan:
-
-            bias_serial_prescan_value = prescan_fitted_bias_column(
-                array_electrons[:, 18:24]
-            )
-
-            array_electrons -= bias_serial_prescan_value
-
-            header.bias_serial_prescan_column = bias_serial_prescan_value
-
-        if bias is not None:
-
-            bias = layout_util.rotate_array_via_roe_corner_from(
-                array=bias, roe_corner=roe_corner
-            )
-
-            if use_flipud:
-                bias = np.flipud(bias)
-
-            array_electrons -= bias
-
-            header.bias = Array2DACS.no_mask(values=bias, pixel_scales=0.05) # renamed
-
-        return cls.no_mask(values=array_electrons, header=header, pixel_scales=0.05) # renamed
-
-    @classmethod
-    def quadrant_b(
-        cls, array_electrons, header=None, bias_subtract_via_prescan=False, bias=None
-    ):
-        """
-        Use an input array of the right quadrant in electrons and perform the rotations required to give correct
-        arctic clocking.
-
-        See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
-        rotations.
-
-        Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
-        """
-
-        array_electrons = layout_util.rotate_array_via_roe_corner_from(
-            array=array_electrons, roe_corner=(1, 1)
-        )
-
-        array_electrons = np.flipud(array_electrons)
-
-        if bias_subtract_via_prescan:
-
-            bias_serial_prescan_value = prescan_fitted_bias_column(
-                array_electrons[:, 18:24]
-            )
-
-            array_electrons -= bias_serial_prescan_value
-
-            header.bias_serial_prescan_column = bias_serial_prescan_value
-
-        if bias is not None:
-
-            bias = layout_util.rotate_array_via_roe_corner_from(
-                array=bias, roe_corner=(1, 1)
-            )
-
-            bias = np.flipud(bias)
-
-            array_electrons -= bias
-
-            header.bias = Array2DACS.no_mask(values=bias, pixel_scales=0.05) # renamed
-
-        return cls.no_mask(values=array_electrons, header=header, pixel_scales=0.05) # renamed
-
-    @classmethod
-    def quadrant_c(
-        cls, array_electrons, header=None, bias_subtract_via_prescan=False, bias=None
-    ):
-        """
-        Use an input array of the left quadrant in electrons and perform the rotations required to give correct
-        arctic clocking.
-
-        See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
-        rotations.
-
-        Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
-        """
-
-        array_electrons = layout_util.rotate_array_via_roe_corner_from(
-            array=array_electrons, roe_corner=(1, 0)
-        )
-
-        if bias_subtract_via_prescan:
-
-            bias_serial_prescan_value = prescan_fitted_bias_column(
-                array_electrons[:, 18:24]
-            )
-
-            array_electrons -= bias_serial_prescan_value
-
-            header.bias_serial_prescan_column = bias_serial_prescan_value
-
-        if bias is not None:
-
-            bias = layout_util.rotate_array_via_roe_corner_from(
-                array=bias, roe_corner=(1, 0)
-            )
-
-            array_electrons -= bias
-
-            header.bias = Array2DACS.no_mask(values=bias, pixel_scales=0.05) # renamed
-
-        return cls.no_mask(values=array_electrons, header=header, pixel_scales=0.05) # renamed
-
-    @classmethod
-    def quadrant_d(
-        cls, array_electrons, header=None, bias_subtract_via_prescan=False, bias=None
-    ):
-        """
-        Use an input array of the right quadrant in electrons and perform the rotations required to give correct
-        arctic clocking.
-
-        See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
-        rotations.
-
-        Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
-        """
-
-        array_electrons = layout_util.rotate_array_via_roe_corner_from(
-            array=array_electrons, roe_corner=(1, 1)
-        )
-
-        if bias_subtract_via_prescan:
-            bias_serial_prescan_value = prescan_fitted_bias_column(
-                array_electrons[:, 18:24]
-            )
-
-            array_electrons -= bias_serial_prescan_value
-
-            header.bias_serial_prescan_column = bias_serial_prescan_value
-
-        if bias is not None:
-
-            bias = layout_util.rotate_array_via_roe_corner_from(
-                array=bias, roe_corner=(1, 1)
-            )
-
-            array_electrons -= bias
-
-            header.bias = Array2DACS.no_mask(values=bias, pixel_scales=0.05) # renamed
-
-        return cls.no_mask(values=array_electrons, header=header, pixel_scales=0.05) # renamed
-
-    def update_fits(self, original_file_path, new_file_path):
-        """
-        Output the array to a .fits file.
-
-        Parameters
-        ----------
-        file_path
-            The path the file is output to, including the filename and the ``.fits`` extension,
-            e.g. '/path/to/filename.fits'
-        """
-
-        new_file_dir = os.path.split(new_file_path)[0]
-
-        if not os.path.exists(new_file_dir):
-
-            os.makedirs(new_file_dir)
-
-        if not os.path.exists(new_file_path):
-
-            shutil.copy(original_file_path, new_file_path)
-
-        hdulist = fits.open(new_file_path)
-
-        hdulist[self.header.hdu].data = self.layout_2d.original_orientation_from(
-            array=self
-        )
-
-        ext_header = hdulist[4].header
-        bscale = ext_header["BSCALE"]
-
-        os.remove(new_file_path)
-
-        hdulist.writeto(new_file_path)
-
+# =============================================================================
+# class Array2DACS(Array2D):
+#     """
+#     An ACS array consists of four quadrants ('A', 'B', 'C', 'D') which have the following layout (which are described
+#     at the following STScI 
+#     link https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418).
+# 
+#        <--------S-----------   ---------S----------->
+#     [] [========= 2 =========] [========= 3 =========] []          /\
+#     /    [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  /        |
+#     |   [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  |         | Direction arctic
+#     P   [xxxxxxxxx B/C xxxxxxx] [xxxxxxxxx A/D xxxxxxx]  P         | clocks an image
+#     |   [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  |         | without any rotation
+#     \/  [xxxxxxxxxxxxxxxxxxxxx] [xxxxxxxxxxxxxxxxxxxxx]  \/        | (e.g. towards row 0
+#                                                                    | of the NumPy arrays)
+# 
+#     For a ACS .fits file:
+# 
+#     - The images contained in hdu 1 correspond to quadrants B (left) and A (right).
+#     - The images contained in hdu 4 correspond to quadrants C (left) and D (right).
+#     """
+# 
+#     @classmethod
+#     def from_fits(cls, file_path, quadrant_letter):
+#         """
+#         Use the input .fits file and quadrant letter to extract the quadrant from the full CCD, perform
+#         the rotations required to give correct arctic clocking and convert the image from units of COUNTS / CPS to
+#         ELECTRONS.
+# 
+#         See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
+#         rotations.
+#         
+#         Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
+#         """
+# 
+#         hdu = fits_hdu_via_quadrant_letter_from(quadrant_letter=quadrant_letter)
+# 
+#         array = array_2d_util.numpy_array_2d_via_fits_from(file_path=file_path, hdu=hdu)
+# 
+#         return cls.from_ccd(array_electrons=array, quadrant_letter=quadrant_letter)
+# 
+#     @classmethod
+#     def from_ccd(
+#         cls,
+#         array_electrons,
+#         quadrant_letter,
+#         header=None,
+#         bias_subtract_via_prescan=False,
+#         bias=None,
+#     ):
+#         """
+#         Using an input array of both quadrants in electrons, use the quadrant letter to extract the quadrant from the
+#         full CCD and perform the rotations required to give correct arctic.
+# 
+#         See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
+#         rotations.
+#         
+#         Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
+#         """
+#         if quadrant_letter == "A":
+# 
+#             array_electrons = array_electrons[0:2068, 0:2072]
+#             roe_corner = (1, 0)
+#             use_flipud = True
+# 
+#             if bias is not None:
+#                 bias = bias[0:2068, 0:2072]
+# 
+#         elif quadrant_letter == "B":
+# 
+#             array_electrons = array_electrons[0:2068, 2072:4144]
+#             roe_corner = (1, 1)
+#             use_flipud = True
+# 
+#             if bias is not None:
+#                 bias = bias[0:2068, 2072:4144]
+# 
+#         elif quadrant_letter == "C":
+# 
+#             array_electrons = array_electrons[0:2068, 0:2072]
+# 
+#             roe_corner = (1, 0)
+#             use_flipud = False
+# 
+#             if bias is not None:
+#                 bias = bias[0:2068, 0:2072]
+# 
+#         elif quadrant_letter == "D":
+# 
+#             array_electrons = array_electrons[0:2068, 2072:4144]
+# 
+#             roe_corner = (1, 1)
+#             use_flipud = False
+# 
+#             if bias is not None:
+#                 bias = bias[0:2068, 2072:4144]
+# 
+#         else:
+#             raise exc.ArrayException(
+#                 "Quadrant letter for FrameACS must be A, B, C or D."
+#             )
+# 
+#         return cls.quadrant_a(
+#             array_electrons=array_electrons,
+#             header=header,
+#             roe_corner=roe_corner,
+#             use_flipud=use_flipud,
+#             bias_subtract_via_prescan=bias_subtract_via_prescan,
+#             bias=bias,
+#         )
+# 
+#     @classmethod
+#     def quadrant_a(
+#         cls,
+#         array_electrons,
+#         roe_corner,
+#         use_flipud,
+#         header=None,
+#         bias_subtract_via_prescan=False,
+#         bias=None,
+#     ):
+#         """
+#         Use an input array of the left quadrant in electrons and perform the rotations required to give correct
+#         arctic clocking.
+# 
+#         See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
+#         rotations.
+#         
+#         Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
+#         """
+# 
+#         array_electrons = layout_util.rotate_array_via_roe_corner_from(
+#             array=array_electrons, roe_corner=roe_corner
+#         )
+# 
+#         if use_flipud:
+#             array_electrons = np.flipud(array_electrons)
+# 
+#         if bias_subtract_via_prescan:
+# 
+#             bias_serial_prescan_value = prescan_fitted_bias_column(
+#                 array_electrons[:, 18:24]
+#             )
+# 
+#             array_electrons -= bias_serial_prescan_value
+# 
+#             header.bias_serial_prescan_column = bias_serial_prescan_value
+# 
+#         if bias is not None:
+# 
+#             bias = layout_util.rotate_array_via_roe_corner_from(
+#                 array=bias, roe_corner=roe_corner
+#             )
+# 
+#             if use_flipud:
+#                 bias = np.flipud(bias)
+# 
+#             array_electrons -= bias
+# 
+#             header.bias = Array2DACS.manual_native(array=bias, pixel_scales=0.05)
+# 
+#         return cls.manual(array=array_electrons, header=header, pixel_scales=0.05)
+# 
+#     @classmethod
+#     def quadrant_b(
+#         cls, array_electrons, header=None, bias_subtract_via_prescan=False, bias=None
+#     ):
+#         """
+#         Use an input array of the right quadrant in electrons and perform the rotations required to give correct
+#         arctic clocking.
+# 
+#         See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
+#         rotations.
+# 
+#         Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
+#         """
+# 
+#         array_electrons = layout_util.rotate_array_via_roe_corner_from(
+#             array=array_electrons, roe_corner=(1, 1)
+#         )
+# 
+#         array_electrons = np.flipud(array_electrons)
+# 
+#         if bias_subtract_via_prescan:
+# 
+#             bias_serial_prescan_value = prescan_fitted_bias_column(
+#                 array_electrons[:, 18:24]
+#             )
+# 
+#             array_electrons -= bias_serial_prescan_value
+# 
+#             header.bias_serial_prescan_column = bias_serial_prescan_value
+# 
+#         if bias is not None:
+# 
+#             bias = layout_util.rotate_array_via_roe_corner_from(
+#                 array=bias, roe_corner=(1, 1)
+#             )
+# 
+#             bias = np.flipud(bias)
+# 
+#             array_electrons -= bias
+# 
+#             header.bias = Array2DACS.manual_native(array=bias, pixel_scales=0.05)
+# 
+#         return cls.manual(array=array_electrons, header=header, pixel_scales=0.05)
+# 
+#     @classmethod
+#     def quadrant_c(
+#         cls, array_electrons, header=None, bias_subtract_via_prescan=False, bias=None
+#     ):
+#         """
+#         Use an input array of the left quadrant in electrons and perform the rotations required to give correct
+#         arctic clocking.
+# 
+#         See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
+#         rotations.
+# 
+#         Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
+#         """
+# 
+#         array_electrons = layout_util.rotate_array_via_roe_corner_from(
+#             array=array_electrons, roe_corner=(1, 0)
+#         )
+# 
+#         if bias_subtract_via_prescan:
+# 
+#             bias_serial_prescan_value = prescan_fitted_bias_column(
+#                 array_electrons[:, 18:24]
+#             )
+# 
+#             array_electrons -= bias_serial_prescan_value
+# 
+#             header.bias_serial_prescan_column = bias_serial_prescan_value
+# 
+#         if bias is not None:
+# 
+#             bias = layout_util.rotate_array_via_roe_corner_from(
+#                 array=bias, roe_corner=(1, 0)
+#             )
+# 
+#             array_electrons -= bias
+# 
+#             header.bias = Array2DACS.manual_native(array=bias, pixel_scales=0.05)
+# 
+#         return cls.manual(array=array_electrons, header=header, pixel_scales=0.05)
+# 
+#     @classmethod
+#     def quadrant_d(
+#         cls, array_electrons, header=None, bias_subtract_via_prescan=False, bias=None
+#     ):
+#         """
+#         Use an input array of the right quadrant in electrons and perform the rotations required to give correct
+#         arctic clocking.
+# 
+#         See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
+#         rotations.
+# 
+#         Also see https://github.com/spacetelescope/hstcal/blob/master/pkg/acs/calacs/acscte/dopcte-gen2.c#L418
+#         """
+# 
+#         array_electrons = layout_util.rotate_array_via_roe_corner_from(
+#             array=array_electrons, roe_corner=(1, 1)
+#         )
+# 
+#         if bias_subtract_via_prescan:
+#             bias_serial_prescan_value = prescan_fitted_bias_column(
+#                 array_electrons[:, 18:24]
+#             )
+# 
+#             array_electrons -= bias_serial_prescan_value
+# 
+#             header.bias_serial_prescan_column = bias_serial_prescan_value
+# 
+#         if bias is not None:
+# 
+#             bias = layout_util.rotate_array_via_roe_corner_from(
+#                 array=bias, roe_corner=(1, 1)
+#             )
+# 
+#             array_electrons -= bias
+# 
+#             header.bias = Array2DACS.manual_native(array=bias, pixel_scales=0.05)
+# 
+#         return cls.manual(array=array_electrons, header=header, pixel_scales=0.05)
+# 
+#     def update_fits(self, original_file_path, new_file_path):
+#         """
+#         Output the array to a .fits file.
+# 
+#         Parameters
+#         ----------
+#         file_path
+#             The path the file is output to, including the filename and the ``.fits`` extension,
+#             e.g. '/path/to/filename.fits'
+#         """
+# 
+#         new_file_dir = os.path.split(new_file_path)[0]
+# 
+#         if not os.path.exists(new_file_dir):
+# 
+#             os.makedirs(new_file_dir)
+# 
+#         if not os.path.exists(new_file_path):
+# 
+#             shutil.copy(original_file_path, new_file_path)
+# 
+#         hdulist = fits.open(new_file_path)
+# 
+#         hdulist[self.header.hdu].data = self.layout_2d.original_orientation_from(
+#             array=self
+#         )
+# 
+#         ext_header = hdulist[4].header
+#         bscale = ext_header["BSCALE"]
+# 
+#         os.remove(new_file_path)
+# 
+#         hdulist.writeto(new_file_path)
+# 
+# 
+# =============================================================================
 class ImageACS(Array2DACS):
     """
     The layout of an ACS array and image is given in `FrameACS`.
@@ -945,29 +947,31 @@ class paolo_ImageACS(Array2DACS):
             bias_subtract_via_prescan=bias_subtract_via_prescan,
             bias=bias,
         )
-class Layout2DACS(Layout2D):
-    @classmethod
-    def from_sizes(cls, roe_corner, serial_prescan_size=24, parallel_overscan_size=20):
-        """
-        Use an input array of the left quadrant in electrons and perform the rotations required to give correct
-        arctic clocking.
-
-        See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
-        rotations.
-        """
-
-        parallel_overscan = Region2D(
-            (2068 - parallel_overscan_size, 2068, serial_prescan_size, 2072)
-        )
-
-        serial_prescan = Region2D((0, 2068, 0, serial_prescan_size))
-
-        return Layout2D.rotated_from_roe_corner(
-            roe_corner=roe_corner,
-            shape_native=(2068, 2072),
-            parallel_overscan=parallel_overscan,
-            serial_prescan=serial_prescan,
-        )
+# =============================================================================
+# class Layout2DACS(Layout2D):
+#     @classmethod
+#     def from_sizes(cls, roe_corner, serial_prescan_size=24, parallel_overscan_size=20):
+#         """
+#         Use an input array of the left quadrant in electrons and perform the rotations required to give correct
+#         arctic clocking.
+# 
+#         See the docstring of the `FrameACS` class for a complete description of the HST FPA, quadrants and
+#         rotations.
+#         """
+# 
+#         parallel_overscan = Region2D(
+#             (2068 - parallel_overscan_size, 2068, serial_prescan_size, 2072)
+#         )
+# 
+#         serial_prescan = Region2D((0, 2068, 0, serial_prescan_size))
+# 
+#         return Layout2D.rotated_from_roe_corner(
+#             roe_corner=roe_corner,
+#             shape_native=(2068, 2072),
+#             parallel_overscan=parallel_overscan,
+#             serial_prescan=serial_prescan,
+#         )
+# =============================================================================
 
 
 class HeaderACS(Header):
@@ -1828,28 +1832,26 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
 #                     )
 # =============================================================================
                 print('Plotting one autofit subplot...')
-# =============================================================================
-#                 global_autofit=trail_model_arctic_notch_pushed_plot_slowcap(x=pixels, 
-#                                            rho_q=rho_q, 
-#                                            generated_trails=line.model_full_trail_untrailed,
-#                                            beta=beta, 
-#                                            w=w, 
-#                                            A=a, 
-#                                            B=b, 
-#                                            C=C, 
-#                                            tau_a=tau_a, 
-#                                            tau_b=tau_b, 
-#                                            tau_c=tau_c,
-#                                            capt_a=capt_a,
-#                                            capt_b=capt_b,
-#                                            capt_c=capt_c,
-#                                            notch=notch
-#                                           )
-# =============================================================================
+                global_autofit=trail_model_arctic_notch_pushed_plot_slowcap(x=pixels, 
+                                           rho_q=best_fit_rho_q, 
+                                           generated_trails=line.model_full_trail_untrailed,
+                                           beta=best_fit_beta, 
+                                           w=w, 
+                                           A=best_fit_a, 
+                                           B=best_fit_b, 
+                                           C=best_fit_c, 
+                                           tau_a=best_fit_tau_a, 
+                                           tau_b=best_fit_tau_b, 
+                                           tau_c=best_fit_tau_c,
+                                           capt_a=best_fit_capt_a,
+                                           capt_b=best_fit_capt_b,
+                                           capt_c=best_fit_capt_c,
+                                           notch=best_fit_notch
+                                          )
                 print('Done!')
 
                 
-                #ax.plot(pixels, global_autofit, color='red', ls='-.', alpha=0.7)
+                ax.plot(pixels, global_autofit, color='red', ls='-.', alpha=0.7)
                 # Annotate
                 if i_background == 0:
                     text = "$%d$" % line.n_stacked
@@ -1967,26 +1969,27 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     writefilename=f"{dataset_date}_2024_july_opt1a_{const_fix}" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([f"beta = {beta}"])
-        writer.writerow([f"rho_q = {rho_q}"])
-        writer.writerow([f"a = {a}"])
-        writer.writerow([f"b = {b}"])
-        writer.writerow([f"c = {C}"])
-        writer.writerow([f"tau_a = {tau_a}"])
-        writer.writerow([f"tau_b = {tau_b}"])
-        writer.writerow([f"tau_c = {tau_c}"])
+        writer.writerow([f"Log likelihood = {result.log_likelihood}"])
+        writer.writerow([f"beta = {best_trail_model.beta}"])
+        writer.writerow([f"rho_q = {best_trail_model.rho_q}"])
+        writer.writerow([f"a = {best_trail_model.a}"])
+        writer.writerow([f"b = {best_trail_model.b}"])
+        writer.writerow([f"c = {best_trail_model.c}"])
+        writer.writerow([f"tau_a = {best_trail_model.tau_a}"])
+        writer.writerow([f"tau_b = {best_trail_model.tau_b}"])
+        writer.writerow([f"tau_c = {best_trail_model.tau_c}"])
         writer.writerow([f"capt_a = {best_trail_model.capt_a}"])
         writer.writerow([f"capt_b = {best_trail_model.capt_b}"])
         writer.writerow([f"capt_c = {best_trail_model.capt_c}"])
-        writer.writerow([f"notch = {notch}"])
+        writer.writerow([f"notch = {best_trail_model.notch}"])
         writer.writerow([f"mean height = {mean_height}"])
+        writer.writerow([result.info])
        
             
     print("Data file written!")
     
     # Put the csv file into the appropriate folder
-    batch_path = path.join(path.sep, "cosma", "home", "durham","dc-barr6", "warm_pixels_workspace", 
-                           "batch_scripts")
+    batch_path = path.join(path.sep, "cosma5","data","durham","dc-barr6","richard_scripts")
     csv_directory = Path(batch_path)
     csvs_all=list(pathlib.Path(csv_directory).glob('*.csv'))
     csvs_string=[]
@@ -1996,7 +1999,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt1a_{const_fix}", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -2008,12 +2011,12 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     
 # Import data to be fitted
 start_time2=time.time()
-cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
+cosma_path = path.join(path.sep, "cosma", "home", "dphgals", "rjm", "data")
 #dataset_folder="Paolo's_03_2020"
 #dataset_name="03_2020"
 
-cosma_dataset_path = path.join(cosma_path, "hst", "cte", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo",f"2024_july_opt1a_{const_fix}")
+cosma_dataset_path = path.join(cosma_path, "hst", "cte_test", dataset_date)
+cosma_output_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt1a_{const_fix}")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -2025,19 +2028,14 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}")
-if not os.path.exists(dir):
-    os.mkdir(dir)
+base_dir = os.path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt1a_{const_fix}")
+os.makedirs(base_dir, exist_ok=True)
 
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
-                 f"{dataset_date}_2024_july_opt1a_{const_fix}")
-if not os.path.exists(dir):
-    os.mkdir(dir)
-    
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
-                 "csv_files")
-if not os.path.exists(dir):
-    os.mkdir(dir)
+sub_dir_1 = os.path.join(base_dir, f"{dataset_date}_2024_july_opt1a_{const_fix}")
+os.makedirs(sub_dir_1, exist_ok=True)
+
+sub_dir_2 = os.path.join(base_dir, "csv_files")
+os.makedirs(sub_dir_2, exist_ok=True)
     
 data_directory = dataset_directory
 
@@ -2067,7 +2065,7 @@ for file in temp_files:
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt1a_{const_fix}",
                      f"{dataset_date}_2024_july_opt1a_{const_fix}"))/f"{dataset_date}_2024_july_opt1a_{const_fix}.png"
 )
  
@@ -2141,7 +2139,7 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt1a_{const_fix}", 
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6","richard_scripts", f"2024_july_opt1a_{const_fix}", 
                             f"{dataset_date}_2024_july_opt1a_{const_fix}", filename)
     
     # Save the corrected image
@@ -2182,7 +2180,7 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt1a_{const_fix}", 
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "dc-barr6","richard_scripts", f"2024_july_opt1a_{const_fix}", 
                                     f"{dataset_date}_2024_july_opt1a_{const_fix}")
         ).native
         for quadrant in ["A", "B", "C", "D"]
@@ -2214,7 +2212,7 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt1a_{const_fix}", 
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6","richard_scripts", f"2024_july_opt1a_{const_fix}", 
                             f"{dataset_date}_2024_july_opt1a_{const_fix}", filename)
     
     # Save the corrected image
@@ -2723,7 +2721,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"MJD = {MJD_var}"])
-        #writer.writerow([f"Log likelihood after = {result.log_likelihood}"])
+        writer.writerow([f"Log likelihood after = {result.log_likelihood}"])
         writer.writerow([f"Log likelihood before = {best_fit_loglikelihood}"])
         writer.writerow([f"beta = {best_trail_model.beta}"])
         writer.writerow([f"rho_q before = {best_fit_rho_q}"])
@@ -2744,8 +2742,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print("Data file written!")
     
     # Put the csv file into the output folder
-    batch_path = path.join(path.sep, "cosma", "home", "durham", "dc-barr6",
-                           "warm_pixels_workspace", "batch_scripts")
+    batch_path = path.join(path.sep, "cosma5","data","durham","dc-barr6","richard_scripts")
     csv_directory = Path(batch_path)
     csvs_all=list(pathlib.Path(csv_directory).glob('*.csv'))
     csvs_string=[]
@@ -2755,12 +2752,12 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt1a_{const_fix}",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts",f"2024_july_opt1a_{const_fix}",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt1a_{const_fix}",
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts",f"2024_july_opt1a_{const_fix}",
                                f"{dataset_date}_2024_july_opt1a_{const_fix}")
 cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
@@ -2777,7 +2774,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "dc-barr6", "richard_scripts", f"2024_july_opt1a_{const_fix}",
                      f"{dataset_date}_2024_july_opt1a_{const_fix}"))/f"{dataset_date}_2024_july_opt1a_{const_fix}_corrected.png"
 )
 

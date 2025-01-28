@@ -9,8 +9,8 @@ from warm_pixels import hst_utilities as ut#, PixelLine
 from warm_pixels import misc
 #from warm_pixels.hst_functions.fit import fit_dataset_total_trap_density
 #from warm_pixels.hst_functions.trail_model import trail_model_hst
-from warm_pixels.hst_functions.trail_model_k_fastest import trail_model_arctic_notch_pushed 
-from warm_pixels.hst_functions.trail_model_k_fastest import trail_model_arctic_notch_pushed_plot
+from warm_pixels.hst_functions.trail_model_k_fastest import trail_model_arctic_notch_pushed_slowcap
+from warm_pixels.hst_functions.trail_model_k_fastest import trail_model_arctic_notch_pushed_plot_slowcap
 #from warm_pixels.fit.model import TrailModel
 #from warm_pixels.fit.analysis import Analysis
 from warm_pixels.model.group import QuadrantGroup
@@ -199,6 +199,9 @@ class TrailModel:
                 tau_a,
                 tau_b,
                 tau_c,
+                capt_a,
+                capt_b,
+                capt_c,
                 notch
         ):
             self.rho_q = rho_q
@@ -211,6 +214,9 @@ class TrailModel:
             self.tau_a = tau_a
             self.tau_b = tau_b
             self.tau_c = tau_c
+            self.capt_a = capt_a
+            self.capt_b = capt_b
+            self.capt_c = capt_c
             self.notch=notch
     
         def __call__(self, x, generated_trails):
@@ -225,7 +231,7 @@ class TrailModel:
 #             print('tau_c=',self.tau_c)
 #             print('notch=',self.notch)
 # =============================================================================
-            return trail_model_arctic_notch_pushed(
+            return trail_model_arctic_notch_pushed_slowcap(
                 x=x,
                 rho_q=self.rho_q,
                 generated_trails = generated_trails,
@@ -237,6 +243,9 @@ class TrailModel:
                 tau_a=self.tau_a,
                 tau_b=self.tau_b,
                 tau_c=self.tau_c,
+                capt_a=self.capt_a,
+                capt_b=self.capt_b,
+                capt_c=self.capt_c,
                 notch=self.notch,
             )
 class TrailModelPrint:
@@ -651,8 +660,8 @@ def array_eps_to_counts(array_eps, bscale, bzero):
 # 
 #         hdulist.writeto(new_file_path)
 # 
+# 
 # =============================================================================
-
 class ImageACS(Array2DACS):
     """
     The layout of an ACS array and image is given in `FrameACS`.
@@ -962,8 +971,8 @@ class paolo_ImageACS(Array2DACS):
 #             parallel_overscan=parallel_overscan,
 #             serial_prescan=serial_prescan,
 #         )
-# 
 # =============================================================================
+
 
 class HeaderACS(Header):
     def __init__(
@@ -1381,12 +1390,6 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     w = 84700.0   
     notch=94.091
     
-    rho_q = af.UniformPrior(
-        lower_limit=-10.0,
-        #lower_limit=0.0,
-        upper_limit=10.0,
-    )
-    
     # Convert MJD to days since launch for notch time evolution
     global days_var
     JD_var=float(MJD_var)+2400000.5
@@ -1414,6 +1417,50 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
         tau_b=5.531/(7.7/4.86)
         tau_c=43.924/(37/20.6)
         
+    rho_q = af.UniformPrior(
+        lower_limit=-10.0,
+        #lower_limit=0.0,
+        upper_limit=10.0,
+    )
+        
+    beta = af.GaussianPrior(
+              mean=0.584,
+              sigma=0.1,
+       )
+    
+    # Trap species
+    a = af.UniformPrior(
+        lower_limit=0,
+        upper_limit=1.0,
+    )
+    b = af.UniformPrior(
+        lower_limit=0,
+        upper_limit=1.0,
+    )
+    C = 1 - (a + b)
+    
+    tau_a = af.GaussianPrior(
+          mean=tau_a,
+          sigma=0.2,
+      )
+    tau_b = af.GaussianPrior(
+          mean=tau_b,
+          sigma=2.0,
+      )
+    tau_c = af.GaussianPrior(
+          mean=tau_c,
+          sigma=10.0,
+      )
+    capt_a = af.LogUniformPrior(lower_limit=0.0001, upper_limit=100.0)
+    capt_b = af.LogUniformPrior(lower_limit=0.0001, upper_limit=100.0)
+    capt_c = af.LogUniformPrior(lower_limit=0.0001, upper_limit=100.0)
+    
+    notch = af.UniformPrior(
+        lower_limit=-500,
+        #lower_limit=0.0,
+        upper_limit=500,
+    )
+        
     model = af.Model(
         TrailModel,
         days_var=days_var,
@@ -1426,8 +1473,19 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
         tau_a=tau_a,
         tau_b=tau_b,
         tau_c=tau_c,
+        capt_a=capt_a,
+        capt_b=capt_b,
+        capt_c=capt_c,
         notch=notch
     )
+    
+    model.add_assertion(C > 0.0)
+    model.add_assertion(tau_a > 0.0)
+    model.add_assertion(tau_b > 0.0)
+    model.add_assertion(tau_c > 0.0)
+    model.add_assertion(capt_a > 0.0)
+    model.add_assertion(capt_b > 0.0)
+    model.add_assertion(capt_c > 0.0)
     
 # =============================================================================
 #     # First iteration residuals    
@@ -1603,7 +1661,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     result_info_pre=result.info
     print(result.info)
 
-# =============================================================================
+# ============================================================================= USE THIS INSTEAD! 
 #     print(f"beta = {best_trail_model.beta}")
 #     print(f"rho_q = {best_trail_model.rho_q}")
 #     print(f"a = {best_trail_model.a}")
@@ -1624,15 +1682,14 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     global best_fit_tau_a
     global best_fit_tau_b
     global best_fit_tau_c
+    global best_fit_capt_a
+    global best_fit_capt_b
+    global best_fit_capt_c
     global best_fit_notch
     global best_fit_loglikelihood
     
     
-    best_fit_loglikelihood=result.log_likelihood
-    
-# =============================================================================
-#     best_fit_loglikelihood=result.log_likelihood
-# =============================================================================
+    best_fit_loglikelihood=result.log_likelihood #change these to best_trail_model
     best_fit_beta=best_trail_model.beta
     best_fit_rho_q=best_trail_model.rho_q
     best_fit_a=best_trail_model.a
@@ -1641,6 +1698,9 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     best_fit_tau_a=best_trail_model.tau_a
     best_fit_tau_b=best_trail_model.tau_b
     best_fit_tau_c=best_trail_model.tau_c
+    best_fit_capt_a=best_trail_model.capt_a
+    best_fit_capt_b=best_trail_model.capt_b
+    best_fit_capt_c=best_trail_model.capt_c
     best_fit_notch=best_trail_model.notch
     best_fit_mean_height=mean_height
     
@@ -1772,7 +1832,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
 #                     )
 # =============================================================================
                 print('Plotting one autofit subplot...')
-                global_autofit=trail_model_arctic_notch_pushed_plot(x=pixels, 
+                global_autofit=trail_model_arctic_notch_pushed_plot_slowcap(x=pixels, 
                                            rho_q=best_fit_rho_q, 
                                            generated_trails=line.model_full_trail_untrailed,
                                            beta=best_fit_beta, 
@@ -1782,7 +1842,10 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
                                            C=best_fit_c, 
                                            tau_a=best_fit_tau_a, 
                                            tau_b=best_fit_tau_b, 
-                                           tau_c=best_fit_tau_c,
+                                           tau_c=best_fit_c,
+                                           capt_a=best_fit_capt_a,
+                                           capt_b=best_fit_capt_b,
+                                           capt_c=best_fit_capt_c,
                                            notch=best_fit_notch
                                           )
                 print('Done!')
@@ -1903,7 +1966,7 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     print("Total fit processing time: ", time.time() - start_time, "seconds")
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_2024_july_opt2_{const_fix}" 
+    writefilename=f"{dataset_date}_2024_july_opt1a_{const_fix}" 
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"Log likelihood = {result.log_likelihood}"])
@@ -1915,6 +1978,9 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
         writer.writerow([f"tau_a = {best_trail_model.tau_a}"])
         writer.writerow([f"tau_b = {best_trail_model.tau_b}"])
         writer.writerow([f"tau_c = {best_trail_model.tau_c}"])
+        writer.writerow([f"capt_a = {best_trail_model.capt_a}"])
+        writer.writerow([f"capt_b = {best_trail_model.capt_b}"])
+        writer.writerow([f"capt_c = {best_trail_model.capt_c}"])
         writer.writerow([f"notch = {best_trail_model.notch}"])
         writer.writerow([f"mean height = {mean_height}"])
         writer.writerow([result.info])
@@ -1930,11 +1996,11 @@ def Paolo_autofit_global_50(group: QuadrantGroup, use_corrected=False, save_path
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_opt2_{const_fix}" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_opt1a_{const_fix}" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}", "csv_files",
+    target2=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}", "csv_files",
                      str(csv_name))
     shutil.copyfile(csv_list[0],target2)
     
@@ -1950,8 +2016,8 @@ cosma_path = path.join(path.sep, "cosma5", "data", "durham", "rjm")
 #dataset_folder="Paolo's_03_2020"
 #dataset_name="03_2020"
 
-cosma_dataset_path = path.join(cosma_path, "hst", "cte", dataset_date)
-cosma_output_path = path.join(cosma_path, "paolo",f"2024_july_opt2_{const_fix}")
+cosma_dataset_path = path.join(cosma_path, "paolo", "datasets", dataset_date)
+cosma_output_path = path.join(cosma_path, "paolo",f"2024_july_opt1a_{const_fix}")
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
 
@@ -1963,16 +2029,16 @@ dataset = wp.Dataset(dataset_directory)
 group = dataset.group("ABCD")
 
 # Create the directory where we will save all the outputs
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                 f"{dataset_date}_2024_july_opt2_{const_fix}")
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
+                 f"{dataset_date}_2024_july_opt1a_{const_fix}")
 if not os.path.exists(dir):
     os.mkdir(dir)
     
-dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
+dir = os.path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
                  "csv_files")
 if not os.path.exists(dir):
     os.mkdir(dir)
@@ -2005,8 +2071,8 @@ for file in temp_files:
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                     f"{dataset_date}_2024_july_opt2_{const_fix}"))/f"{dataset_date}_2024_july_opt2_{const_fix}.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
+                     f"{dataset_date}_2024_july_opt1a_{const_fix}"))/f"{dataset_date}_2024_july_opt1a_{const_fix}.png"
 )
  
 
@@ -2054,9 +2120,9 @@ for file in files_bia:
     ]
     
     traps = [
-         arctic.TrapInstantCapture(density=density_a, release_timescale=best_fit_tau_a),
-         arctic.TrapInstantCapture(density=density_b, release_timescale=best_fit_tau_b),
-         arctic.TrapInstantCapture(density=density_c, release_timescale=best_fit_tau_c),      
+         arctic.TrapSlowCapture(density=density_a, release_timescale=best_fit_tau_a, capture_timescale=best_fit_capt_a),
+         arctic.TrapSlowCapture(density=density_b, release_timescale=best_fit_tau_b, capture_timescale=best_fit_capt_b),
+         arctic.TrapSlowCapture(density=density_c, release_timescale=best_fit_tau_c, capture_timescale=best_fit_capt_c),
      ]
     print('Passing fit parameters to arCTIc')
     roe = arctic.ROE()
@@ -2079,8 +2145,8 @@ for file in files_bia:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
-                            f"{dataset_date}_2024_july_opt2_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt1a_{const_fix}", 
+                            f"{dataset_date}_2024_july_opt1a_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2120,16 +2186,16 @@ for file in files:
             quadrant_letter=quadrant,
             bias_subtract_via_bias_file=True,
             bias_subtract_via_prescan=True,
-            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
-                                    f"{dataset_date}_2024_july_opt2_{const_fix}")
+            bias_file_path=path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt1a_{const_fix}", 
+                                    f"{dataset_date}_2024_july_opt1a_{const_fix}")
         ).native
         for quadrant in ["A", "B", "C", "D"]
     ]
     
     traps = [
-         arctic.TrapInstantCapture(density=density_a, release_timescale=best_fit_tau_a),
-         arctic.TrapInstantCapture(density=density_b, release_timescale=best_fit_tau_b),
-         arctic.TrapInstantCapture(density=density_c, release_timescale=best_fit_tau_c),      
+         arctic.TrapSlowCapture(density=density_a, release_timescale=best_fit_tau_a, capture_timescale=best_fit_capt_a),
+         arctic.TrapSlowCapture(density=density_b, release_timescale=best_fit_tau_b, capture_timescale=best_fit_capt_b),
+         arctic.TrapSlowCapture(density=density_c, release_timescale=best_fit_tau_c, capture_timescale=best_fit_capt_c),
      ]
     print('Passing fit parameters to arCTIc')
     roe = arctic.ROE()
@@ -2152,8 +2218,8 @@ for file in files:
     ]
     
     filename=str(os.path.basename(file))
-    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt2_{const_fix}", 
-                            f"{dataset_date}_2024_july_opt2_{const_fix}", filename)
+    output_path = path.join(path.sep, "cosma5", "data", "durham", "rjm","paolo", f"2024_july_opt1a_{const_fix}", 
+                            f"{dataset_date}_2024_july_opt1a_{const_fix}", filename)
     
     # Save the corrected image
     print('Saving image',output_path)
@@ -2657,7 +2723,7 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
 # =============================================================================
     
     #  Print results to csv file 
-    writefilename=f"{dataset_date}_2024_july_opt2_{const_fix}_corrected"
+    writefilename=f"{dataset_date}_2024_july_opt1a_{const_fix}_corrected"
     with open(writefilename+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([f"MJD = {MJD_var}"])
@@ -2689,17 +2755,17 @@ def Paolo_autofit_global_50_after(group: QuadrantGroup, use_corrected=False, sav
     csvs_string=[]
     for stuff in csvs_all:
         csvs_string.append(str(stuff))
-    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_opt2_{const_fix}_corrected" in x]
+    csv_list=[x for x in csvs_string if f"{dataset_date}_2024_july_opt1a_{const_fix}_corrected" in x]
     print(csv_list)
     csv_name=str(os.path.basename(csv_list[0]))
     print(csv_name)
-    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt2_{const_fix}",
+    target3=path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt1a_{const_fix}",
                      "csv_files", str(csv_name))
     shutil.copyfile(csv_list[0],target3)
 
 # Import data to be fitted
-cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt2_{const_fix}",
-                               f"{dataset_date}_2024_july_opt2_{const_fix}")
+cosma_dataset_path = path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo",f"2024_july_opt1a_{const_fix}",
+                               f"{dataset_date}_2024_july_opt1a_{const_fix}")
 cosma_output_path = cosma_dataset_path
 workspace_path = "/cosma5/data/durham/rjm/paolo/dc-barr6/warm_pixels_workspace/"
 #config_path = path.join(workspace_path, "cosma", "config")
@@ -2715,7 +2781,7 @@ group = dataset.group("ABCD")
 # Call the 50 plot function we just defined    
 Paolo_autofit_global_50_after(
     group,
-    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt2_{const_fix}",
-                     f"{dataset_date}_2024_july_opt2_{const_fix}"))/f"{dataset_date}_2024_july_opt2_{const_fix}_corrected.png"
+    save_path=Path(path.join(path.sep, "cosma5", "data", "durham", "rjm", "paolo", f"2024_july_opt1a_{const_fix}",
+                     f"{dataset_date}_2024_july_opt1a_{const_fix}"))/f"{dataset_date}_2024_july_opt1a_{const_fix}_corrected.png"
 )
 
