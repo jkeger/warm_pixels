@@ -13,7 +13,7 @@ import scipy.optimize as scpo
 import scipy.stats
 import math
 
-starting_directory = r'C:\Users\chipe\Documents\Durham University\warm_pixels\scripts\2024_july_opt2_beta478_again'
+starting_directory = r'C:\Users\chipe\Documents\Durham University\warm_pixels\scripts\2024_july_opt2_beta531'
 os.chdir(starting_directory)
 
 def date_to_jd(year,month,day):

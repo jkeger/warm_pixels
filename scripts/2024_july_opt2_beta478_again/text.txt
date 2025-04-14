@@ -1,0 +1,89 @@
+ LINEAR FIT RESULTS BICs
+Number of free parameters = 1
+DoF = 175
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 2171114529009.189
+reduced chi^2 = 12406368737.195366
+P(chi^2_min, DoF) = 0.0
+First coefficient = 0.7996096878524007 +/- 3.6382908738877173e-07
+Second coefficient = -40221.41771151758 +/- 0.02069190857201718
+Model Equation: 0.7996096878524007x+-40221.41771151758
+Number of dates: 177
+Mean BIC value: 5192.629419343484
+BIC RMS: 5688.198150587916
+Mean BIC value in the first 2 years: 2679.3362049199827
+Mean BIC value in the last 2 years: 7959.6854322730915
+
+
+mean beta is 0.4779999999999999
+mean a is  0.14600000000000002
+mean b is  0.5940000000000001
+mean c is  0.26000000000000006
+mean tau_a is  0.515
+mean tau_b is  5.530999999999999
+mean tau_c is  43.923999999999985
+mean notch for t>4000 is  94.09100000000002
+
+
+mean notch for t<4000 is  94.09100000000001
+mean notch all t is  94.091
+
+
+RHO_Q ALL DATES LINEAR FIT RESULTS
+DoF = 175
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 3536.546306601963
+reduced chi^2 = 20.2088360377255
+P(chi^2_min, DoF) = 0.0
+First coefficient = 0.0003438872662676914 +/- 4.016432087501215e-07
+Second coefficient = -0.04549856739360164 +/- 0.0018124470660346188
+Model Equation: 0.0003438872662676914x+-0.04549856739360164
+
+
+RHO_Q PRE TEMP SWITCH LINEAR FIT RESULTS
+DoF = 27
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 94.53388949013873
+reduced chi^2 = 3.5012551663014344
+P(chi^2_min, DoF) = 1.9966060696010684e-09
+First coefficient = 0.0003042681984348767 +/- 4.706038895476434e-06
+Second coefficient = -0.004920579912973629 +/- 0.005664764229200543
+Model Equation: 0.0003042681984348767x+-0.004920579912973629
+
+
+RHO_Q POST TEMP SWITCH LINEAR FIT RESULTS
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 2877.637087177342
+reduced chi^2 = 25.693188278369124
+P(chi^2_min, DoF) = 0.0
+First coefficient = 0.00033886360842489994 +/- 6.239978106863518e-07
+Second coefficient = -0.012333792898884555 +/- 0.003628719433890823
+Model Equation: 0.00033886360842489994x+-0.012333792898884555
+
+
+temp switch day is 1586.5
+mean tau_a before temp switch is 0.334054054054054
+mean tau_b before temp switch is 3.4909948051948048
+mean tau_c before temp switch is 24.454983783783778
+mean tau_a after temp switch is 0.515
+mean tau_b after temp switch is 5.531
+mean tau_c after temp switch is 43.92399999999999
+
+
+tau_a uncertainty on mean before temp switch is 0.0631302822485682
+tau_b uncertainty on mean before temp switch is 0.6597360059117022
+tau_c uncertainty on mean before temp switch is 4.621557529143517
+tau_a uncertainty on mean after temp switch is 0.04247648409037961
+tau_b uncertainty on mean after temp switch is 0.45618919126968854
+tau_c uncertainty on mean after temp switch is 3.6227904605550174
+Minimum norm. residuals:  -8.176766192789518
+Maximum norm. residuals:  12.126089679956596
+Mean of all post-correction rho_q is:  -0.021375924709707513
+RMS of all post-correction rho_q is:  0.04804822292762507
+Mean of all rho_q ratios is:  -67.10276483463886
+RMS of all rho_q ratios is:  1245.248817769248

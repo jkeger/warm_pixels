@@ -13,7 +13,7 @@ import scipy.optimize as scpo
 import scipy.stats
 import math
 
-starting_directory = r'C:\Users\chipe\Documents\Durham University\warm_pixels\scripts\2024_july_opt2_beta478_again'
+starting_directory = r'C:\Users\chipe\Documents\Durham University\warm_pixels\scripts\2024_july_opt2_beta538'
 os.chdir(starting_directory)
 
 def date_to_jd(year,month,day):
@@ -319,6 +319,7 @@ ax_day.plot(days,betas,color="red",marker="None", linestyle='none')
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
 plt.savefig('Beta(MJD)', bbox_inches="tight")
+plt.savefig('Beta(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # BICS plot
@@ -404,6 +405,7 @@ ax_day.plot(days,betas,color="red",marker="None", linestyle='none')
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
 plt.savefig('BICS', bbox_inches="tight")
+plt.savefig('BICS.pdf', bbox_inches="tight")
 plt.show()
 
 # relative densities plot
@@ -476,6 +478,7 @@ ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none')
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
 plt.savefig('a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('a,b,c(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -553,6 +556,7 @@ ax_day.plot(days,tau_c_vals,color="red",marker="None", linestyle='none')
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
 plt.savefig('tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('tau_a,tau_b,tau_c(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -577,6 +581,7 @@ ax_day.plot(days,ccdgains,marker="None", linestyle='none')
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
 plt.savefig('CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('CCDGAIN(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 
@@ -609,6 +614,7 @@ ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
 plt.savefig('correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('correction_metrics(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # Look for datasets with days > 4000 to find the average beta value 
@@ -751,6 +757,7 @@ plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
 plt.savefig('Notch(MJD)', bbox_inches="tight")
+plt.savefig('Notch(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 
@@ -1064,6 +1071,7 @@ plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zord
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
 plt.savefig('Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('Rho_q(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # rho_q plot with swapped x-axes
@@ -1116,6 +1124,7 @@ plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zord
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
 plt.savefig('Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('Rho_q_post_zoom(MJD).pdf', bbox_inches="tight")
 plt.show()
                 
 # Find the mean value of the taus before and after temp switch date
