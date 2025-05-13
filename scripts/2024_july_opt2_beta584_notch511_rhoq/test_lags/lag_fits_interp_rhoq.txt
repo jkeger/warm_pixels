@@ -1,0 +1,384 @@
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 0
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 19
+Number of function evaluations: 570
+minimised chi-squared = 105.22783089895272
+reduced chi^2 = 0.6082533577974145
+P(chi^2_min, DoF) = 0.9999884859868461
+First coefficient = 0.00019225656723187188 +/- 5.880648631431782e-05
+Second coefficient = 0.00032917946566646223 +/- 5.674462699767244e-05
+Third coefficient = 0.003957057413426635 +/- 0.0009127704061383504
+Fourth coefficient = 5.005090869395693 +/- 8.50931021952268
+Lag Term = 1.5940643566378 +/- 7.1570307797879815
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 50
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 16
+Number of function evaluations: 545
+minimised chi-squared = 103.99365815124051
+reduced chi^2 = 0.6011194112788468
+P(chi^2_min, DoF) = 0.9999924328711284
+First coefficient = 0.00017706981035223523 +/- 3.625351259550275e-05
+Second coefficient = 0.0003430965162968193 +/- 2.4482363766021507e-05
+Third coefficient = 0.003546239982372325 +/- 0.0013200913915154455
+Fourth coefficient = 4.132467159226178 +/- 5.157725697554245
+Lag Term = 50.547259478477706 +/- 4.46184285711066
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 100
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 20
+Number of function evaluations: 607
+minimised chi-squared = 103.42095675388128
+reduced chi^2 = 0.5978089985773485
+P(chi^2_min, DoF) = 0.9999937972486215
+First coefficient = 0.00014638461924731198 +/- 8.931362202471359e-05
+Second coefficient = 0.0003656076317879456 +/- 7.549865352337231e-05
+Third coefficient = 0.0029841063991844956 +/- 0.0013617023552529276
+Fourth coefficient = 9.319799009489406 +/- 11.551844149464065
+Lag Term = 103.79264337217813 +/- 7.396219885206164
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 150
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 13
+Number of function evaluations: 423
+minimised chi-squared = 103.54186168322059
+reduced chi^2 = 0.5985078710012751
+P(chi^2_min, DoF) = 0.9999935299592912
+First coefficient = 0.00020031049362293914 +/- 1.719437191940038e-05
+Second coefficient = 0.00031860610742933857 +/- 2.559249199638763e-05
+Third coefficient = 0.0035366847498240293 +/- 0.0008186093186889177
+Fourth coefficient = 2.787225697728699 +/- 1.9036448659036553
+Lag Term = 150.0591263146172 +/- 1.4922300990715198
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 200
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 12
+Number of function evaluations: 420
+minimised chi-squared = 103.86708926113121
+reduced chi^2 = 0.6003877991972902
+P(chi^2_min, DoF) = 0.9999927565603565
+First coefficient = 0.00020917345615238285 +/- 1.556499411520386e-05
+Second coefficient = 0.0003061488842147763 +/- 2.349646256376983e-05
+Third coefficient = 0.0033508282120685985 +/- 0.0008099303832920277
+Fourth coefficient = 3.018602143904957 +/- 1.7486877913167571
+Lag Term = 200.04489007126713 +/- 1.4217641834916288
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 250
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 13
+Number of function evaluations: 391
+minimised chi-squared = 104.11129275649674
+reduced chi^2 = 0.6017993800953568
+P(chi^2_min, DoF) = 0.9999921199627461
+First coefficient = 0.00021311650663814966 +/- 1.3771009097415503e-05
+Second coefficient = 0.0003006892215928335 +/- 2.2584072038040967e-05
+Third coefficient = 0.0032266639902838947 +/- 0.0008667882250741147
+Fourth coefficient = 2.514602674368439 +/- 1.738689892899826
+Lag Term = 250.0017342180704 +/- 2.170889021983687
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 300
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 11
+Number of function evaluations: 377
+minimised chi-squared = 104.57632922341372
+reduced chi^2 = 0.6044874521584608
+P(chi^2_min, DoF) = 0.999990760799454
+First coefficient = 0.00021932388096119012 +/- 1.3839238179559575e-05
+Second coefficient = 0.00029237475111646864 +/- 2.0336480600378596e-05
+Third coefficient = 0.0030626102446153587 +/- 0.0008012632571019746
+Fourth coefficient = 1.806361922563692 +/- 1.4969533062302272
+Lag Term = 300.04328639170035 +/- 1.4201627112094366
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 350
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 14
+Number of function evaluations: 395
+minimised chi-squared = 105.11210954033695
+reduced chi^2 = 0.6075844482100401
+P(chi^2_min, DoF) = 0.9999889248162476
+First coefficient = 0.00022580350861972767 +/- 2.071642242705114e-05
+Second coefficient = 0.00028276403876747726 +/- 2.5879060647114952e-05
+Third coefficient = 0.00289948819167533 +/- 0.0007285868405987833
+Fourth coefficient = 2.244468855688637 +/- 1.6081036736149321
+Lag Term = 350.0409157369602 +/- 1.8072609723637563
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 400
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 11
+Number of function evaluations: 469
+minimised chi-squared = 105.49885031999516
+reduced chi^2 = 0.6098199440462148
+P(chi^2_min, DoF) = 0.999987394044114
+First coefficient = 0.00022643913014335396 +/- 1.4605831301264869e-05
+Second coefficient = 0.0002807338195369268 +/- 2.014548827769425e-05
+Third coefficient = 0.00276715352179206 +/- 0.0007428420270513934
+Fourth coefficient = 1.8685788180023433 +/- 1.5290621296549154
+Lag Term = 400.0443189784111 +/- 1.429710307528627
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 450
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 14
+Number of function evaluations: 460
+minimised chi-squared = 106.01282456912737
+reduced chi^2 = 0.6127908934631641
+P(chi^2_min, DoF) = 0.9999850537118001
+First coefficient = 0.00023224164768369476 +/- 1.0765448865057514e-05
+Second coefficient = 0.00027303753703829454 +/- 1.6619352547213558e-05
+Third coefficient = 0.002623839364163406 +/- 0.001196834863465993
+Fourth coefficient = 1.0656867362010431 +/- 1.4503571521765204
+Lag Term = 449.2917897836093 +/- 26.47189289565937
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 500
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 23
+Number of function evaluations: 1148
+minimised chi-squared = 104.44065712184386
+reduced chi^2 = 0.6037032203574789
+P(chi^2_min, DoF) = 0.999991178375712
+First coefficient = 0.00027483985377414744 +/- 3.224567048174991e-05
+Second coefficient = 0.00022783139126853258 +/- 4.1931126752660385e-05
+Third coefficient = 0.003977046827826294 +/- 0.000820555367254768
+Fourth coefficient = 11.922739281857073 +/- 3.5491454038974695
+Lag Term = 315.31717840748064 +/- 31.82405369696311
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 550
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 4
+Number of function evaluations: 381
+minimised chi-squared = 120.05993629647958
+reduced chi^2 = 0.6939880710779166
+P(chi^2_min, DoF) = 0.9992266594527657
+First coefficient = 0.0003008683920284082 +/- 0.012546679889187139
+Second coefficient = 0.00016672920307231814 +/- 0.02257564791375349
+Third coefficient = 7.401334191093667e-05 +/- 0.0013575376930489488
+Fourth coefficient = 2.7905771139204046e-09 +/- 1.4142135628116796
+Lag Term = 549.9999999992334 +/- nan
+END SUNSPOT ANALYSIS
+c:\users\chipe\documents\durham university\warm_pixels\scripts\time_evolution_2024_july_opt2_beta584_notch511_rhoq_sunspotv3d_lag_pdf_loopinitlagv2.py:1002: RuntimeWarning: invalid value encountered in sqrt
+  errs_Hessian = np.sqrt(np.diag(2*fit_sunspot.hess_inv))
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 600
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 25
+Number of function evaluations: 647
+minimised chi-squared = 105.55804205705795
+reduced chi^2 = 0.6101620928153638
+P(chi^2_min, DoF) = 0.9999871430657785
+First coefficient = 0.0002650975532056019 +/- 2.2286608186987537e-05
+Second coefficient = 0.00023737792026386757 +/- 2.9582037332223524e-05
+Third coefficient = 0.003243807212098362 +/- 0.0005620876552395249
+Fourth coefficient = 7.4005595212950785 +/- 2.4852187245678867
+Lag Term = 421.0992998070759 +/- 55.32094289914477
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 650
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 18
+Number of function evaluations: 585
+minimised chi-squared = 108.64612951425215
+reduced chi^2 = 0.6280123093309373
+P(chi^2_min, DoF) = 0.999965320488114
+First coefficient = 0.00022614262106759417 +/- 2.41534030187976e-05
+Second coefficient = 0.0002701447346592976 +/- 2.766771687098211e-05
+Third coefficient = 0.0018236829940423197 +/- 0.00045586463572643373
+Fourth coefficient = 0.7937354691354379 +/- 2.1117366593843863
+Lag Term = 649.3307369279202 +/- 16.520515474677225
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 700
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 16
+Number of function evaluations: 887
+minimised chi-squared = 109.20782595192205
+reduced chi^2 = 0.6312591095486824
+P(chi^2_min, DoF) = 0.999958769647634
+First coefficient = 0.00023003899507889521 +/- 1.421069864572857e-05
+Second coefficient = 0.00026581303206051293 +/- 1.8747838619538178e-05
+Third coefficient = 0.0017947455146330978 +/- 0.0005375796457491607
+Fourth coefficient = 0.927891427260504 +/- 2.5937335910424193
+Lag Term = 698.4896115277272 +/- 18.654897590176166
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 750
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 4
+Number of function evaluations: 96
+minimised chi-squared = 120.04111480911041
+reduced chi^2 = 0.6938792763532393
+P(chi^2_min, DoF) = 0.9992300960283039
+First coefficient = 0.00029789552740985473 +/- 0.038673675707008436
+Second coefficient = 0.00016970213491664977 +/- 0.036995643916662206
+Third coefficient = 6.88834358068095e-05 +/- 0.0013443631029480243
+Fourth coefficient = 2.737814213627648e-09 +/- 1.414213562859397
+Lag Term = 749.9999999993025 +/- 3.755464874612718e-06
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 800
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 4
+Number of function evaluations: 96
+minimised chi-squared = 120.04760834483682
+reduced chi^2 = 0.6939168112418314
+P(chi^2_min, DoF) = 0.9992289119378966
+First coefficient = 0.0002978451108848963 +/- 0.036692366759912415
+Second coefficient = 0.00016975250196364072 +/- 0.0312261644709702
+Third coefficient = 6.729198093140153e-05 +/- 0.0011254429367395348
+Fourth coefficient = 2.7467129068447484e-09 +/- 1.4142135628597594
+Lag Term = 799.9999999993781 +/- 2.923215692460114e-06
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 850
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 4
+Number of function evaluations: 401
+minimised chi-squared = 120.04988802937154
+reduced chi^2 = 0.6939299886090841
+P(chi^2_min, DoF) = 0.9992284958523229
+First coefficient = 0.0002972766912674934 +/- nan
+Second coefficient = 0.0001703208974492774 +/- nan
+Third coefficient = 6.579365756436087e-05 +/- nan
+Fourth coefficient = 2.7456518385538052e-09 +/- 1.4142135628719137
+Lag Term = 849.9999999993721 +/- nan
+END SUNSPOT ANALYSIS
+c:\users\chipe\documents\durham university\warm_pixels\scripts\time_evolution_2024_july_opt2_beta584_notch511_rhoq_sunspotv3d_lag_pdf_loopinitlagv2.py:1002: RuntimeWarning: invalid value encountered in sqrt
+  errs_Hessian = np.sqrt(np.diag(2*fit_sunspot.hess_inv))
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 900
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 4
+Number of function evaluations: 373
+minimised chi-squared = 120.05747586864157
+reduced chi^2 = 0.6939738489516855
+P(chi^2_min, DoF) = 0.9992271094772567
+First coefficient = 0.00029710413131166474 +/- 0.008972135963289574
+Second coefficient = 0.0001704934031278603 +/- 0.05613256200971708
+Third coefficient = 6.40426451582369e-05 +/- 0.0013054182384578269
+Fourth coefficient = 2.747016249564241e-09 +/- 1.4142135628833905
+Lag Term = 899.9999999994004 +/- nan
+END SUNSPOT ANALYSIS
+c:\users\chipe\documents\durham university\warm_pixels\scripts\time_evolution_2024_july_opt2_beta584_notch511_rhoq_sunspotv3d_lag_pdf_loopinitlagv2.py:1002: RuntimeWarning: invalid value encountered in sqrt
+  errs_Hessian = np.sqrt(np.diag(2*fit_sunspot.hess_inv))
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 950
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 4
+Number of function evaluations: 96
+minimised chi-squared = 120.06569463557256
+reduced chi^2 = 0.6940213562749858
+P(chi^2_min, DoF) = 0.9992256053052888
+First coefficient = 0.00029698709524947554 +/- 0.03597814507303106
+Second coefficient = 0.00017061038231600074 +/- 0.02769140226345208
+Third coefficient = 6.229980208601289e-05 +/- 0.0010423524021627786
+Fourth coefficient = 2.7450978938402545e-09 +/- 1.41421356288622
+Lag Term = 949.9999999994258 +/- 4.672237868832201e-06
+END SUNSPOT ANALYSIS
+BEGIN SUNSPOT ANALYSIS
+Initial guess for the lag in days is 1000
+Sunspot data extracted from csv file and interpolated!
+SUNSPOT RHO_Q FIT RESULTS
+DoF = 173
+False
+Desired error not necessarily achieved due to precision loss.
+Number of iterations: 4
+Number of function evaluations: 376
+minimised chi-squared = 120.07519646843447
+reduced chi^2 = 0.6940762801643611
+P(chi^2_min, DoF) = 0.9992238630394673
+First coefficient = 0.0002969506338491432 +/- 0.04347171267486157
+Second coefficient = 0.0001706467817230372 +/- 0.047073284224967864
+Third coefficient = 6.0227960327894766e-05 +/- 0.0014802679758081849
+Fourth coefficient = 2.7185988613271203e-09 +/- 1.414213562867359
+Lag Term = 999.9999999994302 +/- 2.011027349327949e-06
+END SUNSPOT ANALYSIS

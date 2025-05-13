@@ -1,0 +1,423 @@
+LINEAR FIT RESULTS BICs
+Number of free parameters = 6
+DoF = 175
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 275040739975.9281
+reduced chi^2 = 1571661371.2910178
+P(chi^2_min, DoF) = 0.0
+First coefficient = 0.1968262392035084 +/- 2.0997536499104437e-07
+Second coefficient = -7922.971362770558 +/- 0.011925986009711665
+Model Equation: 0.1968262392035084x+-7922.971362770558
+Number of dates: 177
+Mean BIC value: 3255.8281830853525
+BIC RMS: 3317.8615319391465
+Mean BIC value in the first 2 years: 2700.0548322681866
+Mean BIC value in the last 2 years: 3985.0164038963835
+
+
+EARLY A FIT RESULTS
+DoF = 27
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 2.453072846180307
+reduced chi^2 = 0.09085454985852988
+P(chi^2_min, DoF) = 0.9999999997816312
+First coefficient = 9.047373171421861e-07 +/- 7.639105604640196e-05
+Second coefficient = 0.21373852493121195 +/- 0.10055379138667948
+Model Equation: 9.047373171421861e-07x+0.21373852493121195
+
+
+EARLY B FIT RESULTS
+DoF = 27
+True
+Optimization terminated successfully.
+minimised chi-squared = 3.8314117315919165
+reduced chi^2 = 0.141904138207108
+P(chi^2_min, DoF) = 0.9999999524768027
+First coefficient = 0.00010385153383961041 +/- 0.0001794419166529751
+Second coefficient = 0.4304180110099606 +/- 0.22315332161849372
+Model Equation: 0.00010385153383961041x+0.4304180110099606
+
+
+LATE A FIT RESULTS
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 58.23112149349526
+reduced chi^2 = 0.5199207276204934
+P(chi^2_min, DoF) = 0.9999937257465162
+First coefficient = 6.5451539985594515e-06 +/- 1.809622336217801e-06
+Second coefficient = 0.12498592656413235 +/- 0.012511922052133764
+Model Equation: 6.5451539985594515e-06x+0.12498592656413235
+
+
+LATE B FIT RESULTS
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 188.78263942846945
+reduced chi^2 = 1.6855592806113344
+P(chi^2_min, DoF) = 7.75940355076018e-06
+First coefficient = -3.492737587896832e-05 +/- 1.1117739511681306e-05
+Second coefficient = 0.8664488286133984 +/- 0.07695853278165508
+Model Equation: -3.492737587896832e-05x+0.8664488286133984
+
+
+EARLY LINEAR FIT RESULTS FOR TAU_A
+DoF = 27
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 1.7654148149336548
+reduced chi^2 = 0.06538573388643167
+P(chi^2_min, DoF) = 0.9999999999964612
+First coefficient = 5.821139743892494e-05 +/- 0.00019210402206623782
+Second coefficient = 0.5141990749773763 +/- 0.2602184822799863
+Model Equation: 5.821139743892494e-05x+0.5141990749773763
+
+
+EARLY LINEAR FIT RESULTS FOR TAU_B
+DoF = 27
+True
+Optimization terminated successfully.
+minimised chi-squared = 2.2070026973166765
+reduced chi^2 = 0.08174084064135839
+P(chi^2_min, DoF) = 0.999999999941263
+First coefficient = 0.00028320519042108355 +/- 0.0014541281402561852
+Second coefficient = 4.126091863170175 +/- 1.8736981612748869
+Model Equation: 0.00028320519042108355x+4.126091863170175
+
+
+EARLY LINEAR FIT RESULTS FOR TAU_C
+DoF = 27
+True
+Optimization terminated successfully.
+minimised chi-squared = 2.0921952190270674
+reduced chi^2 = 0.0774887118158173
+P(chi^2_min, DoF) = 0.9999999999698841
+First coefficient = -0.002348275893190444 +/- 0.01434505536882727
+Second coefficient = 25.941161103427298 +/- 16.64100703087773
+Model Equation: -0.002348275893190444x+25.941161103427298
+
+
+LATE LINEAR FIT RESULTS FOR TAU_A
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 53.83597597278652
+reduced chi^2 = 0.48067835689987964
+P(chi^2_min, DoF) = 0.9999993509991594
+First coefficient = 1.1908404395515022e-05 +/- 4.356729348399653e-06
+Second coefficient = 0.46229816756454517 +/- 0.030437236188022423
+Model Equation: 1.1908404395515022e-05x+0.46229816756454517
+
+
+LATE LINEAR FIT RESULTS FOR TAU_B
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 127.86229521617092
+reduced chi^2 = 1.141627635858669
+P(chi^2_min, DoF) = 0.1451108775257262
+First coefficient = 4.261536270040245e-05 +/- 6.216234664069724e-05
+Second coefficient = 5.716652277584645 +/- 0.4180882232206496
+Model Equation: 4.261536270040245e-05x+5.716652277584645
+
+
+LATE LINEAR FIT RESULTS FOR TAU_C
+DoF = 112
+True
+Optimization terminated successfully.
+minimised chi-squared = 27.168450505517995
+reduced chi^2 = 0.24257545094212496
+P(chi^2_min, DoF) = 1.0
+First coefficient = -0.005660975453270707 +/- 0.0011182227460843977
+Second coefficient = 57.35680910012228 +/- 8.568141246091498
+Model Equation: -0.005660975453270707x+57.35680910012228
+
+
+mean beta is 0.5840000000000001
+mean a is  0.1598249782734121
+mean b is  0.6440499028567688
+mean c is  0.19612511886981907
+mean tau_a is  0.499105549076324
+mean tau_b is  5.437987714160921
+mean tau_c is  31.013388234183505
+mean notch for t>4000 is  51.10000000000004
+
+
+mean notch for t<4000 is  51.10000000000002
+mean notch all t is  51.100000000000016
+
+
+RHO_Q ALL DATES LINEAR FIT RESULTS
+DoF = 175
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 1466.3526846810382
+reduced chi^2 = 8.379158198177361
+P(chi^2_min, DoF) = 1.3399405991322947e-202
+First coefficient = 0.00039659263224244386 +/- 1.1751064603125286e-06
+Second coefficient = -0.0035924710133923565 +/- 0.0058434876632484575
+Model Equation: 0.00039659263224244386x+-0.0035924710133923565
+
+
+RHO_Q PRE TEMP SWITCH LINEAR FIT RESULTS
+DoF = 27
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 12.902165977227884
+reduced chi^2 = 0.47785799915658833
+P(chi^2_min, DoF) = 0.9898567124365323
+First coefficient = 0.00039031859575765215 +/- 1.0877356494667846e-05
+Second coefficient = -0.006063398779773993 +/- 0.011829171347610863
+Model Equation: 0.00039031859575765215x+-0.006063398779773993
+
+
+RHO_Q POST TEMP SWITCH LINEAR FIT RESULTS
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 1303.1558621563906
+reduced chi^2 = 11.635320197824916
+P(chi^2_min, DoF) = 5.32110414395697e-202
+First coefficient = 0.00039215799810206846 +/- 2.3013063952479565e-06
+Second coefficient = 0.0245476678934238 +/- 0.014874311607876162
+Model Equation: 0.00039215799810206846x+0.0245476678934238
+
+
+temp switch day is 1586.5
+mean tau_a before temp switch is 0.5924203667267183
+mean tau_b before temp switch is 4.369103736257327
+mean tau_c before temp switch is 21.646442507370782
+mean tau_a after temp switch is 0.47957571131506677
+mean tau_b after temp switch is 5.1257013445678
+mean tau_c after temp switch is 33.66814073062703
+
+
+tau_a uncertainty on mean before temp switch is 0.11492706208813343
+tau_b uncertainty on mean before temp switch is 0.8520501418314593
+tau_c uncertainty on mean before temp switch is 4.515474754973567
+tau_a uncertainty on mean after temp switch is 0.04083019507084305
+tau_b uncertainty on mean after temp switch is 0.4422449753323398
+tau_c uncertainty on mean after temp switch is 3.0486622770588605
+Minimum norm. residuals:  -12.596231503144528
+Maximum norm. residuals:  9.060780052025413
+Mean of all post-correction rho_q is:  0.011778465794589094
+RMS of all post-correction rho_q is:  0.023225879830333796
+Mean of all rho_q ratios is:  -127.02898101295037
+RMS of all rho_q ratios is:  1139.2019340705576
+
+runfile('C:/Users/chipe/Documents/Durham University/warm_pixels/scripts/Time_evolution_2024_july_opt2_beta584_notch511allpdf.py', wdir='C:/Users/chipe/Documents/Durham University/warm_pixels/scripts')
+Finding csv files
+Now locating corrected csv files
+Now locating uncorrected csv files
+LINEAR FIT RESULTS BICs
+Number of free parameters = 6
+DoF = 175
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 275040739975.9281
+reduced chi^2 = 1571661371.2910178
+P(chi^2_min, DoF) = 0.0
+First coefficient = 0.1968262392035084 +/- 2.0997536499104437e-07
+Second coefficient = -7922.971362770558 +/- 0.011925986009711665
+Model Equation: 0.1968262392035084x+-7922.971362770558
+Number of dates: 177
+Mean BIC value: 3255.8281830853525
+BIC RMS: 3317.8615319391465
+Mean BIC value in the first 2 years: 2700.0548322681866
+Mean BIC value in the last 2 years: 3985.0164038963835
+
+
+EARLY A FIT RESULTS
+DoF = 27
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 2.453072846180307
+reduced chi^2 = 0.09085454985852988
+P(chi^2_min, DoF) = 0.9999999997816312
+First coefficient = 9.047373171421861e-07 +/- 7.639105604640196e-05
+Second coefficient = 0.21373852493121195 +/- 0.10055379138667948
+Model Equation: 9.047373171421861e-07x+0.21373852493121195
+
+
+EARLY B FIT RESULTS
+DoF = 27
+True
+Optimization terminated successfully.
+minimised chi-squared = 3.8314117315919165
+reduced chi^2 = 0.141904138207108
+P(chi^2_min, DoF) = 0.9999999524768027
+First coefficient = 0.00010385153383961041 +/- 0.0001794419166529751
+Second coefficient = 0.4304180110099606 +/- 0.22315332161849372
+Model Equation: 0.00010385153383961041x+0.4304180110099606
+
+
+LATE A FIT RESULTS
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 58.23112149349526
+reduced chi^2 = 0.5199207276204934
+P(chi^2_min, DoF) = 0.9999937257465162
+First coefficient = 6.5451539985594515e-06 +/- 1.809622336217801e-06
+Second coefficient = 0.12498592656413235 +/- 0.012511922052133764
+Model Equation: 6.5451539985594515e-06x+0.12498592656413235
+
+
+LATE B FIT RESULTS
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 188.78263942846945
+reduced chi^2 = 1.6855592806113344
+P(chi^2_min, DoF) = 7.75940355076018e-06
+First coefficient = -3.492737587896832e-05 +/- 1.1117739511681306e-05
+Second coefficient = 0.8664488286133984 +/- 0.07695853278165508
+Model Equation: -3.492737587896832e-05x+0.8664488286133984
+
+
+EARLY LINEAR FIT RESULTS FOR TAU_A
+DoF = 27
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 1.7654148149336548
+reduced chi^2 = 0.06538573388643167
+P(chi^2_min, DoF) = 0.9999999999964612
+First coefficient = 5.821139743892494e-05 +/- 0.00019210402206623782
+Second coefficient = 0.5141990749773763 +/- 0.2602184822799863
+Model Equation: 5.821139743892494e-05x+0.5141990749773763
+
+
+EARLY LINEAR FIT RESULTS FOR TAU_B
+DoF = 27
+True
+Optimization terminated successfully.
+minimised chi-squared = 2.2070026973166765
+reduced chi^2 = 0.08174084064135839
+P(chi^2_min, DoF) = 0.999999999941263
+First coefficient = 0.00028320519042108355 +/- 0.0014541281402561852
+Second coefficient = 4.126091863170175 +/- 1.8736981612748869
+Model Equation: 0.00028320519042108355x+4.126091863170175
+
+
+EARLY LINEAR FIT RESULTS FOR TAU_C
+DoF = 27
+True
+Optimization terminated successfully.
+minimised chi-squared = 2.0921952190270674
+reduced chi^2 = 0.0774887118158173
+P(chi^2_min, DoF) = 0.9999999999698841
+First coefficient = -0.002348275893190444 +/- 0.01434505536882727
+Second coefficient = 25.941161103427298 +/- 16.64100703087773
+Model Equation: -0.002348275893190444x+25.941161103427298
+
+
+LATE LINEAR FIT RESULTS FOR TAU_A
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 53.83597597278652
+reduced chi^2 = 0.48067835689987964
+P(chi^2_min, DoF) = 0.9999993509991594
+First coefficient = 1.1908404395515022e-05 +/- 4.356729348399653e-06
+Second coefficient = 0.46229816756454517 +/- 0.030437236188022423
+Model Equation: 1.1908404395515022e-05x+0.46229816756454517
+
+
+LATE LINEAR FIT RESULTS FOR TAU_B
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 127.86229521617092
+reduced chi^2 = 1.141627635858669
+P(chi^2_min, DoF) = 0.1451108775257262
+First coefficient = 4.261536270040245e-05 +/- 6.216234664069724e-05
+Second coefficient = 5.716652277584645 +/- 0.4180882232206496
+Model Equation: 4.261536270040245e-05x+5.716652277584645
+
+
+LATE LINEAR FIT RESULTS FOR TAU_C
+DoF = 112
+True
+Optimization terminated successfully.
+minimised chi-squared = 27.168450505517995
+reduced chi^2 = 0.24257545094212496
+P(chi^2_min, DoF) = 1.0
+First coefficient = -0.005660975453270707 +/- 0.0011182227460843977
+Second coefficient = 57.35680910012228 +/- 8.568141246091498
+Model Equation: -0.005660975453270707x+57.35680910012228
+
+
+mean beta is 0.5840000000000001
+mean a is  0.1598249782734121
+mean b is  0.6440499028567688
+mean c is  0.19612511886981907
+mean tau_a is  0.499105549076324
+mean tau_b is  5.437987714160921
+mean tau_c is  31.013388234183505
+mean notch for t>4000 is  51.10000000000004
+
+
+mean notch for t<4000 is  51.10000000000002
+mean notch all t is  51.100000000000016
+
+
+RHO_Q ALL DATES LINEAR FIT RESULTS
+DoF = 175
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 1466.3526846810382
+reduced chi^2 = 8.379158198177361
+P(chi^2_min, DoF) = 1.3399405991322947e-202
+First coefficient = 0.00039659263224244386 +/- 1.1751064603125286e-06
+Second coefficient = -0.0035924710133923565 +/- 0.0058434876632484575
+Model Equation: 0.00039659263224244386x+-0.0035924710133923565
+
+
+RHO_Q PRE TEMP SWITCH LINEAR FIT RESULTS
+DoF = 27
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 12.902165977227884
+reduced chi^2 = 0.47785799915658833
+P(chi^2_min, DoF) = 0.9898567124365323
+First coefficient = 0.00039031859575765215 +/- 1.0877356494667846e-05
+Second coefficient = -0.006063398779773993 +/- 0.011829171347610863
+Model Equation: 0.00039031859575765215x+-0.006063398779773993
+
+
+RHO_Q POST TEMP SWITCH LINEAR FIT RESULTS
+DoF = 112
+False
+Desired error not necessarily achieved due to precision loss.
+minimised chi-squared = 1303.1558621563906
+reduced chi^2 = 11.635320197824916
+P(chi^2_min, DoF) = 5.32110414395697e-202
+First coefficient = 0.00039215799810206846 +/- 2.3013063952479565e-06
+Second coefficient = 0.0245476678934238 +/- 0.014874311607876162
+Model Equation: 0.00039215799810206846x+0.0245476678934238
+
+
+temp switch day is 1586.5
+mean tau_a before temp switch is 0.5924203667267183
+mean tau_b before temp switch is 4.369103736257327
+mean tau_c before temp switch is 21.646442507370782
+mean tau_a after temp switch is 0.47957571131506677
+mean tau_b after temp switch is 5.1257013445678
+mean tau_c after temp switch is 33.66814073062703
+
+
+tau_a uncertainty on mean before temp switch is 0.11492706208813343
+tau_b uncertainty on mean before temp switch is 0.8520501418314593
+tau_c uncertainty on mean before temp switch is 4.515474754973567
+tau_a uncertainty on mean after temp switch is 0.04083019507084305
+tau_b uncertainty on mean after temp switch is 0.4422449753323398
+tau_c uncertainty on mean after temp switch is 3.0486622770588605
+Minimum norm. residuals:  -12.596231503144528
+Maximum norm. residuals:  9.060780052025413
+Mean of all post-correction rho_q is:  0.011778465794589094
+RMS of all post-correction rho_q is:  0.023225879830333796
+Mean of all rho_q ratios is:  -127.02898101295037
+RMS of all rho_q ratios is:  1139.2019340705576
