@@ -8,9 +8,13 @@ import sys
 import os
 import pathlib
 from astropy.time import Time
+import scipy
 import scipy.optimize as scpo
 import scipy.stats
 import math
+
+starting_directory = r'C:\Users\chipe\Documents\Durham University\warm_pixels\scripts\2024_july_freeparams'
+os.chdir(starting_directory)
 
 def date_to_jd(year,month,day):
     """
@@ -110,7 +114,7 @@ temp_switch_date_since_launch=temp_switch_date-launch_date
 
 
 # Point to the csv_files directory
-csv_path = path.join("csv_files_v4_pushed")
+csv_path = path.join("csv_files")
 
 # Find all the csv files
 print('Finding csv files')
@@ -148,6 +152,7 @@ ccdgains=[]
 rho_q_exp=[]
 success_metric=[]
 log_likelihoods=[]
+log_likelihoods_post=[]
 BICs=[]
 
 # Lists for the errors
@@ -169,17 +174,19 @@ tau_c_upper=[]
 tau_c_lower=[]
 notch_upper=[]
 notch_lower=[]
-rho_q_exp_upper=[]
-rho_q_exp_lower=[]
 
 
 # Read each csv file
 for file in files_corrected:
     data = pd.read_csv(f"{file}", header=None)
     # Extract pre-correction log likelihood
-    log_likelihoodstring=str(data.loc[[1],:])
+    log_likelihoodstring=str(data.loc[[2],:])
     log_likelihoodval=log_likelihoodstring.partition("= ")[2]
     log_likelihoods.append(float(log_likelihoodval))
+    # Extract post-correction log likelihood
+    log_likelihoodstring=str(data.loc[[1],:])
+    log_likelihoodval=log_likelihoodstring.partition("= ")[2]
+    log_likelihoods_post.append(float(log_likelihoodval))
     # Extract MJD values
     MJDstring=str(data.loc[[0],:])
     MJDval=MJDstring.partition("= ")[2]
@@ -232,14 +239,10 @@ for file in files_corrected:
     rqrstring=str(data.loc[[15],:])
     rqrval=rqrstring.partition("= ")[2]
     rho_q_reductions.append(float(rqrval))
-    # Extract rho_q reduction values
+    # Extract ccd gain values
     ccdstring=str(data.loc[[16],:])
     ccdval=ccdstring.partition("= ")[2]
     ccdgains.append(float(ccdval))
-    # Extract success metric values
-    successstring=str(data.loc[[17],:])
-    successval=successstring.partition("= ")[2]
-    success_metric.append(float(successval))
     
     # Extract post rho_q error
     with open(file, 'r') as named_file:
@@ -271,16 +274,7 @@ files_string_uncorrected=[x for x in files_string if 'corrected' not in x]
 files_uncorrected=[]
 for stuff in files_string_uncorrected:
     files_uncorrected.append(Path(stuff))
-
-for file in files_uncorrected:
-    data = pd.read_csv(f"{file}", header=None)
-    # Extract MJD values
-    rho_q_exp_string=str(data.loc[[11],:])
-    rho_q_exp_val=rho_q_exp_string.partition("= ")[2]
-    rho_q_exp.append(float(rho_q_exp_val))
     
-rho_q_lower_ranges=[]
-rho_q_upper_ranges=[]
 file_counter=0
 for file in files_uncorrected:
     with open(file, 'r') as file:
@@ -298,12 +292,9 @@ for file in files_uncorrected:
     # Rho q before correction
     rho_q_region_long=find_between( info_file, 'Summary (3.0 sigma limits):', 'ummary (1.0 sigma limits):' )
     rho_q_lower_range=float(find_between(rho_q_region_long, '(', ',' ))
-    rho_q_lower_ranges.append(rho_q_lower_range)
-    rho_q_pre_lower.append(float(rho_q_pres[file_counter]-rho_q_lower_range))
+    rho_q_pre_lower.append(float(abs(rho_q_pres[file_counter]-rho_q_lower_range)))
     rho_q_upper_range=float(find_between(rho_q_region_long, ', ', ')' ))
-    rho_q_upper_ranges.append(rho_q_upper_range)
-    rho_q_pre_upper.append(float(rho_q_upper_range-rho_q_pres[file_counter]))
-    #file_counter=file_counter+1
+    rho_q_pre_upper.append(float(abs(rho_q_upper_range-rho_q_pres[file_counter])))
     # Beta
     beta_region_long=find_between(rho_q_region_long, 'beta', 'c' )
     beta_lower_range=float(find_between(beta_region_long, '(', ',' ))
@@ -349,32 +340,6 @@ for file in files_uncorrected:
     notch_upper.append(float(notch_upper_range-notches[file_counter]))
     file_counter=file_counter+1
     
-rho_q_exp_lower_ranges=[]
-rho_q_exp_upper_ranges=[]
-file_counter=0
-for file in files_uncorrected:
-    with open(file, 'r') as file:
-        reader = csv.reader(file)
-        
-        # Iterate over each row in the CSV file
-        for row in reader:
-            # Access the long string in the desired row
-            long_string = row[0]  # Assuming the long string is in the third column (0-indexed)
-            # Process the long string as needed
-            #print("Long string:", long_string)
-            if 'TrailModelPrint' in long_string:
-                info_file=long_string
-                
-    # Rho q exp before correction
-    rho_q_exp_region_long=find_between( info_file, 'Summary (3.0 sigma limits):', 'ummary (1.0 sigma limits):' )
-    rho_q_exp_lower_range=float(find_between(rho_q_exp_region_long, '(', ',' ))
-    rho_q_exp_lower_ranges.append(rho_q_exp_lower_range)
-    rho_q_exp_lower.append(float(rho_q_exp[file_counter]-rho_q_exp_lower_range))
-    rho_q_exp_upper_range=float(find_between(rho_q_exp_region_long, ', ', ')' ))
-    rho_q_exp_upper_ranges.append(rho_q_exp_upper_range)
-    rho_q_exp_upper.append(float(rho_q_exp_upper_range-rho_q_exp[file_counter]))
-    file_counter=file_counter+1
-    
     
 # Convert MJD to JD
 for MJDdates in MJDs:
@@ -409,7 +374,8 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/Beta(MJD)', bbox_inches="tight")
+plt.savefig('Beta(MJD)', bbox_inches="tight")
+plt.savefig('Beta(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # BICS plot
@@ -426,6 +392,7 @@ def chi_squared(model_params, model, x_data, y_data, y_err):
 BICs_array=np.array(BICs)
 MJDs_array=np.array(MJDs)
 print('LINEAR FIT RESULTS BICs')
+print('Number of free parameters = 8')
 initial_values=np.array([0,0])
 deg_freedom = len(notches) - initial_values.size
 print('DoF = {}'.format(deg_freedom))
@@ -493,7 +460,8 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,betas,color="red",marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/instant_unpushed', bbox_inches="tight")
+plt.savefig('BICS', bbox_inches="tight")
+plt.savefig('BICS.pdf', bbox_inches="tight")
 plt.show()
 
 # relative densities plot
@@ -513,6 +481,7 @@ late_a_err_list=[]
 late_b_err_list=[]
 late_c_err_list=[]
 
+
 for i in range(len(ccdgains)):
     if days[i] < temp_switch_date_since_launch:
         early_days_list.append(days[i])
@@ -527,6 +496,7 @@ for i in range(len(ccdgains)):
             early_b_err_list.append(b_lower[i])
         else:
             early_b_err_list.append(b_upper[i])
+        
     elif days[i] < 1666 or days[i] > 3666:
         late_days_list.append(days[i])
         late_a_list.append(a_vals[i])
@@ -540,6 +510,7 @@ for i in range(len(ccdgains)):
             late_b_err_list.append(b_lower[i])
         else:
             late_b_err_list.append(b_upper[i])
+        
             
 early_days=np.array(early_days_list)
 late_days=np.array(late_days_list)
@@ -676,6 +647,7 @@ print('Second coefficient = {} +/- {}'.format(sol1, one_err))
 print('Model Equation: {}x+{}'.format(sol0,sol1))
 print('')
 print('')
+
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
 for i in range(len(ccdgains)):
@@ -704,13 +676,14 @@ ax_day = ax.twiny()
 ax_day.set_xlabel("Days since launch", fontsize=12)
 ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,c_vals,color="red",marker="None", linestyle='none') 
-ax_day.plot(early_days,fit_line_early_a,color="black", linestyle='solid',zorder=15)
-ax_day.plot(early_days,fit_line_early_b,color="fuchsia", linestyle='solid',zorder=15)
-ax_day.plot(late_days,fit_line_late_a,color="black", linestyle='solid',zorder=15)
-ax_day.plot(late_days,fit_line_late_b,color="fuchsia", linestyle='solid',zorder=15)
+#ax_day.plot(early_days,fit_line_early_a,color="black", linestyle='solid',zorder=15)
+#ax_day.plot(early_days,fit_line_early_b,color="fuchsia", linestyle='solid',zorder=15)
+#ax_day.plot(late_days,fit_line_late_a,color="black", linestyle='solid',zorder=15)
+#ax_day.plot(late_days,fit_line_late_b,color="fuchsia", linestyle='solid',zorder=15)
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('a,b,c(MJD)', bbox_inches="tight")
+plt.savefig('a,b,c(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # tau's plot
@@ -750,6 +723,7 @@ for i in range(len(ccdgains)):
             tau_c_early_err_list.append(tau_c_lower[i])
         else:
             tau_c_early_err_list.append(tau_c_upper[i])
+        
     elif days[i] < 1666 or days[i] > 3666:
         late_days_list.append(days[i])
         tau_a_late_list.append(tau_a_vals[i])
@@ -767,7 +741,7 @@ for i in range(len(ccdgains)):
             tau_c_late_err_list.append(tau_c_lower[i])
         else:
             tau_c_late_err_list.append(tau_c_upper[i])
-    
+        
 early_days=np.array(early_days_list)
 late_days=np.array(late_days_list) 
 tau_a_early=np.array(tau_a_early_list) 
@@ -986,7 +960,7 @@ for i in range(len(ccdgains)):
 for i in range(len(ccdgains)):
     color='green'
     if ccdgains[i] == 1.0: color='lightgreen'
-    ax.errorbar(MJDs[i],tau_c_vals[i],yerr=[[tau_c_lower[i]], [tau_c_upper[i]]],
+    ax.errorbar(MJDs[i],tau_c_vals[i],yerr=[[abs(tau_c_lower[i])], [tau_c_upper[i]]],
                 color=color,marker="o", linestyle='none')
 ax.set_xlim(launch_date-500, max(MJDs)+500)
 plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
@@ -1009,7 +983,8 @@ ax_day.plot(late_days,fit_tau_b_late, color='purple', linestyle='solid',zorder=1
 ax_day.plot(late_days,fit_tau_c_late, color='blue', linestyle='solid',zorder=15)
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('tau_a,tau_b,tau_c(MJD)', bbox_inches="tight")
+plt.savefig('tau_a,tau_b,tau_c(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # ccdgain plot
@@ -1033,32 +1008,10 @@ ax_day.set_xlim(-500, max(days)+500)
 ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('CCDGAIN(MJD)', bbox_inches="tight")
+plt.savefig('CCDGAIN(MJD).pdf', bbox_inches="tight")
 plt.show()
 
-# success metric plot
-fig = plt.figure()
-ax = fig.add_axes((0,0,1,1))
-for i in range(len(ccdgains)):
-    color='purple'
-    if ccdgains[i] == 1.0: color='deeppink'
-    ax.plot(MJDs[i],success_metric[i], color=color,marker="o", linestyle='none')
-ax.set_xlim(launch_date-500, max(MJDs)+500)
-plt.axvline(x=launch_date, ymin=0, ymax=1, color='fuchsia')
-plt.axvspan(repair_dates_1_start, repair_dates_1_end, alpha=0.5, color='grey')
-plt.axvspan(repair_dates_2_start, repair_dates_2_end, alpha=0.5, color='grey')
-plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
-plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
-ax.set_ylabel('Success metric (Rho_q_exp_after/Rho_q_exp_before)', fontsize=12)
-ax.set_xlabel("MJD", fontsize = 12)
-ax_day = ax.twiny()
-ax_day.set_xlabel("Days since launch", fontsize=12)
-ax_day.set_xlim(-500, max(days)+500)
-ax_day.plot(days,ccdgains,marker="None", linestyle='none') 
-ax.tick_params(axis='both', which='major', labelsize=12)
-ax_day.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/success_metric(MJD)', bbox_inches="tight")
-plt.show()
 
 # correction metric plots
 fig = plt.figure()
@@ -1088,7 +1041,8 @@ ax_day.plot(days,mean_height_reductions,color="red",marker="None", linestyle='no
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax2.tick_params(axis='both', which='major', labelsize=12)
 ax2.set_ylabel("Rho_q Reduction",color="blue",fontsize=12)
-plt.savefig('v4_pushed_plots/correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('correction_metrics(MJD)', bbox_inches="tight")
+plt.savefig('correction_metrics(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # Look for datasets with days > 4000 to find the average beta value 
@@ -1230,7 +1184,8 @@ plt.axvspan(repair_dates_3_start, repair_dates_3_end, alpha=0.5, color='grey')
 plt.axvline(x=temp_switch_date, ymin=0, ymax=1, color='gold', alpha=0.5)
 ax_MJD.set_xlabel("MJD", fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
-plt.savefig('v4_pushed_plots/Notch(MJD)', bbox_inches="tight")
+plt.savefig('Notch(MJD)', bbox_inches="tight")
+plt.savefig('Notch(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 
@@ -1371,150 +1326,116 @@ print('Second coefficient = {} +/- {}'.format(sol1, one_err))
 print('Model Equation: {}x+{}'.format(sol0,sol1))
 print('')
 print('')
-
-# 3 SEPARATE FITS FOR PRE CORRECTION RHO Q 
-t1_rho_days_list=[]
-t2_rho_days_list=[]
-t3_rho_days_list=[]
-t1_rho_list=[]
-t2_rho_list=[]
-t3_rho_list=[]
-t1_rho_errors_list=[]
-t2_rho_errors_list=[]
-t3_rho_errors_list=[]
-for i in range(len(ccdgains)):
-    if MJDs[i] < 53700:
-        t1_rho_days_list.append(days[i])
-        t1_rho_list.append(rho_q_pres[i])
-        if rho_q_pre_lower[i] > rho_q_pre_upper[i]:
-            t1_rho_errors_list.append(rho_q_pre_lower[i])
-        else:
-            t1_rho_errors_list.append(rho_q_pre_upper[i])
-    elif MJDs[i] < 56500 and MJDs[i] > 53700:
-        t2_rho_days_list.append(days[i])
-        t2_rho_list.append(rho_q_pres[i])
-        if rho_q_pre_lower[i] > rho_q_pre_upper[i]:
-            t2_rho_errors_list.append(rho_q_pre_lower[i])
-        else:
-            t2_rho_errors_list.append(rho_q_pre_upper[i])
-    elif MJDs[i] > 56500:
-        t3_rho_days_list.append(days[i])
-        t3_rho_list.append(rho_q_pres[i])
-        if rho_q_pre_lower[i] > rho_q_pre_upper[i]:
-            t3_rho_errors_list.append(rho_q_pre_lower[i])
-        else:
-            t3_rho_errors_list.append(rho_q_pre_upper[i])
-    
-t1_rho_days=np.array(t1_rho_days_list)
-t2_rho_days=np.array(t2_rho_days_list)
-t3_rho_days=np.array(t3_rho_days_list)
-t1_rho=np.array(t1_rho_list)
-t2_rho=np.array(t2_rho_list)
-t3_rho=np.array(t3_rho_list)
-t1_rho_errors=np.array(t1_rho_errors_list)
-t2_rho_errors=np.array(t2_rho_errors_list) 
-t3_rho_errors=np.array(t3_rho_errors_list) 
-
-print('RHO_Q T1 LINEAR FIT RESULTS')
-initial_values=np.array([1,1])
-deg_freedom = len(t1_rho_days) - initial_values.size
-print('DoF = {}'.format(deg_freedom))
-fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit, t1_rho_days, t1_rho, 
-                                                                  t1_rho_errors))
-print(fit.success) 
-print(fit.message) 
-sol0 = fit.x[0]
-m1=fit.x[0]
-sol1 = fit.x[1]
-c1=fit.x[1]
-fit_line_t1 = linear_fit(t1_rho_days, [sol0,sol1])
-
-#Show fit results
-errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
-
-zero_err = errs_Hessian[0]
-one_err=errs_Hessian[1]
-
-
-print('minimised chi-squared = {}'.format(fit.fun))
-chisq_min = fit.fun
-chisq_reduced = chisq_min/deg_freedom
-print('reduced chi^2 = {}'.format(chisq_reduced))
-P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
-print('P(chi^2_min, DoF) = {}'.format(P_value))
-print('First coefficient = {} +/- {}'.format(sol0, zero_err))
-print('Second coefficient = {} +/- {}'.format(sol1, one_err))
-print('Model Equation: {}x+{}'.format(sol0,sol1))
-print('')
-print('')
-
-def linear_fit_t2(x, param_vals):
-    #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
-    #return (param_vals[0]*x**3+param_vals[1]*x**2+param_vals[2]*x+param_vals[3])
-    return (param_vals[0]*(x-1366)+(m1*1366))
-
-print('RHO_Q T2 LINEAR FIT RESULTS')
-initial_values=np.array([1])
-deg_freedom = len(t2_rho_days) - initial_values.size
-print('DoF = {}'.format(deg_freedom))
-fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit_t2, t2_rho_days, t2_rho, 
-                                                                  t2_rho_errors))
-print(fit.success) 
-print(fit.message) 
-sol0 = fit.x[0]
-m2=fit.x[0]
-fit_line_t2 = linear_fit_t2(t2_rho_days, [sol0])
-
-#Show fit results
-errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
-
-zero_err = errs_Hessian[0]
-
-
-print('minimised chi-squared = {}'.format(fit.fun))
-chisq_min = fit.fun
-chisq_reduced = chisq_min/deg_freedom
-print('reduced chi^2 = {}'.format(chisq_reduced))
-P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
-print('P(chi^2_min, DoF) = {}'.format(P_value))
-print('First coefficient = {} +/- {}'.format(sol0, zero_err))
-print('Model Equation: {}(x-1366)+{}'.format(sol0,m1*1366))
-print('')
-print('')
-
-def linear_fit_t3(x, param_vals):
-    #return (param_vals[0]*x**2+param_vals[1]*x+param_vals[2])
-    #return (param_vals[0]*x**3+param_vals[1]*x**2+param_vals[2]*x+param_vals[3])
-    return (param_vals[0]*(x-4166)+(m2*4166))
-
-print('RHO_Q T3 LINEAR FIT RESULTS')
-initial_values=np.array([1])
-deg_freedom = len(t3_rho_days) - initial_values.size
-print('DoF = {}'.format(deg_freedom))
-fit = scipy.optimize.minimize(chi_squared, initial_values, args=(linear_fit_t3, t3_rho_days, t3_rho, 
-                                                                  t3_rho_errors))
-print(fit.success) 
-print(fit.message) 
-sol0 = fit.x[0]
-fit_line_t3 = linear_fit_t3(t3_rho_days, [sol0])
-
-#Show fit results
-errs_Hessian = np.sqrt(np.diag(2*fit.hess_inv))
-
-zero_err = errs_Hessian[0]
-
-
-print('minimised chi-squared = {}'.format(fit.fun))
-chisq_min = fit.fun
-chisq_reduced = chisq_min/deg_freedom
-print('reduced chi^2 = {}'.format(chisq_reduced))
-P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
-print('P(chi^2_min, DoF) = {}'.format(P_value))
-print('First coefficient = {} +/- {}'.format(sol0, zero_err))
-print('Model Equation: {}(x-4166)+{}'.format(sol0,m2*4166))
-print('')
-print('')
-
+# =============================================================================
+# # Find sunspot data 
+# sun_years=[]
+# sun_months=[]
+# sun_days=[]
+# sunspots=[]
+# sunspot_JD=[]
+# sunspot_days_since_launch=[]
+# sunspot_days_since_launch_fit=[]
+# sunspot_fit=[]
+# csv_file = 'sunspot_monthly.csv'
+# 
+# # Open the CSV file
+# with open(csv_file, mode='r') as file:
+#     # Create a CSV reader with a custom delimiter
+#     csv_reader = csv.reader(file, delimiter=';')
+# 
+#     # Iterate through each row in the CSV file
+#     for row in csv_reader:
+#         # The 'row' variable now contains the data from each row
+#         if float(row[0]) > 2001:
+#             for i in range(30):
+#                 sun_years.append(row[0])
+#                 sun_months.append(row[1])
+#                 sun_days.append(i+1)
+#             if float(row[3]) > 0:
+#                 for i in range(30):
+#                     sunspots.append(row[3])
+#             else: 
+#                 for i in range(30):
+#                     sunspots.append(0)
+# 
+# for x in range(len(sunspots)):
+#     sunspot_JD.append(date_to_jd(float(sun_years[x]),float(sun_months[x]),float(sun_days[x])))
+# for x in range(len(sunspots)):
+#     sunspot_days_since_launch.append(sunspot_JD[x]-launch_date_JD)
+# for x in range(len(sunspots)):
+#     if sunspot_days_since_launch[x] >= 0:
+#         sunspot_fit.append(sunspots[x])
+#         sunspot_days_since_launch_fit.append(sunspot_days_since_launch[x])
+# 
+# def sunspot_rho_q(dates_since_launch, param_vals):
+#     #sum_sunspots=0
+#     global dates_since_launchg
+#     date_since_launchg=dates_since_launch
+#     rho_q_vals=[]
+#     for date in dates_since_launch:
+#         rho_q=0
+#         for x in range(len(sunspot_days_since_launch_fit)):
+#             if sunspot_days_since_launch_fit[x]<=date:
+#                 rho_q=rho_q + float(param_vals[0] + param_vals[1] * ( np.exp(-param_vals[2] * (float(sunspot_fit[x])-param_vals[3])) )) # implement functional form
+#         rho_q_vals.append(rho_q)
+#     return (rho_q_vals)   
+# 
+# 
+# def chi_squared(model_params, model, x_data, y_data, y_err):
+#     return np.sum(((y_data - model(x_data, model_params))/y_err)**2)
+# 
+# sunspot_error=[]
+# for i in range(len(rho_q_pres_array)):
+#     if rho_q_pre_lower[i] > rho_q_pre_upper[i]:
+#         #sunspot_error.append(rho_q_pre_lower[i])
+#         sunspot_error.append(0.1)
+#     else:
+#         #sunspot_error.append(rho_q_pre_upper[i])
+#         sunspot_error.append(0.1)
+# sunspot_error_array=np.array(sunspot_error)
+# 
+# print('SUNSPOT RHO_Q FIT RESULTS')
+# initial_values=np.array([0,0,0,0])
+# deg_freedom = len(days) - initial_values.size
+# print('DoF = {}'.format(deg_freedom))
+# fit_sunspot = scipy.optimize.minimize(chi_squared, initial_values, args=(sunspot_rho_q, days, rho_q_pres_array, 
+#                                                                   sunspot_error_array))
+# print(fit_sunspot.success) 
+# print(fit_sunspot.message) 
+# sol0 = fit_sunspot.x[0]
+# sol1 = fit_sunspot.x[1]
+# sol2 = fit_sunspot.x[2]
+# sol3 = fit_sunspot.x[3]
+# fit_sunspot_line = sunspot_rho_q(days, [sol0,sol1,sol2,sol3])
+# fit_sunspot_line_fixed = sunspot_rho_q(days,[0.01,0.005,0.1,15] )
+# 
+# #Show fit results
+# errs_Hessian = np.sqrt(np.diag(2*fit_sunspot.hess_inv))
+# 
+# zero_err = errs_Hessian[0]
+# one_err=errs_Hessian[1]
+# two_err=errs_Hessian[2]
+# three_err=errs_Hessian[3]
+# 
+# 
+# print('minimised chi-squared = {}'.format(fit_sunspot.fun))
+# chisq_min = fit_sunspot.fun
+# chisq_reduced = chisq_min/deg_freedom
+# print('reduced chi^2 = {}'.format(chisq_reduced))
+# P_value = scipy.stats.chi2.sf(chisq_min, deg_freedom)
+# print('P(chi^2_min, DoF) = {}'.format(P_value))
+# print('First coefficient = {} +/- {}'.format(sol0, zero_err))
+# print('Second coefficient = {} +/- {}'.format(sol1, one_err))
+# print('Third coefficient = {} +/- {}'.format(sol2, two_err))
+# print('Fourth coefficient = {} +/- {}'.format(sol3, three_err))
+# =============================================================================
+# =============================================================================
+# plt.figure(figsize=(8, 6))  # Optional: Set the figure size
+# plt.plot(x, sunspot_rho_q(x), color='blue')  # Plot the function
+# plt.xlabel('x')  # Label for the x-axis
+# plt.ylabel('f(x)')  # Label for the y-axis
+# plt.show()  # Display the plot
+# =============================================================================
 # rho_q plot with swapped x-axes
 fig = plt.figure()
 ax = fig.add_axes((0,0,1,1))
@@ -1538,10 +1459,11 @@ for i in range(len(ccdgains)):
 #ax.plot(days_array, fit_line, linestyle='solid', color='orange')
 ##ax.plot(late_rho_days, fit_line_late, linestyle='solid', color='black',zorder=10)
 ##ax.plot(early_rho_days, fit_line_early, linestyle='solid', color='fuchsia',zorder=15)
-ax.plot(t1_rho_days, fit_line_t1, linestyle='solid', color='black',zorder=25)
-ax.plot(t2_rho_days, fit_line_t2, linestyle='solid', color='black',zorder=25)
-ax.plot(t3_rho_days, fit_line_t3, linestyle='solid', color='black',zorder=25)
+#ax.plot(days_whole, fit_sunspot_line, linestyle='solid', color='black',zorder=25)
+#ax.scatter(days, fit_sunspot_line_fixed, color='black',zorder=10)
+#ax.scatter(days, fit_sunspot_line, color='lime',zorder=10)
 ax.set_xlabel("Days since launch", fontsize=12)
+ax.plot(days_array, fit_line, linestyle='solid', color='orange')
 ax.set_xlim(-500, max(days)+500)
 #ax.set_ylim(-0.02,0.05) # Zoom into post correction rho_q vals
 ax.set_ylabel('Rho_q', fontsize=12)
@@ -1576,7 +1498,8 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('v4_pushed_plots/Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('Rho_q(MJD)', bbox_inches="tight")
+plt.savefig('Rho_q(MJD).pdf', bbox_inches="tight")
 plt.show()
 
 # rho_q plot with swapped x-axes
@@ -1592,15 +1515,10 @@ for i in range(len(ccdgains)):
     if ccdgains[i] == 1.0: color2='lightcoral'
     ax.errorbar(days[i],rho_q_posts[i],yerr=[[rho_q_post_lower[i]], [rho_q_post_upper[i]]],
                 color=color2,marker="o", label='post-correction', linestyle='none', alpha=1) 
-for i in range(len(ccdgains)):
-    color2='green'
-    if ccdgains[i] == 1.0: color2='lime'
-    ax.errorbar(days[i],rho_q_exp[i],yerr=[[rho_q_exp_lower[i]], [rho_q_exp_upper[i]]],
-                color=color2,marker="o", label='exponential pre-correction', linestyle='none', alpha=1) 
 ax.plot(days_array, fit_line, linestyle='solid', color='orange')
 ax.set_xlabel("Days since launch", fontsize=12)
 ax.set_xlim(-500, max(days)+500)
-ax.set_ylim(-0.5,0.5) # Zoom into post correction rho_q vals
+ax.set_ylim(-0.2,0.2) # Zoom into post correction rho_q vals
 ax.set_ylabel('Rho_q', fontsize=12)
 ax.tick_params(axis='both', which='major', labelsize=12)
 ax_MJD = ax.twiny()
@@ -1633,7 +1551,8 @@ plt.axhline(3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorde
 plt.axhline(-3,-100,10000, linestyle='dotted', color='black',linewidth=0.5, zorder=1)
 plt.ylim(-25,25)
 plt.gca().axes.get_yaxis().set_ticks([])
-plt.savefig('v4_pushed_plots/Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('Rho_q_post_zoom(MJD)', bbox_inches="tight")
+plt.savefig('Rho_q_post_zoom(MJD).pdf', bbox_inches="tight")
 plt.show()
                 
 # Find the mean value of the taus before and after temp switch date
@@ -1697,9 +1616,34 @@ print('tau_a uncertainty on mean after temp switch is',tau_a_uncer_after)
 print('tau_b uncertainty on mean after temp switch is',tau_b_uncer_after)
 print('tau_c uncertainty on mean after temp switch is',tau_c_uncer_after)
 
+print('Minimum norm. residuals: ', np.min(norm_residuals))
+print('Maximum norm. residuals: ', np.max(norm_residuals))
+
 print('Mean of all post-correction rho_q is: ', np.mean(rho_q_posts))
 print('RMS of all post-correction rho_q is: ', np.sqrt(np.mean(np.array(rho_q_posts)**2)))
+
+# =============================================================================
+# print('Mean of all rho_q ratios is: ', np.mean(np.array(rho_q_pres)/np.array(rho_q_posts)))
+# print('RMS of all rho_q ratios is: ', np.sqrt(np.mean(np.array(rho_q_pres)/np.array(rho_q_posts)**2)))
+# =============================================================================
 
 # Now do inverted ratios
 print('Mean of all rho_q ratios (posts/pres) is: ', np.mean(np.array(rho_q_posts)/np.array(rho_q_pres)))
 print('RMS of all rho_q ratios is: (posts/pres)', np.sqrt(np.mean((np.array(rho_q_posts)/np.array(rho_q_pres))**2)))
+
+
+# Create a DataFrame
+df = pd.DataFrame({
+    'Epoch name': files_string_uncorrected,
+    'Days since launch': days_array,
+    'rho_q pre-correction': rho_q_pres_array,
+    'rho_q pre-correction LOWER ERROR': rho_q_pre_lower, # use this for fitting
+    'rho_q pre-correction UPPER ERROR': rho_q_pre_upper,
+    'rho_q post-correction': rho_q_posts,
+    'rho_q post-correction LOWER ERROR': rho_q_post_lower,
+    'rho_q post-correction UPPER ERROR': rho_q_post_upper,
+    
+})
+
+# Save to CSV
+df.to_csv('2024_july_freeparams_OUTPUTS.csv', index=False)

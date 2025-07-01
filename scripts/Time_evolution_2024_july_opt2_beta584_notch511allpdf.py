@@ -1607,8 +1607,14 @@ print('Maximum norm. residuals: ', np.max(norm_residuals))
 print('Mean of all post-correction rho_q is: ', np.mean(rho_q_posts))
 print('RMS of all post-correction rho_q is: ', np.sqrt(np.mean(np.array(rho_q_posts)**2)))
 
-print('Mean of all rho_q ratios is: ', np.mean(np.array(rho_q_pres)/np.array(rho_q_posts)))
-print('RMS of all rho_q ratios is: ', np.sqrt(np.mean(np.array(rho_q_pres)/np.array(rho_q_posts)**2)))
+# =============================================================================
+# print('Mean of all rho_q ratios is: ', np.mean(np.array(rho_q_pres)/np.array(rho_q_posts)))
+# print('RMS of all rho_q ratios is: ', np.sqrt(np.mean(np.array(rho_q_pres)/np.array(rho_q_posts)**2)))
+# =============================================================================
+
+# Now do inverted ratios
+print('Mean of all rho_q ratios (posts/pres) is: ', np.mean(np.array(rho_q_posts)/np.array(rho_q_pres)))
+print('RMS of all rho_q ratios is: (posts/pres)', np.sqrt(np.mean((np.array(rho_q_posts)/np.array(rho_q_pres))**2)))
 
 # Create a DataFrame
 df = pd.DataFrame({
