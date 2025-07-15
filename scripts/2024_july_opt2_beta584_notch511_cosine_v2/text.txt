@@ -1,0 +1,35 @@
+mean beta is 0.5840000000000001
+mean a is  0.14600000000000002
+mean b is  0.5940000000000001
+mean c is  0.26000000000000006
+mean tau_a is  0.515
+mean tau_b is  5.530999999999999
+mean tau_c is  43.923999999999985
+mean notch for t>4000 is  51.10000000000004
+
+
+mean notch for t<4000 is  51.10000000000003
+mean notch all t is  51.100000000000016
+
+
+temp switch day is 1586.5
+mean tau_a before temp switch is 0.334054054054054
+mean tau_b before temp switch is 3.4909948051948043
+mean tau_c before temp switch is 24.454983783783778
+mean tau_a after temp switch is 0.515
+mean tau_b after temp switch is 5.531
+mean tau_c after temp switch is 43.92399999999999
+
+
+tau_a uncertainty on mean before temp switch is 0.06203228053698272
+tau_b uncertainty on mean before temp switch is 0.6482614609249807
+tau_c uncertainty on mean before temp switch is 4.5411764838440485
+tau_a uncertainty on mean after temp switch is 0.04247648409037961
+tau_b uncertainty on mean after temp switch is 0.45618919126968854
+tau_c uncertainty on mean after temp switch is 3.6227904605550174
+Mean of all post-correction rho_q is:  -0.0013557887997219123
+RMS of all post-correction rho_q is:  0.07705330375244725
+Mean of all rho_q ratios is:  23.19625749054875
+RMS of all rho_q ratios is:  233.44233905379667
+Mean of all rho_q ratios (posts/pres) is:  -0.008203547795420011
+RMS of all rho_q ratios is: (posts/pres) 0.048110090146569195
