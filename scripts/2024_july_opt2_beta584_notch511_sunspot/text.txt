@@ -1,0 +1,37 @@
+Finding csv files
+Now locating corrected csv files
+mean beta is 0.5840000000000001
+mean a is  0.14600000000000002
+mean b is  0.5940000000000001
+mean c is  0.26000000000000006
+mean tau_a is  0.515
+mean tau_b is  5.530999999999999
+mean tau_c is  43.923999999999985
+mean notch for t>4000 is  51.10000000000004
+
+
+mean notch for t<4000 is  51.10000000000002
+mean notch all t is  51.100000000000016
+
+
+Sunspot data extracted from csv file and interpolated!
+temp switch day is 1586.5
+mean tau_a before temp switch is 0.334054054054054
+mean tau_b before temp switch is 3.4909948051948048
+mean tau_c before temp switch is 24.454983783783778
+mean tau_a after temp switch is 0.515
+mean tau_b after temp switch is 5.531
+mean tau_c after temp switch is 43.92399999999999
+
+
+tau_a uncertainty on mean before temp switch is 0.0631302822485682
+tau_b uncertainty on mean before temp switch is 0.6597360059117022
+tau_c uncertainty on mean before temp switch is 4.621557529143517
+tau_a uncertainty on mean after temp switch is 0.04247648409037961
+tau_b uncertainty on mean after temp switch is 0.45618919126968854
+tau_c uncertainty on mean after temp switch is 3.6227904605550174
+Mean of all post-correction rho_q is:  0.0025909811294762136
+RMS of all post-correction rho_q is:  0.07715928331531434
+Mean of all rho_q ratios is:  67.63036778126057
+Mean of all rho_q ratios (posts/pres) is:  -0.004403614142248114
+RMS of all rho_q ratios is: (posts/pres) 0.060250227031290134
